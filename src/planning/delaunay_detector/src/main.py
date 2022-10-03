@@ -13,7 +13,7 @@ from planning_handle import planningHandle
 def main():
 
     rospy.init_node('planning', anonymous=True)
-    planning = planningHandle()
+    planningHandle()  # Run node
     rospy.spin()
 
 

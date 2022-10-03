@@ -13,7 +13,7 @@ from transformer import transformerFssim
 def main():
 
     rospy.init_node('fssim_interface', anonymous=True)
-    transformer_fssim = transformerFssim()
+    transformerFssim()  # Run node
     rospy.spin()
 
 
