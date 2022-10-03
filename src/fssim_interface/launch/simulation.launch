@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="fssim_interface" name="fssim_interface" type="main.py">
+  </node>
+</launch>

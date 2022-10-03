@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="planning" name="planning" type="main.py">
+  </node>
+</launch>
