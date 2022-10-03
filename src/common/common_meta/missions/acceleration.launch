@@ -1,7 +1,7 @@
 <launch>
 
-  <include file="$(find planning)/missions/acceleration.launch"/>
-  <include file="$(find control)/missions/acceleration.launch"/>
+  <include file="$(find planning_meta)/missions/acceleration.launch"/>
+  <include file="$(find control_meta)/missions/acceleration.launch"/>
 
 
 </launch>

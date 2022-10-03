@@ -1,7 +1,7 @@
 <launch>
 
   <include file="$(find fssim_interface)/launch/simulation.launch"/>
-  <include file="$(find control)/missions/sim_acceleration.launch"/>
+  <include file="$(find control_meta)/missions/sim_acceleration.launch"/>
 
 
 </launch>

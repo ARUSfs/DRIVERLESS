@@ -1,7 +1,7 @@
 <launch>
 
-  <include file="$(find planning)/missions/skidpad.launch"/>
-  <include file="$(find control)/missions/skidpad.launch"/>
+  <include file="$(find planning_meta)/missions/skidpad.launch"/>
+  <include file="$(find control_meta)/missions/skidpad.launch"/>
 
 
 </launch>
