@@ -1,0 +1,7 @@
+<launch>
+
+  <include file="$(find planning)/missions/autox.launch"/>
+  <include file="$(find control)/missions/autox.launch"/>
+
+
+</launch>

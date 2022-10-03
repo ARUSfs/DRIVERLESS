@@ -1,0 +1,7 @@
+<launch>
+
+  <include file="$(find planning)/missions/trackdrive.launch"/>
+  <include file="$(find control)/missions/trackdrive.launch"/>
+
+
+</launch>
