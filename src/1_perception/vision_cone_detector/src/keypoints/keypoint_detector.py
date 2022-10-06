@@ -20,18 +20,18 @@ from net_architecture import KeypointNet
 
 class keypoint_detector():
 
-    def __init__(self, num_kpt, path_weights, target_image_size=(80,80)):
+    def __init__(self, num_kpt, path_weights, target_image_size=(80, 80)):
         '''
         Initialization of a keypoints detector.
         '''
 
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        self.kNet = KeypointNet(target_image_size,num_kpt).to(self.device)
-        if path_weights != None:
+        self.kNet = KeypointNet(target_image_size, num_kpt).to(self.device)
+        if path_weights is not None:
             self.kNet.load_state_dict(torch.load(path_weights))
 
         self.target_image_size = target_image_size
-        self.num_kpt=num_kpt
+        self.num_kpt = num_kpt
 
         print("Net ready!")
 
@@ -42,32 +42,31 @@ class keypoint_detector():
         These are all parameters to build, train and validate
         the model.
         '''
-        num_images_train = 32
-        num_images_validation =32
+        num_images_train = 36
+        num_images_validation = 36
         lr = 0.1
         geo_loss_gamma_horz = 0.0
         geo_loss_gamma_vert = 0.0
-        batch_train = 32
-        batch_validation = 32
-        loss_type='l1_softargmax'
-        first_kp, last_kp = 0,self.num_kpt #Range of keypoints
+        batch_train = 6
+        batch_validation = 6
+        loss_type = 'l1_softargmax'
+        first_kp, last_kp = 0, self.num_kpt  # Range of keypoints
 
         if last_kp != 7:
             print("Not allowed paralelism loss")
             include_geo = False
 
-
         print("Train!")
-        train_model(self.kNet, epochs,dataset_images_path,
+        train_model(self.kNet, epochs, dataset_images_path,
                     dataset_labels_path, num_images_train,
-                    num_images_validation,self.target_image_size,
-                    lr,geo_loss_gamma_horz,geo_loss_gamma_vert,
-                    self.num_kpt,first_kp,last_kp,batch_train,
-                    batch_validation,loss_type,include_geo,self.device)
+                    num_images_validation, self.target_image_size,
+                    lr, geo_loss_gamma_horz, geo_loss_gamma_vert,
+                    self.num_kpt, first_kp, last_kp, batch_train,
+                    batch_validation, loss_type, include_geo, self.device)
 
-        #Save model
+        # Save model
         train_file_name = "train.pth"
-        torch.save(self.kNet.state_dict(),train_file_name)
+        torch.save(self.kNet.state_dict(), train_file_name)
 
     def get_keypoints_from_images(self, test_images: np.ndarray):
         '''
@@ -78,14 +77,13 @@ class keypoint_detector():
         datasetTest = Dataset_for_test(test_images, self.target_image_size)
         dataloaderTest = DataLoader(datasetTest)
 
-        pts2d = evaluate_model(self.kNet,datasetTest,
-                            dataloaderTest,self.device)
+        pts2d = evaluate_model(self.kNet, datasetTest, dataloaderTest,
+                               self.device)
 
         pts2d = np.array([cone[0] for cone in pts2d])
 
         print("Evaluated!")
         return pts2d
-
 
     def get_keypoint_from_image(self, image: np.ndarray):
         '''
@@ -95,22 +93,19 @@ class keypoint_detector():
         '''
 
         images = [image]
-        datasetTest = Dataset_for_test(images,self.target_image_size)
+        datasetTest = Dataset_for_test(images, self.target_image_size)
         dataloaderTest = DataLoader(datasetTest)
 
-
-        pts2d = evaluate_model(self.kNet,datasetTest,
-                            dataloaderTest,self.device)
+        pts2d = evaluate_model(self.kNet, datasetTest, dataloaderTest,
+                               self.device)
         pts2d = pts2d[0][0]
 
         print("Evaluated!")
         return pts2d
 
-    def show_keypoint_image(self, image, keypoints, name):
+    def show_keypoint_image(self, image: np.ndarray, keypoints: np.ndarray, name):
         '''
         Method to show keypoints drown in image.
-        Image must be an array of the image read by openCV.
-        Keypoints must be a list of points (like the output of previous methods)
         Name is the path of the generated image to save
         '''
 
@@ -118,11 +113,10 @@ class keypoint_detector():
         point_color1 = (0, 0, 255)
         thickness = 1
 
-        points_list = keypoints
-        for point in points_list:
+        for point in keypoints:
             cv2.circle(image, point, point_size, point_color1, thickness)
 
-        #Save the image with keypoints
+        # Save the image with keypoints
         cv2.imwrite(name, image)
         print("Image has been saved in this project with name: " + name)
 
@@ -144,28 +138,33 @@ def main(images_path, labels_path, output_path, epochs, draw_keypoints,
             img = cv2.imread(path_image)
             pts = detector.get_keypoint_from_image(img)
             name = path_image.split("/")[-1]
-            out = output_path+ "detected_" + name
+            out = output_path + "detected_" + name
             detector.show_keypoint_image(img, pts, out)
 
-if __name__=="__main__":
 
-    parser = argparse.ArgumentParser(description='Detection of keypoints: Train and evaluate a model')
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description='Detection of keypoints:\
+                                     Train and evaluate a model')
 
     parser.add_argument('--epochs', default=2, help='Epochs to train the model.', type=int)
-    parser.add_argument('--dataset_images_path', default="Dataset/Images/RektNet_Dataset/",
-                     help='Insert dataset images path')
+    parser.add_argument('--dataset_images_path', default="Dataset/Images/Rektnet_Dataset/",
+                        help='Insert dataset images path')
     parser.add_argument('--dataset_labels_path', default="Dataset/Labels/rektnet_labels.csv",
-                     help='Insert dataset labels path')
-    parser.add_argument('--draw_keypoints', default=True, help='True by default if you want to draw keypoints')
-    parser.add_argument('--output_path', default="",help='Insert path for output images if you want to draw keypoints')
-    parser.add_argument('--include_geo', default=False, help='True if add paralelism to loss')
+                        help='Insert dataset labels path')
+    parser.add_argument('--draw_keypoints', default=True,
+                        help='True by default if you want to draw keypoints')
+    parser.add_argument('--output_path', default="",
+                        help='Insert path for output images if you want to draw keypoints')
+    parser.add_argument('--include_geo', default=False,
+                        help='True if add paralelism to loss')
     parser.add_argument('--num_kpt', default=7, help='Number of keypoints to detect')
     parser.add_argument('--path_image', default=None, help='Path of image to detect keypoints')
     parser.add_argument('--train', default=True, help='True if you want to train ')
-    parser.add_argument('--path_weights', default=None, help='Path of weights. By default train with initial weights')
+    parser.add_argument('--path_weights', default=None,
+                        help='Path of weights. By default train with initial weights')
     args = parser.parse_args()
 
     main(args.dataset_images_path, args.dataset_labels_path, args.output_path,
-        args.epochs, args.draw_keypoints, args.include_geo, args.num_kpt,
-      args.path_image, args.train, args.path_weights)
-
+         args.epochs, args.draw_keypoints, args.include_geo, args.num_kpt,
+         args.path_image, args.train, args.path_weights)

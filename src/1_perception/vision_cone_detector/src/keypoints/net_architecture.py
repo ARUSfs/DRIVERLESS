@@ -9,8 +9,6 @@ import torch.nn as nn
 import torch
 import torch.nn.functional
 
-from cross_ratio_loss import CrossRatioLoss
-
 
 class ResNet(nn.Module):
     def __init__(self, in_channels, out_channels):
@@ -31,7 +29,7 @@ class ResNet(nn.Module):
         self.shortcut_conv = nn.Conv2d(in_channels=in_channels,
                                        out_channels=out_channels,
                                        kernel_size=1, stride=1)
-        self.shortcut_bn = nn.BatchNorm2d(out_channels) #Capas de atajo
+        self.shortcut_bn = nn.BatchNorm2d(out_channels)  # Capas de atajo
 
     def forward(self, x):
         c1 = self.conv1(x)

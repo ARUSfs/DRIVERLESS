@@ -8,8 +8,6 @@ Script to implement class of loss.
 import torch
 from torch import nn
 import torch.nn.functional as F
-from torch.autograd import Variable
-import numpy as np
 
 
 class CrossRatioLoss(nn.Module):
@@ -30,19 +28,18 @@ class CrossRatioLoss(nn.Module):
         print(f"Including geometric loss: {include_geo}")
         print(f"Loss type: {loss_type}")
 
-
     def forward(self, heatmap, points, target_hm, target_points):
         """
         All arguments must be numpy arrays.
         """
 
-        if(self.loss_type == 'l2_softargmax' or self.loss_type == 'l2_sm'):
+        if (self.loss_type == 'l2_softargmax' or self.loss_type == 'l2_sm'):
             mse_loss = (points - target_points) ** 2
             location_loss = mse_loss.sum(2).sum(1).mean()
-        elif(self.loss_type == 'l2_heatmap' or self.loss_type == 'l2_hm'):
+        elif (self.loss_type == 'l2_heatmap' or self.loss_type == 'l2_hm'):
             mse_loss = (heatmap - target_hm) ** 2
             location_loss = mse_loss.sum(3).sum(2).sum(1).mean()
-        elif(self.loss_type == 'l1_softargmax' or self.loss_type == 'l1_sm'):
+        elif (self.loss_type == 'l1_softargmax' or self.loss_type == 'l1_sm'):
             l1_loss = torch.abs(points - target_points)
             location_loss = l1_loss.sum(2).sum(1).mean()
 
@@ -69,10 +66,10 @@ class CrossRatioLoss(nn.Module):
             h65 = F.normalize(points[:, 6] - points[:, 5], dim=1)
             hB = 1.0 - torch.tensordot(h65, h43, dims=([1], [1]))
 
-            geo_loss = self.geo_loss_gamma_horz * (hA + hB).mean() / 2 \
-                    + self.geo_loss_gamma_vert * (vA + vB + vC + vD).mean() / 4
+            factorA = self.geo_loss_gamma_horz * (hA + hB).mean() / 2
+            factorB = self.geo_loss_gamma_vert * (vA + vB + vC + vD).mean() / 4
+            geo_loss = factorA + factorB
         else:
             geo_loss = torch.tensor(0)
 
         return location_loss, geo_loss, location_loss+geo_loss
-
