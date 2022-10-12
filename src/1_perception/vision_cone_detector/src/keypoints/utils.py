@@ -89,53 +89,33 @@ def get_scale(actual_image_size, target_image_size):
 
 
 def scale_labels(labels, h_scale, w_scale):
-    new_labels = []
-    for pt in np.array(labels):
-        x_coor = math.ceil((int(pt[0])) * w_scale)
-        y_coor = math.ceil((int(pt[1])) * h_scale)
-        new_labels.append([x_coor, y_coor])
-    return np.asarray(new_labels)
+    scale = np.array([w_scale, h_scale])
+    n_labels = np.array(labels) * scale
+    return np.array(n_labels, dtype=int)
 
 
 def unscale_labels(labels, h_scale, w_scale):
-    new_labels = []
-    for pt in np.array(labels):
-        x_coor = math.ceil(pt[0] / w_scale)
-        y_coor = math.ceil(pt[1] / h_scale)
-        new_labels.append([x_coor, y_coor])
-    return np.asarray(new_labels)
+    scale = np.array([w_scale, h_scale])
+    n_labels = np.array(labels) / scale
+    return np.array(n_labels, dtype=int)
 
 
-def calculate_distance(target_points, pred_points, num_kpt):
+def calculate_distance(target_points, pred_points):
+    """
+    Return matrix of distances between target point
+    and predicted point
+    """
 
-    tpt = target_points.view(target_points.shape[0], num_kpt, -1)
-    tp = tpt.tolist()
-    ppt = pred_points.view(pred_points.shape[0], num_kpt, -1)
-    pp = ppt.tolist()
-    dist_matrix = []
-    for j, points in enumerate(tp):
-        list_ = []
-        for i, point in enumerate(points):
-            dist = np.sqrt(np.square(point[0] - pp[j][i][0])
-                           + np.square(point[1] - pp[j][i][1]))
-            list_.append(dist)
-        dist_matrix.append(list_)
-    return dist_matrix
+    tpt = target_points.T
+    ppt = pred_points.T
+    return np.linalg.norm(tpt-ppt,axis=0)
 
 
 def euclidean_distance_loss(y_pred, Y):
 
-    # Get number of keypoints
-    num_kpt = 7
+    distances = calculate_distance(Y, y_pred)
+    return distances.mean()
 
-    distances = calculate_distance(Y, y_pred, num_kpt)
-
-    # Calculate mean distance of an image (sum of distances of each keypoint)
-    mean = 0
-    for d_image in distances:
-        mean += sum(d_image)
-
-    return mean / len(distances)
 
 
 def draw_and_save_graphic(epochs, train_final_loss, val_final_loss, n, pathname):

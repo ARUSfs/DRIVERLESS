@@ -124,7 +124,7 @@ class keypoint_detector():
 def main(images_path, labels_path, output_path, epochs, draw_keypoints,
          include_geo, num_kpt, path_image, train, path_weights):
 
-    if draw_keypoints and path_image is not None:
+    if draw_keypoints and path_image is None:
         print("Insert path image to detect keypoints or \
               modify draw_keypoints to False to not evaluate")
     else:
@@ -147,8 +147,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Detection of keypoints:\
                                      Train and evaluate a model')
 
-    parser.add_argument('--epochs', default=2, help='Epochs to train the model.', type=int)
-    parser.add_argument('--dataset_images_path', default="Dataset/Images/Rektnet_Dataset/",
+    parser.add_argument('--epochs', default=1, help='Epochs to train the model.', type=int)
+    parser.add_argument('--dataset_images_path', default="Dataset/Images/RektNet_Dataset/",
                         help='Insert dataset images path')
     parser.add_argument('--dataset_labels_path', default="Dataset/Labels/rektnet_labels.csv",
                         help='Insert dataset labels path')
