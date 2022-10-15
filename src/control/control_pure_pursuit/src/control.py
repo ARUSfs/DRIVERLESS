@@ -9,15 +9,16 @@ car controls.
 from pure_pursuit import pure_pursuit_control, targetCourse
 from car_state import State, States
 from speed_control import PIDController
+import rospy
 
 # Constants
-K = 0.30  # look forward gain
-LFC = 8.55  # [m] look-ahead distance
-KP = 1.0  # speed proportional gain
-KI = 0.2    # speed integrative gain
-KD = 0.2    # speed derivative gain
-WB = 1.5  # [m] wheel base of vehicle
-TARGET_SPEED = 10.0 / 3.6  # [m/s]
+K = rospy.get_param('/control_pure_pursuit/K')  # look forward gain
+LFC = rospy.get_param('/control_pure_pursuit/LFC')  # [m] look-ahead distance
+KP = rospy.get_param('/control_pure_pursuit/KP')  # speed proportional gain
+KI = rospy.get_param('/control_pure_pursuit/KI')    # speed integrative gain
+KD = rospy.get_param('/control_pure_pursuit/KD')    # speed derivative gain
+WB = rospy.get_param('/control_pure_pursuit/WB')  # [m] wheel base of vehicle
+TARGET_SPEED = rospy.get_param('/control_pure_pursuit/TARGET_SPEED')  # [m/s]
 
 
 class controlCar():

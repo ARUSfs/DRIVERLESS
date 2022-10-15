@@ -29,12 +29,16 @@ class controlHandle():
 
     def subscribe_topics(self):
 
-        rospy.Subscriber('route', Trajectory, self.update_trajectory_callback)
-        rospy.Subscriber('state', CarState, self.update_state_callback)
+        topic1 = rospy.get_param('/control_pure_pursuit/route_topic')
+        rospy.Subscriber(topic1, Trajectory, self.update_trajectory_callback)
+
+        topic2 = rospy.get_param('/control_pure_pursuit/state_topic')
+        rospy.Subscriber(topic2, CarState, self.update_state_callback)
 
     def publish_topics(self):
 
-        self.pub = rospy.Publisher('controls', Controls, queue_size=10)
+        topic_pub = rospy.get_param('/control_pure_pursuit/controls_topic')
+        self.pub = rospy.Publisher(topic_pub, Controls, queue_size=10)
 
     def update_state_callback(self, msg):
 

@@ -1,5 +1,6 @@
 <launch>
   <node pkg="control" name="control" type="main.py">
+  <rosparam command="load" file="$(find control_pure_pursuit)/config/pure_pursuit.yaml"/>
   </node>
 
 </launch>
