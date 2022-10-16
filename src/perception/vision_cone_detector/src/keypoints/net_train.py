@@ -166,7 +166,6 @@ def evaluate_model(net, dataset, dataloader, device):
     '''
     Function to predict keypoints of dataset of any images choosen.
     Net must be trained.
-    Dataloader must be formed with this dataset.
     Device must be between GPU and CPU
     '''
     target_image_size = dataset.target_image_size

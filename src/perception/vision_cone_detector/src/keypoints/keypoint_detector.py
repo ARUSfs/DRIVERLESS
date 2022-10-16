@@ -75,7 +75,7 @@ class keypoint_detector():
         This returns a numpy array of arrays of keypoints
         '''
         datasetTest = Dataset_for_test(test_images, self.target_image_size)
-        dataloaderTest = DataLoader(datasetTest)
+        dataloaderTest = DataLoader(datasetTest, len(test_images))
 
         pts2d = evaluate_model(self.kNet, datasetTest, dataloaderTest,
                                self.device)

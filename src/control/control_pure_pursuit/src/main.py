@@ -12,8 +12,9 @@ from control_handle import controlHandle
 
 def main():
 
-    rospy.init_node('control', anonymous=True)
-    rate = rospy.Rate(40)
+    rospy.init_node('control_pure_pursuit', anonymous=True)
+    frequency = rospy.get_param('/control_pure_pursuit/frequency')
+    rate = rospy.Rate(frequency)
 
     control_handle = controlHandle()
     while not rospy.is_shutdown():

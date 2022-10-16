@@ -12,7 +12,7 @@ from planning_handle import planningHandle
 
 def main():
 
-    rospy.init_node('planning', anonymous=True)
+    rospy.init_node('delaunay_detector', anonymous=True)
     planningHandle()  # Run node
     rospy.spin()
 

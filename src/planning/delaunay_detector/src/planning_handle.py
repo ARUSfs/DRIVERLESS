@@ -30,12 +30,13 @@ class planningHandle():
         self.publish_topics()
 
     def subscribe_topics(self):
+        topic1 = rospy.get_param('/delaunay_detector/topic_map')
+        rospy.Subscriber(topic1, Map, self.get_trajectory)
 
-        rospy.Subscriber('map', Map, self.get_trajectory)
+    def publish_topics(self):
+        topic2 = rospy.get_param('/delaunay_detector/topic_route')
 
-    def publishToTopics(self):
-
-        self.pub_route = rospy.Publisher('route', Trajectory,
+        self.pub_route = rospy.Publisher(topic2, Trajectory,
                                          queue_size=10)
 
     def get_trajectory(self, msg):

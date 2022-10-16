@@ -5,7 +5,6 @@ Script utils to develope auxiliar functions.
 @date: 20211204
 '''
 
-import math
 import csv
 import numpy as np
 import cv2
@@ -108,7 +107,7 @@ def calculate_distance(target_points, pred_points):
 
     tpt = target_points.T
     ppt = pred_points.T
-    return np.linalg.norm(tpt-ppt,axis=0)
+    return np.linalg.norm(tpt-ppt, axis=0)
 
 
 def euclidean_distance_loss(y_pred, Y):
@@ -117,9 +116,7 @@ def euclidean_distance_loss(y_pred, Y):
     return distances.mean()
 
 
-
 def draw_and_save_graphic(epochs, train_final_loss, val_final_loss, n, pathname):
-
     '''
     Function to draw graphic of a train of keypoint net. Four graphics are
     drown with train loss, validation loss.
