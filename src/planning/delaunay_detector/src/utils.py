@@ -5,15 +5,19 @@ Script to implement utils funcions.
 @date: 20220320
 """
 
+import rospy
 import numpy as np
 import math
 from scipy.interpolate import splprep, splev
 
+NUM_POINTS = rospy.get_param('/delaunay_detector/NUM_POINTS')
+DEGREE = rospy.get_param('/delaunay_detector/DEGREE')
+
 
 def spline(trajectory: np.ndarray):
 
-    tck, u = splprep(trajectory.T, s=0.0, k=3)
-    x = np.linspace(u.min(), u.max(), 100)
+    tck, u = splprep(trajectory.T, s=0.0, k=DEGREE)
+    x = np.linspace(u.min(), u.max(), NUM_POINTS)
     x, y = splev(x, tck)
 
     return x, y

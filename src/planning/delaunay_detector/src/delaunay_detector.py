@@ -6,7 +6,7 @@ search path.
 @date: 20220902
 '''
 
-
+import rospy
 from scipy.spatial import Delaunay
 from treelib import Tree
 import numpy as np
@@ -14,11 +14,11 @@ import numpy as np
 from utils import distance2D, midpoint, get_cos
 
 # Constants
-W_DISTANCE = 1
-W_ANGLE = 1
-MAX_COST1 = 5
-MAX_COST2 = 1
-MAX_DISTANCE = 10
+W_DISTANCE = rospy.get_param('/delaunay_detector/W_DISTANCE')
+W_ANGLE = rospy.get_param('/delaunay_detector/W_ANGLE')
+MAX_COST1 = rospy.get_param('/delaunay_detector/MAX_COST1')
+MAX_COST2 = rospy.get_param('/delaunay_detector/MAX_COST2')
+MAX_DISTANCE = rospy.get_param('/delaunay_detector/MAX_DISTANCE')
 
 
 def contains(p: np.ndarray, points: list):
