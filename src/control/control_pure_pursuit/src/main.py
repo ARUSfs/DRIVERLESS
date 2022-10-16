@@ -12,7 +12,7 @@ from control_handle import controlHandle
 
 def main():
 
-    rospy.init_node('control', anonymous=True)
+    rospy.init_node('control_pure_pursuit', anonymous=True)
     frequency = rospy.get_param('/control_pure_pursuit/frequency')
     rate = rospy.Rate(frequency)
 
