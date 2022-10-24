@@ -1,5 +1,4 @@
-"""
-Script to implement main planning class to get route.
+"""Script to implement main planning class to get route.
 
 @author: Mariano del Río
 @date: 20220320
@@ -8,16 +7,14 @@ Script to implement main planning class to get route.
 import numpy as np
 
 from delaunay_detector import delaunay_triangulation
-from delaunay_detector import calculate_midpoints
 from delaunay_detector import build_path_tree
 from delaunay_detector import find_best_path
 
 from utils import spline
 
 
-class planningSystem():
-    """
-    Update tracklimits with new cones detected, calculate
+class PlanningSystem():
+    """Update tracklimits with new cones detected, calculate
     new path via Delaunay triangulation and smooth it with
     spline.
     """
@@ -36,23 +33,20 @@ class planningSystem():
         self.tl_left = []
         self.tl_right = []
 
-        for x, y, c, p in cones:
-            if p > 0.9:
-                if c == 'b':
-                    self.tl_left.append(np.array([x, y]))
-                elif c == 'y':
-                    self.tl_right.append(np.array([x, y]))
+        for c in cones:
+            if c.probability.data > 0.9:
+                if c.color.data == 'b':
+                    self.tl_left.append(np.array([c.position.x, c.position.y]))
+                elif c.color.data == 'y':
+                    self.tl_right.append(np.array([c.position.x, c.position.y]))
 
     def calculate_path(self):
 
         path = self.path.copy()
 
-        b_cones = self.tl_left
-        y_cones = self.tl_right
-        points = np.concatenate(b_cones, y_cones)
+        points = np.array(self.tl_left + self.tl_right)
 
-        edges = delaunay_triangulation(points, y_cones, b_cones)
-        midpoints = calculate_midpoints(edges)
+        midpoints = delaunay_triangulation(points, self.tl_left, self.tl_right)
         tree = build_path_tree(path, midpoints)
         path, weight = find_best_path(tree)
         path = spline(path)

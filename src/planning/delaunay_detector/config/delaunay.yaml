@@ -1,5 +1,5 @@
 # Topics names of planning node
-topic_map: 'map'
+topic_map: 'perception_map'
 topic_route: 'route'
 
 
@@ -12,4 +12,4 @@ MAX_DISTANCE: 10
 
 # Parameters of spline aproximation of path
 NUM_POINTS: 100
-DEGREE: 3
+DEGREE: 2
