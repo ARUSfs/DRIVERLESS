@@ -1,5 +1,4 @@
-"""
-Script to execute control node
+"""Script to execute control node
 
 @author: Mariano del Río
 @date: 20220704
@@ -9,19 +8,18 @@ import rospy
 import math
 
 from common_msgs.msg import Controls, Trajectory, CarState
-from control import controlCar
+from control import ControlCar
 
 
-class controlHandle():
-    """
-    Listen route and state and generate command controls of steering and
+class ControlHandle():
+    """Listen route and state and generate command controls of steering and
     accelerator.
     """
 
     def __init__(self):
 
         time = rospy.Time.now()
-        self.control = controlCar(time)
+        self.control = ControlCar(time)
 
         self.subscribe_topics()
         self.pub = None
@@ -57,14 +55,7 @@ class controlHandle():
         pointsy = [p.y for p in data]
 
         self.control.update_trajectory(pointsx, pointsy)
-
-    def run(self):
-
-        if self.control.existPath:
-            self.publish_msg()
-
-        else:
-            rospy.loginfo("Not route yet")
+        self.publish_msg()
 
     def publish_msg(self):
 

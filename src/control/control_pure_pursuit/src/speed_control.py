@@ -1,5 +1,4 @@
-"""
-Script to develope PID controller to accelerator control.
+"""Script to develope PID controller to accelerator control.
 
 @author: Mariano del Río
 @date: 20220520

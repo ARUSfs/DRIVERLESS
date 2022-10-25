@@ -1,12 +1,11 @@
-"""
-Script to implement main class to control planning and
+"""Script to implement main class to control planning and
 car controls.
 
 @author: Mariano del Río
 @date: 20220320
 """
 
-from pure_pursuit import pure_pursuit_control, targetCourse
+from pure_pursuit import pure_pursuit_control, TargetCourse
 from car_state import State, States
 from speed_control import PIDController
 import rospy
@@ -21,9 +20,8 @@ WB = rospy.get_param('/control_pure_pursuit/WB')  # [m] wheel base of vehicle
 TARGET_SPEED = rospy.get_param('/control_pure_pursuit/TARGET_SPEED')  # [m/s]
 
 
-class controlCar():
-    """
-    Main class to save and update trajectory and calculate
+class ControlCar():
+    """Main class to save and update trajectory and calculate
     command controls via pure pursuit and PID controllers.
     """
 
@@ -36,7 +34,7 @@ class controlCar():
         self.previous_states = States()
         self.previous_states.append(self.state)
 
-        self.target_course = targetCourse(K, LFC)
+        self.target_course = TargetCourse(K, LFC)
         self.target_ind = None
         self.existPath = False  # True if there is trajectory
 
@@ -55,7 +53,8 @@ class controlCar():
 
     def getCmd(self):
 
-        ai = self.pid.accelerator_control(self.state.v, TARGET_SPEED)
+        # ai = self.pid.accelerator_control(self.state.v, TARGET_SPEED)
+        ai = 0.2
         di, ind = pure_pursuit_control(self.state, self.target_course,
                                        self.target_ind, WB)
         self.target_ind = ind

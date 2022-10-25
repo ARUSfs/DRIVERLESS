@@ -1,6 +1,3 @@
-# Rate of control node
-frequency: 40
-
 # Topics names
 route_topic: 'route'
 state_topic: 'state'

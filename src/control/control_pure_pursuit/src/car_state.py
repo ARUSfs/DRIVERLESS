@@ -1,5 +1,4 @@
-"""
-Script to save estimated car state in certain time
+"""Script to save estimated car state in certain time
 
 @author: Mariano del Río
 @date: 20220320
@@ -39,8 +38,7 @@ class State:
 
 
 class States:
-    """
-    Class to save all estimated states.
+    """Class to save all estimated states.
     """
 
     def __init__(self):
