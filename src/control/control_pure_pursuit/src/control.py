@@ -51,7 +51,7 @@ class ControlCar():
         self.state.update(x, y, yaw, v, time)
         self.previous_states.append(self.state)
 
-    def getCmd(self):
+    def get_cmd(self):
 
         # ai = self.pid.accelerator_control(self.state.v, TARGET_SPEED)
         ai = 0.2

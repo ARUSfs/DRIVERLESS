@@ -8,6 +8,7 @@ import rospy
 import math
 
 from common_msgs.msg import Controls, Trajectory, CarState
+from geometry_msgs.msg import Point
 from control import ControlCar
 
 
@@ -23,6 +24,7 @@ class ControlHandle():
 
         self.subscribe_topics()
         self.pub = None
+        self.pub2 = None
         self.publish_topics()
 
     def subscribe_topics(self):
@@ -37,6 +39,9 @@ class ControlHandle():
 
         topic_pub = rospy.get_param('/control_pure_pursuit/controls_topic')
         self.pub = rospy.Publisher(topic_pub, Controls, queue_size=10)
+
+        topic_pursuit = rospy.get_param('/control_pure_pursuit/pursuit_topic')
+        self.pub2 = rospy.Publisher(topic_pursuit, Point, queue_size=10)
 
     def update_state_callback(self, msg):
 
@@ -63,6 +68,12 @@ class ControlHandle():
         msg = Controls()
         msg.steering.data = di
         msg.accelerator.data = ai
+
+        p = Point()
+        ind = self.control.target_ind
+        p.x = self.control.target_course.cx[ind]
+        p.y = self.control.target_course.cy[ind]
+        self.pub2.publish(p)
 
         rospy.loginfo(msg)
         self.pub.publish(msg)
