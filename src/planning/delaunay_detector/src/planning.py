@@ -21,35 +21,37 @@ class PlanningSystem():
 
     def __init__(self):
 
-        self.origin = np.zeros(2)
+        self.origin = (0.0, 0.0)
         self.tl_left = []
         self.tl_right = []
 
-        self.path = []
-        self.path.append(self.origin)
+        self.path = None
 
     def update_tracklimits(self, cones: list):
 
+        # Renew path every tracklimits update (Local system)
+        self.path = []
+        self.path.append(self.origin)
         self.tl_left = []
         self.tl_right = []
 
         for c in cones:
-            if c.probability.data > 0.9:
+            if c.probability.data > 0.9 and c.position.x>0:
                 if c.color.data == 'b':
-                    self.tl_left.append(np.array([c.position.x, c.position.y]))
+                    self.tl_left.append((c.position.x, c.position.y))
                 elif c.color.data == 'y':
-                    self.tl_right.append(np.array([c.position.x, c.position.y]))
+                    self.tl_right.append((c.position.x, c.position.y))
 
     def calculate_path(self):
 
         path = self.path.copy()
 
-        points = np.array(self.tl_left + self.tl_right)
+        points = self.tl_left + self.tl_right
 
         midpoints = delaunay_triangulation(points, self.tl_left, self.tl_right)
         tree = build_path_tree(path, midpoints)
         path, weight = find_best_path(tree)
-        path = spline(path)
+        #path = spline(np.array(path))
         self.path = path
 
-        return self.path
+        return self.path, weight

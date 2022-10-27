@@ -21,19 +21,19 @@ def spline(trajectory: np.ndarray):
     return x, y
 
 
-def distance2D(p1: np.ndarray, p2: np.ndarray):
-    return np.linalg.norm(p1-p2)
+def distance2D(p1:tuple, p2:tuple):
+    return np.linalg.norm(np.array(p1)-np.array(p2))
 
 
-def get_cos(p1: np.ndarray, p2: np.ndarray, p3: np.ndarray):
+def get_cos(p1:tuple, p2:tuple, p3:tuple):
 
-    v1 = p2 - p1
-    v2 = p3 - p3
+    v1 = np.array(p2) - np.array(p1)
+    v2 = np.array(p3) - np.array(p2)
     v1_mod = np.linalg.norm(v1)
     v2_mod = np.linalg.norm(v2)
     cos = v1.dot(v2.T)/(v1_mod*v2_mod)
     return (-1)*cos
 
 
-def midpoint(p1: np.ndarray, p2: np.ndarray):
-    return (p1+p2)/2
+def midpoint(p1:tuple, p2:tuple):
+    return ((p1[0]+p2[0])/2,(p1[1]+p2[1])/2)
