@@ -7,8 +7,7 @@ by darknet.py, a python wrapper for darknet.
 @date: 20211214
 """
 import os
-import sys
-from typing import List, Tuple, Union
+from typing import List, Union
 
 import cv2
 import numpy as np
