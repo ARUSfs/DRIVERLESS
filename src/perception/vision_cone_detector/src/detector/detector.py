@@ -36,11 +36,11 @@ class YoloDetector:
         :return: List containing Darknet detections
         :rtype: List[darknet.DETECTION]
         """
-        frame = cv2.resize(frame,
+        frame = cv2.resize(img,
                            (self.darknet_width, self.darknet_height),
                            interpolation=cv2.INTER_LINEAR)
         darknet_image = darknet.make_image(self.darknet_width, self.darknet_height, 3)
-        darknet.copy_image_from_bytes(darknet_image, frame.to_bytes())
+        darknet.copy_image_from_bytes(darknet_image, frame.tobytes())
 
         detections = darknet.detect_image(self.network, self.names, darknet_image)
         darknet.free_image(darknet_image)
