@@ -1,5 +1,4 @@
-"""
-Script to implement pure pursuit algorithm.
+"""Script to implement pure pursuit algorithm.
 
 @author: Mariano del Río
 @date: 20220320
@@ -10,9 +9,8 @@ import math
 from car_state import State
 
 
-class targetCourse:
-    """
-    Class to choose pursuit point of trajectory.
+class TargetCourse:
+    """Class to choose pursuit point of trajectory.
     """
 
     def __init__(self, k: float, Lfc: float):

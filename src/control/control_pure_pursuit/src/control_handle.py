@@ -1,5 +1,4 @@
-"""
-Script to execute control node
+"""Script to execute control node
 
 @author: Mariano del Río
 @date: 20220704
@@ -9,22 +8,23 @@ import rospy
 import math
 
 from common_msgs.msg import Controls, Trajectory, CarState
-from control import controlCar
+from geometry_msgs.msg import Point
+from control import ControlCar
 
 
-class controlHandle():
-    """
-    Listen route and state and generate command controls of steering and
+class ControlHandle():
+    """Listen route and state and generate command controls of steering and
     accelerator.
     """
 
     def __init__(self):
 
         time = rospy.Time.now()
-        self.control = controlCar(time)
+        self.control = ControlCar(time)
 
         self.subscribe_topics()
         self.pub = None
+        self.pub2 = None
         self.publish_topics()
 
     def subscribe_topics(self):
@@ -39,6 +39,9 @@ class controlHandle():
 
         topic_pub = rospy.get_param('/control_pure_pursuit/controls_topic')
         self.pub = rospy.Publisher(topic_pub, Controls, queue_size=10)
+
+        topic_pursuit = rospy.get_param('/control_pure_pursuit/pursuit_topic')
+        self.pub2 = rospy.Publisher(topic_pursuit, Point, queue_size=10)
 
     def update_state_callback(self, msg):
 
@@ -57,14 +60,7 @@ class controlHandle():
         pointsy = [p.y for p in data]
 
         self.control.update_trajectory(pointsx, pointsy)
-
-    def run(self):
-
-        if self.control.existPath:
-            self.publish_msg()
-
-        else:
-            rospy.loginfo("Not route yet")
+        self.publish_msg()
 
     def publish_msg(self):
 
@@ -72,6 +68,12 @@ class controlHandle():
         msg = Controls()
         msg.steering.data = di
         msg.accelerator.data = ai
+
+        p = Point()
+        ind = self.control.target_ind
+        p.x = self.control.target_course.cx[ind]
+        p.y = self.control.target_course.cy[ind]
+        self.pub2.publish(p)
 
         rospy.loginfo(msg)
         self.pub.publish(msg)

@@ -1,9 +1,8 @@
-'''
-Script to execute planning node
+"""Script to execute planning node
 
 @author: Mariano del Río
 @date: 20220504
-'''
+"""
 
 from common_msgs.msg import Map
 from common_msgs.msg import Trajectory
@@ -11,19 +10,18 @@ from geometry_msgs.msg import Point
 
 import rospy
 
-from planning import planningSystem
+from planning import PlanningSystem
 
 
-class planningHandle():
-    """
-    Listen map of cones, calculate center track via Delaunay
+class PlanningHandle():
+    """Listen map of cones, calculate center track via Delaunay
     triangulation and publish trajectory message.
     Every message received of cones, a new trajectory is published.
     """
 
     def __init__(self):
 
-        self.planning_system = planningSystem()
+        self.planning_system = PlanningSystem()
 
         self.subscribe_topics()
         self.pub_route = None
@@ -35,28 +33,22 @@ class planningHandle():
 
     def publish_topics(self):
         topic2 = rospy.get_param('/delaunay_detector/topic_route')
-
         self.pub_route = rospy.Publisher(topic2, Trajectory,
                                          queue_size=10)
 
     def get_trajectory(self, msg):
 
         data = msg.cones  # List of cones
-        cones = []
-        for c in data:
-            cone = [c.position.x, c.position.y,
-                    c.color.data, c.probability.data]
-            cones.append(cone)
+        self.planning_system.update_tracklimits(data)
+        self.publish_msg()
 
-        self.planningSystem.update_tracklimits(cones)
-        self.publish_msg(msg)
+    def publish_msg(self):
 
-    def publish_msg(self, msg):
-
-        route, weight = self.planningSystem.calculate_path()
+        route, weight = self.planning_system.calculate_path()
 
         msg = self.transform_to_msg_trajectory(route)
         rospy.loginfo(msg)
+        rospy.loginfo(weight)
         self.pub_route.publish(msg)
 
     def transform_to_msg_trajectory(self, route: list):

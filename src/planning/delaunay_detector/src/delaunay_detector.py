@@ -1,15 +1,13 @@
-'''
-Script to implement delaunay triangulation and
+"""Script to implement delaunay triangulation and
 search path.
 
 @author: Mariano del Río
 @date: 20220902
-'''
+"""
 
 import rospy
 from scipy.spatial import Delaunay
 from treelib import Tree
-import numpy as np
 
 from utils import distance2D, midpoint, get_cos
 
@@ -21,7 +19,7 @@ MAX_COST2 = rospy.get_param('/delaunay_detector/MAX_COST2')
 MAX_DISTANCE = rospy.get_param('/delaunay_detector/MAX_DISTANCE')
 
 
-def contains(p: np.ndarray, points: list):
+def contains(p: tuple, points: list):
 
     value = False
     for c in points:
@@ -32,7 +30,7 @@ def contains(p: np.ndarray, points: list):
     return value
 
 
-def correct_colors(p1: np.ndarray, p2: np.ndarray, y_cones: list,
+def correct_colors(p1: tuple, p2: tuple, y_cones: list,
                    b_cones: list):
 
     value = True
@@ -45,10 +43,9 @@ def correct_colors(p1: np.ndarray, p2: np.ndarray, y_cones: list,
     return value
 
 
-def filter_edge(points: np.ndarray, i1: int, i2: int, y_cones: list,
+def filter_edge(points: list, i1: int, i2: int, y_cones: list,
                 b_cones: list):
-    """
-    Filter edges larger than a maximum distance and edges with
+    """Filter edges larger than a maximum distance and edges with
     cones of the same color.
     """
 
@@ -59,49 +56,46 @@ def filter_edge(points: np.ndarray, i1: int, i2: int, y_cones: list,
     return v
 
 
-def delaunay_triangulation(points: np.ndarray, y_cones: list,
+def delaunay_triangulation(points: list, y_cones: list,
                            b_cones: list):
 
     triangles = Delaunay(points)
-    edges = []
+    midpoints = []
     for t in triangles.simplices:
         if filter_edge(points, t[0], t[1], y_cones, b_cones):
-            edges.append((points[t[0]], points[t[1]]))
+
+            p = midpoint(points[t[0]], points[t[1]])
+            if not contains(p, midpoints):
+                midpoints.append(p)
 
         if filter_edge(points, t[1], t[2], y_cones, b_cones):
-            edges.append((points[t[1]], points[t[2]]))
+
+            p = midpoint(points[t[1]], points[t[2]])
+            if not contains(p, midpoints):
+                midpoints.append(p)
 
         if filter_edge(points, t[0], t[2], y_cones, b_cones):
-            edges.append((points[t[0]], points[t[2]]))
 
-    return edges
-
-
-def calculate_midpoints(edges: list):
-    midpoints = []
-    for p1, p2 in edges:
-        p = midpoint(p1, p2)
-        if not contains(p, midpoints):
-            midpoints.append(p)
+            p = midpoint(points[t[0]], points[t[2]])
+            if not contains(p, midpoints):
+                midpoints.append(p)
 
     return midpoints
 
 
-def cost_function(o_path: list, new_point: np.ndarray):
-    """
-    Cost function to build best path. It takes in account distance
+def cost_function(o_path: list, new_point: tuple):
+    """Cost function to build best path. It takes in account distance
     and angles between midpoints.
     """
 
-    len_path = len(o_path)
     path = o_path.copy()
+    len_path = len(path)
     path.append(new_point)
 
     cost_dist = 0
     cost_angle = 0
 
     cost_dist += distance2D(path[0], path[1])
-
     if len_path > 2:
         for i in range(1, len(path)-1):
             d = distance2D(path[i], path[i+1])
@@ -118,17 +112,14 @@ def cost_function(o_path: list, new_point: np.ndarray):
             d = distance2D(path[i], path[i+1])
             cost_dist += d
 
-    return (cost_dist*W_DISTANCE + cost_angle*W_ANGLE)/len(o_path)
+    return (cost_dist*W_DISTANCE + W_ANGLE*cost_angle)/(len_path+1)
 
 
-def build_path_tree(path: list, points: np.ndarray):
-    """
-    Recursive function (use of build_tree_children) to build a tree
+def build_path_tree(path: list, points: list):
+    """Recursive function (use of build_tree_children) to build a tree
     being nodes next point of path and choose best path according
     to a defined cost function.
     """
-
-    assert len(path) > 0
 
     path_tree = Tree()
     counter = 0  # Counter to identify every node
@@ -151,7 +142,7 @@ def build_path_tree(path: list, points: np.ndarray):
 
     if c1 < MAX_COST1 and t1 is not None:
         # If cost is higher than a max, prune tree
-        new_path = path.copy()
+        new_path = path
         new_path.append(p1)
         new_points = points
         new_points.remove(p1)
@@ -159,7 +150,7 @@ def build_path_tree(path: list, points: np.ndarray):
                                         path_tree, c1)
 
     if c2 < MAX_COST1 and t2 is not None:
-        new_path = path.copy()
+        new_path = path
         new_path.append(p2)
         new_points = points
         new_points.remove(p2)
@@ -169,10 +160,9 @@ def build_path_tree(path: list, points: np.ndarray):
     return path_tree
 
 
-def build_tree_children(path: list, points: np.ndarray, id_parent: int,
+def build_tree_children(path: list, points: list, id_parent: int,
                         tree: Tree, cost: float):
-    """
-    Auxiliar recursive function of build_path_tree.
+    """Auxiliar recursive function of build_path_tree.
     """
 
     counter = id_parent+1
@@ -183,7 +173,7 @@ def build_tree_children(path: list, points: np.ndarray, id_parent: int,
                      parent=id_parent)
 
     # Sorted list of pair (point, cost of path with this point)
-    c_points = sorted([[cost_function(path.copy(), p), p] for p in points])
+    c_points = sorted([[cost_function(path.copy(), p), p] for i, p in enumerate(points)])
 
     # To take in account that it is possible to get less than
     # two elements in list c_points
@@ -206,18 +196,17 @@ def build_tree_children(path: list, points: np.ndarray, id_parent: int,
         tree = build_tree_children(new_path, new_points, counter, tree, c1)
 
     if c2 < MAX_COST2 and t2 is not None:
-        new_path = path.copy()
-        new_path.append(p2)
-        new_points = points.copy()
-        new_points.remove(p2)
-        tree = build_tree_children(new_path, new_points, counter, tree, c2)
+        new_path2 = path.copy()
+        new_path2.append(p2)
+        new_points2 = points.copy()
+        new_points2.remove(p2)
+        tree = build_tree_children(new_path2, new_points2, counter, tree, c2)
 
     return tree
 
 
 def find_best_path(tree: Tree):
-    """
-    Function to choose best path of tree taking in account costs
+    """Function to choose best path of tree taking in account costs
     of every path represented in every leave.
     Cost is accumulated in attribute tag of node.
     """
@@ -229,4 +218,4 @@ def find_best_path(tree: Tree):
         if node.tag < min_node.tag:
             min_node = node
 
-    return np.array(min_node.data), min_node.tag
+    return min_node.data, min_node.tag
