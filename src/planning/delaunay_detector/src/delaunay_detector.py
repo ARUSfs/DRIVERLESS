@@ -8,7 +8,6 @@ search path.
 import rospy
 from scipy.spatial import Delaunay
 from treelib import Tree
-import numpy as np
 
 from utils import distance2D, midpoint, get_cos
 
@@ -18,6 +17,7 @@ W_ANGLE = rospy.get_param('/delaunay_detector/W_ANGLE')
 MAX_COST1 = rospy.get_param('/delaunay_detector/MAX_COST1')
 MAX_COST2 = rospy.get_param('/delaunay_detector/MAX_COST2')
 MAX_DISTANCE = rospy.get_param('/delaunay_detector/MAX_DISTANCE')
+
 
 def contains(p: tuple, points: list):
 
@@ -64,13 +64,13 @@ def delaunay_triangulation(points: list, y_cones: list,
     for t in triangles.simplices:
         if filter_edge(points, t[0], t[1], y_cones, b_cones):
 
-            p = midpoint(points[t[0]], points[t[2]])
+            p = midpoint(points[t[0]], points[t[1]])
             if not contains(p, midpoints):
                 midpoints.append(p)
 
         if filter_edge(points, t[1], t[2], y_cones, b_cones):
 
-            p = midpoint(points[t[0]], points[t[2]])
+            p = midpoint(points[t[1]], points[t[2]])
             if not contains(p, midpoints):
                 midpoints.append(p)
 
@@ -95,13 +95,12 @@ def cost_function(o_path: list, new_point: tuple):
     cost_dist = 0
     cost_angle = 0
 
-
     cost_dist += distance2D(path[0], path[1])
     if len_path > 2:
         for i in range(1, len(path)-1):
             d = distance2D(path[i], path[i+1])
             a = get_cos(path[i-1], path[i], path[i+1])
-            if a > -0.66:
+            if a > 0:
                 a = 10000
             if d > 10:
                 d = 10000
@@ -113,7 +112,7 @@ def cost_function(o_path: list, new_point: tuple):
             d = distance2D(path[i], path[i+1])
             cost_dist += d
 
-    return (cost_dist*W_DISTANCE + cost_angle*W_ANGLE)/(len_path+1)
+    return (cost_dist*W_DISTANCE + W_ANGLE*cost_angle)/(len_path+1)
 
 
 def build_path_tree(path: list, points: list):
@@ -141,7 +140,7 @@ def build_path_tree(path: list, points: list):
         t1 = c_points[0]
         c1, p1 = t1
 
-    if c1 < MAX_COST1 and t1 != None:
+    if c1 < MAX_COST1 and t1 is not None:
         # If cost is higher than a max, prune tree
         new_path = path
         new_path.append(p1)
@@ -150,7 +149,7 @@ def build_path_tree(path: list, points: list):
         path_tree = build_tree_children(new_path, new_points, counter,
                                         path_tree, c1)
 
-    if c2 < MAX_COST1 and t2 != None:
+    if c2 < MAX_COST1 and t2 is not None:
         new_path = path
         new_path.append(p2)
         new_points = points
@@ -174,7 +173,7 @@ def build_tree_children(path: list, points: list, id_parent: int,
                      parent=id_parent)
 
     # Sorted list of pair (point, cost of path with this point)
-    c_points = sorted([[cost_function(path.copy(), p), p] for i,p in enumerate(points)])
+    c_points = sorted([[cost_function(path.copy(), p), p] for i, p in enumerate(points)])
 
     # To take in account that it is possible to get less than
     # two elements in list c_points
@@ -188,7 +187,7 @@ def build_tree_children(path: list, points: list, id_parent: int,
         t1 = c_points[0]
         c1, p1 = t1
 
-    if c1 < MAX_COST2 and t1 != None:
+    if c1 < MAX_COST2 and t1 is not None:
         # If cost is higher than a max, prune tree
         new_path = path.copy()
         new_path.append(p1)
@@ -196,7 +195,7 @@ def build_tree_children(path: list, points: list, id_parent: int,
         new_points.remove(p1)
         tree = build_tree_children(new_path, new_points, counter, tree, c1)
 
-    if c2 < MAX_COST2 and t2 != None:
+    if c2 < MAX_COST2 and t2 is not None:
         new_path2 = path.copy()
         new_path2.append(p2)
         new_points2 = points.copy()

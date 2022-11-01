@@ -4,12 +4,9 @@
 @date: 20220320
 """
 
-import numpy as np
-
 from delaunay_detector import delaunay_triangulation
 from delaunay_detector import build_path_tree
 from delaunay_detector import find_best_path
-
 from utils import spline
 
 
@@ -36,7 +33,7 @@ class PlanningSystem():
         self.tl_right = []
 
         for c in cones:
-            if c.probability.data > 0.9 and c.position.x>0:
+            if c.probability.data > 0.9:
                 if c.color.data == 'b':
                     self.tl_left.append((c.position.x, c.position.y))
                 elif c.color.data == 'y':
@@ -51,7 +48,7 @@ class PlanningSystem():
         midpoints = delaunay_triangulation(points, self.tl_left, self.tl_right)
         tree = build_path_tree(path, midpoints)
         path, weight = find_best_path(tree)
-        #path = spline(np.array(path))
+        # path = spline(np.array(path))
         self.path = path
 
         return self.path, weight

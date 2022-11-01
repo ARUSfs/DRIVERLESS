@@ -6,7 +6,6 @@
 
 import rospy
 import numpy as np
-import math
 from scipy.interpolate import splprep, splev
 
 NUM_POINTS = rospy.get_param('/delaunay_detector/NUM_POINTS')
@@ -21,11 +20,11 @@ def spline(trajectory: np.ndarray):
     return x, y
 
 
-def distance2D(p1:tuple, p2:tuple):
+def distance2D(p1: tuple, p2: tuple):
     return np.linalg.norm(np.array(p1)-np.array(p2))
 
 
-def get_cos(p1:tuple, p2:tuple, p3:tuple):
+def get_cos(p1: tuple, p2: tuple, p3: tuple):
 
     v1 = np.array(p2) - np.array(p1)
     v2 = np.array(p3) - np.array(p2)
@@ -35,5 +34,5 @@ def get_cos(p1:tuple, p2:tuple, p3:tuple):
     return (-1)*cos
 
 
-def midpoint(p1:tuple, p2:tuple):
-    return ((p1[0]+p2[0])/2,(p1[1]+p2[1])/2)
+def midpoint(p1: tuple, p2: tuple):
+    return ((p1[0]+p2[0])/2, (p1[1]+p2[1])/2)

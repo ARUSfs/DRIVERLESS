@@ -7,8 +7,6 @@
 from common_msgs.msg import Map
 from common_msgs.msg import Trajectory
 from geometry_msgs.msg import Point
-from sensor_msgs.msg import PointCloud2
-from sensor_msgs import point_cloud2
 
 import rospy
 
@@ -50,7 +48,7 @@ class PlanningHandle():
 
         msg = self.transform_to_msg_trajectory(route)
         rospy.loginfo(msg)
-        print("Weight -> ", weight)
+        rospy.loginfo(weight)
         self.pub_route.publish(msg)
 
     def transform_to_msg_trajectory(self, route: list):
