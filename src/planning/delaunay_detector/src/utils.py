@@ -6,7 +6,7 @@
 
 import rospy
 import numpy as np
-from scipy.interpolate import splprep, splev
+import scipy.interpolate as si
 
 NUM_POINTS = rospy.get_param('/delaunay_detector/NUM_POINTS')
 DEGREE = rospy.get_param('/delaunay_detector/DEGREE')
@@ -14,18 +14,34 @@ DEGREE = rospy.get_param('/delaunay_detector/DEGREE')
 
 def spline(trajectory: np.ndarray):
 
-    tck, u = splprep(trajectory.T, s=0.0, k=DEGREE)
-    x = np.linspace(u.min(), u.max(), NUM_POINTS)
-    x, y = splev(x, tck)
-    return x, y
+    x = trajectory[:, 0]
+    y = trajectory[:, 1]
+
+    n = len(x)
+    if n > 3:
+        knotspace = range(n)
+
+        knots = si.InterpolatedUnivariateSpline(knotspace, knotspace, k=DEGREE).get_knots()
+        knots_full = np.concatenate(([knots[0]]*DEGREE, knots, [knots[-1]]*DEGREE))
+        tckX = knots_full, x, DEGREE
+        tckY = knots_full, y, DEGREE
+        splineX = si.UnivariateSpline._from_tck(tckX)
+        splineY = si.UnivariateSpline._from_tck(tckY)
+
+        tp = np.linspace(knotspace[0], knotspace[-1], NUM_POINTS)
+        xp = splineX(tp)
+        yp = splineY(tp)
+    else:
+        xp, yp = x, y
+
+    return zip(xp, yp)
 
 
 def distance2D(p1: tuple, p2: tuple):
-    return np.linalg.norm(np.array(p1)-np.array(p2))
+    return np.linalg.norm(np.array(p1) - np.array(p2))
 
 
 def get_cos(p1: tuple, p2: tuple, p3: tuple):
-
     v1 = np.array(p2) - np.array(p1)
     v2 = np.array(p3) - np.array(p2)
     v1_mod = np.linalg.norm(v1)
