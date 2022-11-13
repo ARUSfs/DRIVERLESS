@@ -55,8 +55,6 @@ def getPoints(string):
 
 
 def prep_image(image, target_image_size):
-
-    h, w, _ = image.shape
     image = cv2.resize(image, target_image_size)
     return image
 

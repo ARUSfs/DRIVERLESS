@@ -17,9 +17,10 @@ import numpy as np
 
 from detector.utils import darknet
 from detector import YoloDetector
-from keypoints import keypoint_detector
+from keypoints.keypoint_detector import keypoint_detector
 
 
+import rospy
 @dataclass
 class CameraConfig:
     camera_mat: np.ndarray
@@ -28,10 +29,14 @@ class CameraConfig:
     img_format: str
 
     def from_param(cam_info):
-        return CameraConfig(np.array(cam_info["camera_mat"]),
-                            np.array(cam_info["dist_coefs"]),
-                            np.array(cam_info["homography_mat"]),
-                            cam_info["img_format"])
+        camera_mat = np.array(cam_info["camera_mat"]).reshape((3, 3))
+        dist_coefs = np.array(cam_info["dist_coefs"])
+        homography_mat = np.array(cam_info["homography_mat"]).reshape((3, 3))
+        conf =  CameraConfig(camera_mat,
+                             dist_coefs,
+                             homography_mat,
+                             cam_info["img_format"])
+        return conf
 
 
 class Estimator:
@@ -53,28 +58,33 @@ class Estimator:
 
         detections = self.yolo_detector.predict_from_image(img)
 
-        keypoint_list = list()
+        map_list = list()
 
         for class_name, confidence, bbox in detections:
             xmin, ymin, xmax, ymax = darknet.bbox2points(bbox)
-            cone_bbox_img = img[xmin:xmax, ymin:ymax]
+            if xmin < 0 or ymin < 0:
+                rospy.logerr("Minimo erroneo {} {}".format(xmin, ymin))
+            if xmax < 0 or ymax < 0:
+                rospy.logerr("Maximo erroneo {} {}".format(xmax, ymax))
+            cone_bbox_img = img[ymin:ymax, xmin:xmax]
 
             # keypoints relative to bounding box
             kpts_relative = self.kpt_detector.get_keypoint_from_image(cone_bbox_img)
 
             # keypoints relative to whole image
-            kpts_absolute = kpts_relative + np.array([[xmin, ymin]])
+            kpts_absolute = kpts_relative + np.array([[xmin, ymin]], dtype=np.float32)
 
             # Right now, we only apply homography to the vertex of the cone. Detecting 7 kpts
             # is unnecesary, but is left for future use.
             vertex_point = kpts_absolute[0, :]
 
-            undistorted_vertex_point = cv2.undistortPoints(vertex_point,
+            undistorted_vertex_point = cv2.undistortPoints(vertex_point.T,
                                                            self.cam_conf.camera_mat,
                                                            self.cam_conf.dist_coefs)
 
-            map_point = self.cam_conf.homography_mat @ np.append(undistorted_vertex_point, 1)
+            map_point = self.cam_conf.homography_mat @ np.append(undistorted_vertex_point.T, 1)
 
             map_point = map_point / map_point[2]  # We normalize the affine point
 
-            keypoint_list.append((class_name, confidence, (map_point[0], map_point[1])))
+            map_list.append((class_name, confidence, (map_point[0], map_point[1])))
+        return map_list
