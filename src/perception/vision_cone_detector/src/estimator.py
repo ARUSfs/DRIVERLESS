@@ -27,6 +27,12 @@ class CameraConfig:
     homography_mat: np.ndarray
     img_format: str
 
+    def from_param(cam_info):
+        return CameraConfig(np.array(cam_info["camera_mat"]),
+                            np.array(cam_info["dist_coefs"]),
+                            np.array(cam_info["homography_mat"]),
+                            cam_info["img_format"])
+
 
 class Estimator:
     def __init__(self,
@@ -36,24 +42,14 @@ class Estimator:
                  kpt_num: int,
                  kpt_weights: Union[str, bytes, os.PathLike],
                  kpt_img_size: Tuple[int, int],
-                 cameras: dict[str, CameraConfig]):
+                 camera: CameraConfig):
 
         self.yolo_detector = YoloDetector(yolo_cfg, yolo_data, yolo_weights)
         self.kpt_detector = keypoint_detector(kpt_num, kpt_weights, kpt_img_size)
-        self.cameras = cameras
+        self.cam_conf = camera
 
-    def get_from_identifier(self,
-                            camera_identifier: str,
-                            img: np.ndarray) -> List[Tuple[str, float, Tuple[float, float]]]:
-        cam_conf = self.cameras[camera_identifier]
-        if cam_conf.img_format == 'RGB':
-            pass
-        elif cam_conf.img_format == 'BRG':
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        else:
-            raise NotImplementedError("At this moment only RGB and BRG formats\
-                                      are supported. Inputed image format is {}."
-                                      .format(cam_conf.img_format))
+    def map_from_image(self,
+                       img: np.ndarray) -> List[Tuple[str, float, Tuple[float, float]]]:
 
         detections = self.yolo_detector.predict_from_image(img)
 
@@ -74,9 +70,11 @@ class Estimator:
             vertex_point = kpts_absolute[0, :]
 
             undistorted_vertex_point = cv2.undistortPoints(vertex_point,
-                                                           cam_conf.camera_mat,
-                                                           cam_conf.dist_coefs)
+                                                           self.cam_conf.camera_mat,
+                                                           self.cam_conf.dist_coefs)
 
-            map_point = cam_conf.homography_mat @ np.append(undistorted_vertex_point, 1)
+            map_point = self.cam_conf.homography_mat @ np.append(undistorted_vertex_point, 1)
+
+            map_point = map_point / map_point[2]  # We normalize the affine point
 
             keypoint_list.append((class_name, confidence, (map_point[0], map_point[1])))

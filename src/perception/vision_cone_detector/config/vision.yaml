@@ -1,0 +1,21 @@
+yolo:
+  - cfg: "path to cfg"
+  - data: "path to darknet data"
+  - weights: "path to weights"
+
+kpt:
+  - num: 7
+  - weights: "path to weights"
+  - img_size: 80, 80
+
+camera:
+  - topic: "/camera/camera0"
+  - device: "/dev/camera0"
+  - camera_mat: [1, 0, 0,
+                 0, 1, 0,
+                 0, 1, 1]
+  - dist_coefs: [0, 0, 0, 0, 0]
+  - homography_mat: [1, 0, 0,
+                     0, 1, 0,
+                     0, 1, 1]
+  - img_format: "BRG"
