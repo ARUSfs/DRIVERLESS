@@ -9,6 +9,8 @@ from delaunay_detector import build_path_tree
 from delaunay_detector import find_best_path
 from utils import spline
 
+import numpy as np
+
 
 class PlanningSystem():
     """Update tracklimits with new cones detected, calculate
@@ -48,7 +50,7 @@ class PlanningSystem():
         midpoints = delaunay_triangulation(points, self.tl_left, self.tl_right)
         tree = build_path_tree(path, midpoints)
         path, weight = find_best_path(tree)
-        # path = spline(np.array(path))
+        path = spline(np.array(path))
         self.path = path
 
         return self.path, weight
