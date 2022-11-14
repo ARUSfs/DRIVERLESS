@@ -31,10 +31,10 @@ class CameraConfig:
         camera_mat = np.array(cam_info["camera_mat"]).reshape((3, 3))
         dist_coefs = np.array(cam_info["dist_coefs"])
         homography_mat = np.array(cam_info["homography_mat"]).reshape((3, 3))
-        conf =  CameraConfig(camera_mat,
-                             dist_coefs,
-                             homography_mat,
-                             cam_info["img_format"])
+        conf = CameraConfig(camera_mat,
+                            dist_coefs,
+                            homography_mat,
+                            cam_info["img_format"])
         return conf
 
 
