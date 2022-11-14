@@ -134,7 +134,12 @@ def calibrate_from_chessboard(directory, progress_bar=False):
             objpoints.append(objp)
 
     try:
-        ret, mtx, dist, _, _ = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
+        ret, mtx, dist, _, _ = cv2.calibrateCamera(objpoints,
+                                                   imgpoints,
+                                                   gray.shape[::-1],
+                                                   None,
+                                                   None)
         return mtx, dist
-    except:
-        raise Exception("None of the provided images are valid. Check that the full 8x8 grid is visible with high enough contrast")
+    except cv2.Exception:
+        raise Exception("None of the provided images are valid. Check that the full 8x8 grid is \
+                         visible with high enough contrast")

@@ -11,10 +11,10 @@ from tqdm import tqdm
 import torch
 from torch.utils.data import DataLoader
 
-from utils import draw_and_save_graphic
-from dataset import ConeDataset
-from cross_ratio_loss import CrossRatioLoss
-from utils import get_scale, unscale_labels
+from .utils import draw_and_save_graphic
+from .dataset import ConeDataset
+from .cross_ratio_loss import CrossRatioLoss
+from .utils import get_scale, unscale_labels
 
 
 def train_model(kNet, epochs, dataset_images_path,

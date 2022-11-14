@@ -11,7 +11,7 @@ from torch.utils.data import Dataset
 import numpy as np
 import cv2
 
-from utils import get_labels, get_scale, scale_labels, prep_image, prep_label
+from .utils import get_labels, get_scale, scale_labels, prep_image, prep_label
 
 
 class ConeDataset(Dataset):

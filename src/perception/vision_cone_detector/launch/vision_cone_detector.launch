@@ -1,6 +1,10 @@
 <launch>
-  <node pkg="vision_cone_detector" name="" type="main.py">
-  <rosparam command="load" file="$(find vision_cone_detector)/config/vision.yaml"/>
+  <node pkg="cv_camera" type="cv_camera_node" name="cam">
+    <param name="rate" value="10.0"/>
+    <param name="file" value="/home/jacobo/Downloads/C-ART/vid.mp4"/>
+  </node>
+  <node pkg="vision_cone_detector" name="vision_cone_detector" type="main.py">
+    <rosparam command="load" file="$(find vision_cone_detector)/config/vision.yaml"/>
   </node>
 
 </launch>

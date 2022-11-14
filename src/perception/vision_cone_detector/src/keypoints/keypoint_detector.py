@@ -13,9 +13,9 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
-from net_train import train_model, evaluate_model
-from dataset import Dataset_for_test
-from net_architecture import KeypointNet
+from .net_train import train_model, evaluate_model
+from .dataset import Dataset_for_test
+from .net_architecture import KeypointNet
 
 
 class keypoint_detector():
@@ -28,7 +28,7 @@ class keypoint_detector():
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.kNet = KeypointNet(target_image_size, num_kpt).to(self.device)
         if path_weights is not None:
-            self.kNet.load_state_dict(torch.load(path_weights))
+            self.kNet.load_state_dict(torch.load(path_weights, map_location=self.device))
 
         self.target_image_size = target_image_size
         self.num_kpt = num_kpt
