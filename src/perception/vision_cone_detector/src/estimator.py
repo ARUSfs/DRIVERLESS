@@ -20,7 +20,6 @@ from detector import YoloDetector
 from keypoints.keypoint_detector import keypoint_detector
 
 
-import rospy
 @dataclass
 class CameraConfig:
     camera_mat: np.ndarray
@@ -62,10 +61,11 @@ class Estimator:
 
         for class_name, confidence, bbox in detections:
             xmin, ymin, xmax, ymax = darknet.bbox2points(bbox)
-            if xmin < 0 or ymin < 0:
-                rospy.logerr("Minimo erroneo {} {}".format(xmin, ymin))
-            if xmax < 0 or ymax < 0:
-                rospy.logerr("Maximo erroneo {} {}".format(xmax, ymax))
+            # Due to ronding errors, boxes may fall outside the image
+            xmin = max(0, xmin)
+            ymin = max(0, ymin)
+            xmax = min(xmax, img.shape[1] - 1)
+            ymax = min(ymax, img.shape[0] - 1)
             cone_bbox_img = img[ymin:ymax, xmin:xmax]
 
             # keypoints relative to bounding box
@@ -86,5 +86,5 @@ class Estimator:
 
             map_point = map_point / map_point[2]  # We normalize the affine point
 
-            map_list.append((class_name, confidence, (map_point[0], map_point[1])))
+            map_list.append((class_name, float(confidence), (map_point[0], map_point[1])))
         return map_list

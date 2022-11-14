@@ -8,6 +8,7 @@ import cv2
 import rospy
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import Point
+from std_msgs.msg import Header
 from cv_bridge import CvBridge
 
 from estimator import Estimator, CameraConfig
@@ -38,7 +39,13 @@ class EstimatorHandle():
         self.pub = rospy.Publisher("/vision_cone_detector/estimated_map", Map, queue_size=10)
 
     def camera_callback(self, msg: Image):
-        rospy.logerr("received========================================")
+        pub_map = Map()
+        # The timestamp is the same as the camera's to ignore inference time when using
+        # tf2 and other time dependent transforms.
+        pub_map.header = Header()
+        pub_map.header.stamp = msg.header.stamp
+        pub_map.header.frame_id = "camera_2d"
+
         encoding = "passthrough" if camera["img_format"] == "RGB" else "rgb8"
         image = CvBridge().imgmsg_to_cv2(msg, desired_encoding=encoding)
         if image.shape != (1088, 1920, 3):
@@ -46,9 +53,7 @@ class EstimatorHandle():
 
         estimated_points = self.estimator.map_from_image(image)
 
-        pub_map = Map()
         pub_map.cones = list()
-
         for color, confidence, (x, y) in estimated_points:
             cone = Cone()
             cone.position = Point()
@@ -71,4 +76,3 @@ class EstimatorHandle():
             pub_map.cones.append(cone)
 
         self.pub.publish(pub_map)
-        rospy.logerr("sent////////////////////////////////////////////////////////")
