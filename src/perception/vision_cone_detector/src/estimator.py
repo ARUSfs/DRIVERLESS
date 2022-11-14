@@ -86,5 +86,5 @@ class Estimator:
 
             map_point = map_point / map_point[2]  # We normalize the affine point
 
-            map_list.append((class_name, float(confidence), (map_point[0], map_point[1])))
+            map_list.append((class_name, float(confidence)/100, (map_point[0], map_point[1])))
         return map_list

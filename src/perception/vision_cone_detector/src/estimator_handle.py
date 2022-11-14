@@ -72,7 +72,7 @@ class EstimatorHandle():
             else:
                 cone.color = 'u'
 
-            cone.probability = confidence
+            cone.confidence = confidence
             pub_map.cones.append(cone)
 
         self.pub.publish(pub_map)
