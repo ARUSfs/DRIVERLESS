@@ -66,14 +66,14 @@ class transformerFssim():
             maxp = np.where(prob == np.amax(prob))[0][0]
 
             if maxp == 0:  # blue
-                cone.color.data = 'b'
-                cone.probability.data = prob[0]
+                cone.color = 'b'
+                cone.confidence = prob[0]
             elif maxp == 1:  # yellow
-                cone.color.data = 'y'
-                cone.probability.data = prob[1]
+                cone.color = 'y'
+                cone.confidence = prob[1]
             if maxp == 2:  # orange
-                cone.color.data = 'o'
-                cone.probability.data = prob[2]
+                cone.color = 'o'
+                cone.confidence = prob[2]
 
             msg_map.cones.append(cone)
 
@@ -83,15 +83,15 @@ class transformerFssim():
     def send_state(self, msg):
 
         state = CarState()
-        state.x.data = msg.x
-        state.y.data = msg.y
-        state.z.data = 0
-        state.yaw.data = msg.yaw
-        state.roll.data = 0
-        state.pitch.data = 0
-        state.vx.data = msg.vx
-        state.vy.data = msg.vy
-        state.vz.data = 0
+        state.x = msg.x
+        state.y = msg.y
+        state.z = 0
+        state.yaw = msg.yaw
+        state.roll = 0
+        state.pitch = 0
+        state.vx = msg.vx
+        state.vy = msg.vy
+        state.vz = 0
 
         rospy.loginfo(state)
         self.pub_state.publish(state)
@@ -99,8 +99,8 @@ class transformerFssim():
     def send_controllers(self, msg):
 
         cmd = Cmd()
-        cmd.dc = msg.accelerator.data
-        cmd.delta = msg.steering.data
+        cmd.dc = msg.accelerator
+        cmd.delta = msg.steering
 
         rospy.loginfo(cmd)
         self.pub_cmd.publish(cmd)

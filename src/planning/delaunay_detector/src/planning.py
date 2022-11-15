@@ -35,10 +35,10 @@ class PlanningSystem():
         self.tl_right = []
 
         for c in cones:
-            if c.probability.data > 0.9:
-                if c.color.data == 'b':
+            if c.confidence > 0.9:
+                if c.color == 'b':
                     self.tl_left.append((c.position.x, c.position.y))
-                elif c.color.data == 'y':
+                elif c.color == 'y':
                     self.tl_right.append((c.position.x, c.position.y))
 
     def calculate_path(self):

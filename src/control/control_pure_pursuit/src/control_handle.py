@@ -45,10 +45,10 @@ class ControlHandle():
 
     def update_state_callback(self, msg):
 
-        x = msg.x.data
-        y = msg.y.data
-        yaw = msg.yaw.data
-        v = math.sqrt((msg.vx.data**2 + msg.vy.data**2))
+        x = msg.x
+        y = msg.y
+        yaw = msg.yaw
+        v = math.sqrt((msg.vx**2 + msg.vy**2))
 
         self.control.update_state(rospy.Time.now(), x, y, yaw, v)
 
@@ -66,8 +66,8 @@ class ControlHandle():
 
         ai, di = self.control.get_cmd()
         msg = Controls()
-        msg.steering.data = di
-        msg.accelerator.data = ai
+        msg.steering = di
+        msg.accelerator = ai
 
         p = Point()
         ind = self.control.target_ind
