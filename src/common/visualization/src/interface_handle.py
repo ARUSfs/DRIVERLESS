@@ -45,7 +45,7 @@ class InterfaceHandle():
         data = msg.cones  # List of cones
         cones = []
         for c in data:
-            cone = [c.position.x, c.position.y, c.color.data, c.probability.data]
+            cone = [c.position.x, c.position.y, c.color, c.confidence]
             cones.append(cone)
 
         self.draw(cones)

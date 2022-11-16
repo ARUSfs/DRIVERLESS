@@ -1,7 +1,7 @@
 std_msgs/Header header
 
-std_msgs/Float64 steering
-std_msgs/Float64 accelerator
+float64 steering
+float64 accelerator
 
 
 
