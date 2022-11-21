@@ -23,15 +23,27 @@ from keypoints.keypoint_detector import keypoint_detector
 @dataclass
 class CameraConfig:
     camera_mat: np.ndarray
+    inv_camera_mat: np.ndarray
+    new_camera_mat: np.ndarray
     dist_coefs: np.ndarray
     homography_mat: np.ndarray
     img_format: str
 
     def from_param(cam_info):
         camera_mat = np.array(cam_info["camera_mat"]).reshape((3, 3))
+
+        inv_camera_mat = camera_mat.copy()
+        inv_camera_mat[0, 0] = 1/camera_mat[0, 0]
+        inv_camera_mat[1, 1] = 1/camera_mat[1, 1]
+        inv_camera_mat[0, 2] = -camera_mat[0, 2]/camera_mat[0, 0]
+        inv_camera_mat[1, 2] = -camera_mat[1, 2]/camera_mat[1, 1]
+
         dist_coefs = np.array(cam_info["dist_coefs"])
         homography_mat = np.array(cam_info["homography_mat"]).reshape((3, 3))
+        new_camera_mat = cv2.getOptimalNewCameraMatrix(camera_mat, dist_coefs, (1920, 1088), 0)[0]
         conf = CameraConfig(camera_mat,
+                            inv_camera_mat,
+                            new_camera_mat,
                             dist_coefs,
                             homography_mat,
                             cam_info["img_format"])
@@ -55,6 +67,12 @@ class Estimator:
     def map_from_image(self,
                        img: np.ndarray) -> List[Tuple[str, float, Tuple[float, float]]]:
 
+        if img.shape != (1088, 1920, 3):
+            img = cv2.resize(img, (1920, 1088))
+        img = cv2.undistort(img, self.cam_conf.camera_mat,
+                            self.cam_conf.dist_coefs, None,
+                            self.cam_conf.new_camera_mat)
+
         detections = self.yolo_detector.predict_from_image(img)
 
         map_list = list()
@@ -76,13 +94,9 @@ class Estimator:
 
             # Right now, we only apply homography to the vertex of the cone. Detecting 7 kpts
             # is unnecesary, but is left for future use.
-            vertex_point = kpts_absolute[0, :]
+            vertex_point = np.append(kpts_absolute[0, :].T, 1)
 
-            undistorted_vertex_point = cv2.undistortPoints(vertex_point.T,
-                                                           self.cam_conf.camera_mat,
-                                                           self.cam_conf.dist_coefs)
-
-            map_point = self.cam_conf.homography_mat @ np.append(undistorted_vertex_point.T, 1)
+            map_point = self.cam_conf.homography_mat @ self.cam_conf.inv_camera_mat @ vertex_point
 
             map_point = map_point / map_point[2]  # We normalize the affine point
 

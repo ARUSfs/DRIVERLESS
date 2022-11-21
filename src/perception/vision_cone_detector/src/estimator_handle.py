@@ -48,8 +48,6 @@ class EstimatorHandle():
 
         encoding = "passthrough" if camera["img_format"] == "RGB" else "rgb8"
         image = CvBridge().imgmsg_to_cv2(msg, desired_encoding=encoding)
-        if image.shape != (1088, 1920, 3):
-            image = cv2.resize(image, (1920, 1088))
 
         estimated_points = self.estimator.map_from_image(image)
 
