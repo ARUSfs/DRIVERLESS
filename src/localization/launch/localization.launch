@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="localization" name="cara_broadcaster" type="main.py">
+  </node>
+</launch>
