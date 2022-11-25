@@ -34,7 +34,7 @@ class PlanningHandle():
     def publish_topics(self):
         topic2 = rospy.get_param('/delaunay_detector/topic_route')
         self.pub_route = rospy.Publisher(topic2, Trajectory,
-                                         queue_size=10)
+                                         queue_size=1)
 
     def get_trajectory(self, msg):
 
