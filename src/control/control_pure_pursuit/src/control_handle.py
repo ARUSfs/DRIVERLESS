@@ -5,10 +5,12 @@
 """
 
 import rospy
-import math
+import tf2_ros
+import tf_conversions
 
-from common_msgs.msg import Controls, Trajectory, CarState
+from common_msgs.msg import Controls, Trajectory
 from geometry_msgs.msg import Point
+from common_msgs.srv import Spawn
 from control import ControlCar
 
 
@@ -27,13 +29,18 @@ class ControlHandle():
         self.pub2 = None
         self.publish_topics()
 
+        self.tfBuffer = tf2_ros.Buffer()
+        tf2_ros.TransformListener(self.tfBuffer)
+
+        rospy.wait_for_service('spawn')
+        spawner = rospy.ServiceProxy('spawn', Spawn)
+        name = 'local_map'  # Name of frame
+        spawner(4, 2, 0, name)
+
     def subscribe_topics(self):
 
         topic1 = rospy.get_param('/control_pure_pursuit/route_topic')
         rospy.Subscriber(topic1, Trajectory, self.update_trajectory_callback)
-
-        topic2 = rospy.get_param('/control_pure_pursuit/state_topic')
-        rospy.Subscriber(topic2, CarState, self.update_state_callback)
 
     def publish_topics(self):
 
@@ -43,12 +50,27 @@ class ControlHandle():
         topic_pursuit = rospy.get_param('/control_pure_pursuit/pursuit_topic')
         self.pub2 = rospy.Publisher(topic_pursuit, Point, queue_size=10)
 
-    def update_state_callback(self, msg):
+    def update_state(self):
 
-        x = msg.x
-        y = msg.y
-        yaw = msg.yaw
-        v = math.sqrt((msg.vx**2 + msg.vy**2))
+        origin_frame = 'local_map'
+        target_frame = 'global_map'
+        trans = self.tfBuffer.lookup_transform(origin_frame,
+                                               target_frame,
+                                               rospy.Time.now(),
+                                               rospy.Duration(1.0))
+
+        # Read system reference data from TF
+        x = trans.transform.translation.x
+        y = trans.transform.translation.y
+
+        q = (trans.transform.rotation.x,
+             trans.transform.rotation.y,
+             trans.transform.rotation.z,
+             trans.transform.rotation.w)
+        euler_angles = tf_conversions.transformations.euler_from_quaternion(q)
+        yaw = euler_angles[2]
+
+        v = 0  # Not using velocity now.
 
         self.control.update_state(rospy.Time.now(), x, y, yaw, v)
 
@@ -63,6 +85,8 @@ class ControlHandle():
         self.publish_msg()
 
     def publish_msg(self):
+
+        self.update_state()
 
         ai, di = self.control.get_cmd()
         msg = Controls()
