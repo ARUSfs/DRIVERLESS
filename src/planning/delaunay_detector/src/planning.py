@@ -1,56 +1,39 @@
-"""Script to implement main planning class to get route.
-
-@author: Mariano del Río
-@date: 20220320
 """
+Class to get middle route from estimated circuit
 
-from delaunay_detector import delaunay_triangulation
-from delaunay_detector import build_path_tree
-from delaunay_detector import find_best_path
-from utils import spline
 
+@author: Jacobo Pindado
+@date: 20221130
+"""
+from itertools import permutations
+
+from scipy.spatial import Delaunay
 import numpy as np
 
+MAX_DISTANCE = 5
 
 class PlanningSystem():
     """Update tracklimits with new cones detected, calculate
     new path via Delaunay triangulation and smooth it with
     spline.
     """
+    ORIGIN = (0.0, 0.0)
 
     def __init__(self):
-
-        self.origin = (0.0, 0.0)
-        self.tl_left = []
-        self.tl_right = []
-
+        self.cones = None
         self.path = None
 
     def update_tracklimits(self, cones: list):
-
-        # Renew path every tracklimits update (Local system)
-        self.path = []
-        self.path.append(self.origin)
-        self.tl_left = []
-        self.tl_right = []
-
+        self.path = list(ORIGIN)
+        cone_points = list()
         for c in cones:
             if c.confidence > 0.9:
-                if c.color == 'b':
-                    self.tl_left.append((c.position.x, c.position.y))
-                elif c.color == 'y':
-                    self.tl_right.append((c.position.x, c.position.y))
+                cone_points.append((c.position.x, c.position.y))
 
     def calculate_path(self):
+        triangles = Delaunay(self.cones)
 
-        path = self.path.copy()
-
-        points = self.tl_left + self.tl_right
-
-        midpoints = delaunay_triangulation(points, self.tl_left, self.tl_right)
-        tree = build_path_tree(path, midpoints)
-        path, weight = find_best_path(tree)
-        path = spline(np.array(path))
-        self.path = path
-
-        return self.path, weight
+        for simplex in triangles.simplices:
+            for p1, p2 in permutations(simplex, 2):
+                if np.linalg.norm(p2 - p1) > MAX_DISTANCE:
+                    triangles.add_points
