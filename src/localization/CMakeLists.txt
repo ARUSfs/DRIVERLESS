@@ -10,6 +10,8 @@ project(localization)
 find_package(catkin REQUIRED COMPONENTS
   rospy
   sbg_driver
+  tf2_ros
+  tf2
 )
 
 catkin_package(
