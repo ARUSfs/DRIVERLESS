@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """Script to initialize interface node
 
 @author: Mariano del Río
