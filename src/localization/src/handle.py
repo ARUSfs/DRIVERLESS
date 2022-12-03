@@ -28,7 +28,7 @@ class localization():
     def publish_topics(self):
         self.pub = rospy.Publisher("vel_state", velState, queue_size=1)
         self.pub = rospy.Publisher("gps position", GpsPos, queue_size=1)
-        
+
 
     def send_velocity(self, msg):
         vel = velState()
@@ -53,10 +53,3 @@ class localization():
         #t.header.stamp = rospy.Time.now() # Marca de tiempo
         #t.header.frame_id = "position" #Nombre del marco padre
         #t.child_frame_id = position
-
-        
-
-
-        
-	
-
