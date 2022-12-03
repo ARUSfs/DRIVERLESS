@@ -7,12 +7,18 @@ Class to get middle route from estimated circuit
 """
 from itertools import combinations
 
+import rospy
+import numpy as np
 from scipy.spatial import Delaunay
 from sklearn.neighbors import NearestNeighbors
-import numpy as np
-import rospy
 
-MAX_DISTANCE = 9
+from common_msgs.msg import Simplex, Triangulation
+from geometry_msgs.msg import Point
+from visualization_msgs.msg import Marker
+
+from utils import spline
+
+MAX_DISTANCE = 8
 
 
 class PlanningSystem():
@@ -27,6 +33,11 @@ class PlanningSystem():
         self.colours = None
         self.path = None
         self.distances = None
+
+        self.delaunay_publisher = rospy.Publisher('/delaunay_detector/simplices',
+                                                  Triangulation,
+                                                  queue_size=1)
+
 
     def update_tracklimits(self, cones: list):
         self.colours = list()
@@ -54,6 +65,7 @@ class PlanningSystem():
                         preproc_simplices.append(simplex)
                         break
 
+        self.publish_delaunay_triangles(preproc_simplices)
         midpoints = np.array(midpoints)
         neighbors = NearestNeighbors(n_neighbors=7, algorithm='auto').fit(midpoints)
 
@@ -87,3 +99,18 @@ class PlanningSystem():
             distance = np.linalg.norm(p1 - p2)
             self.distances[(p1b, p2b)] = distance
             return distance
+
+    def publish_delaunay_triangles(self, simplices):
+        triang = Triangulation()
+        triang.simplices = list()
+        for simplex_indices in simplices:
+            simplex = Simplex()
+            simplex.simplex = list()
+            for i in simplex_indices:
+                point = Point()
+                point.x = self.cones[i, 0]
+                point.y = self.cones[i, 1]
+                simplex.simplex.append(point)
+
+            triang.simplices.append(simplex)
+        self.delaunay_publisher.publish(triang)

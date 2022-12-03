@@ -3,12 +3,11 @@
 @author: Mariano del Río
 @date: 20221019
 """
+from itertools import combinations
 
-from common_msgs.msg import Map
-from common_msgs.msg import Trajectory
-from geometry_msgs.msg import PoseStamped
-from visualization_msgs.msg import Marker
-from visualization_msgs.msg import MarkerArray
+from common_msgs.msg import Map, Trajectory, Simplex, Triangulation
+from geometry_msgs.msg import PoseStamped, Polygon
+from visualization_msgs.msg import Marker, MarkerArray
 from nav_msgs.msg import Path
 from geometry_msgs.msg import Point
 
@@ -27,25 +26,29 @@ class InterfaceHandle():
 
     def subscribe_topics(self):
 
-        topic1 = rospy.get_param("/interface/topic_map")
-        rospy.Subscriber(topic1, Map, self.read_map)
+        map_topic = rospy.get_param("/interface/topic_map")
+        rospy.Subscriber(map_topic, Map, self.read_map)
 
-        topic2 = rospy.get_param("/interface/topic_route")
-        rospy.Subscriber(topic2, Trajectory, self.read_route)
+        topic_route = rospy.get_param("/interface/topic_route")
+        rospy.Subscriber(topic_route, Trajectory, self.read_route)
 
-        topic3 = rospy.get_param("/interface/topic_pursuit")
-        rospy.Subscriber(topic3, Point, self.read_pursuit_point)
+        topic_pursuit = rospy.get_param("/interface/topic_pursuit")
+        rospy.Subscriber(topic_pursuit, Point, self.read_pursuit_point)
+
+        topic_delaunay = rospy.get_param("/interface/topic_delaunay")
+        rospy.Subscriber(topic_delaunay, Triangulation, self.delaunay_callback)
 
     def publish_topics(self):
-        self.pub = rospy.Publisher("visualization_cones", MarkerArray, queue_size=10)
-        self.pub2 = rospy.Publisher("visualization_path", Path, queue_size=10)
-        self.pub3 = rospy.Publisher("visualization_pursuit", Marker, queue_size=10)
+        self.pub = rospy.Publisher("visualization_cones", MarkerArray, queue_size=1)
+        self.pub2 = rospy.Publisher("visualization_path", Path, queue_size=1)
+        self.pub3 = rospy.Publisher("visualization_pursuit", Marker, queue_size=1)
+        self.delaunay_pub = rospy.Publisher("visualization_delaunay", Marker, queue_size=1)
 
     def read_map(self, msg):
         data = msg.cones  # List of cones
-        cones = []
+        cones = list()
         for c in data:
-            cone = [c.position.x, c.position.y, c.color, c.confidence]
+            cone = (c.position.x, c.position.y, c.color, c.confidence)
             cones.append(cone)
 
         self.draw(cones)
@@ -63,7 +66,6 @@ class InterfaceHandle():
         self.pub.publish(markerarray)
 
     def read_route(self, msg):
-
         data = msg.trajectory  # List of points
         points = [[p.x, p.y] for p in data]
         self.send_route(points)
@@ -162,3 +164,21 @@ class InterfaceHandle():
 
         marker.lifetime = rospy.Duration()
         return marker
+
+    def delaunay_callback(self, simplices):
+        marker = Marker()
+        marker.header.frame_id = "local_map"
+        marker.header.stamp = rospy.Time.now()
+
+        marker.ns = "delaunay"
+        marker.id = 0
+        marker.type = Marker.LINE_LIST
+        marker.action = Marker.MODIFY
+        marker.scale.x = 0.1
+        marker.color.a = 1.0
+
+        marker.points = list()
+        for s in simplices.simplices:
+            marker.points.extend(p for c in combinations(s.simplex, 2) for p in c)
+
+        self.delaunay_pub.publish(marker)

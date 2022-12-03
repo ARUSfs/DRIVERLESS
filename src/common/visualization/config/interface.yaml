@@ -1,5 +1,6 @@
 # Topics
 topic_route: "route"
-topic_map: "perception_map"
+topic_map: "/vision_cone_detector/estimated_map/"
 topic_pursuit: "pursuit_point"
 topic_state: "state"
+topic_delaunay: "/delaunay_detector/simplices"
