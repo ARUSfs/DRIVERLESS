@@ -21,6 +21,8 @@ find_package(catkin REQUIRED COMPONENTS
    CarState.msg
    Camera_dofs.msg
    Mission.msg
+   Simplex.msg
+   Triangulation.msg
  )
 
 ## Generate services in the 'srv' folder

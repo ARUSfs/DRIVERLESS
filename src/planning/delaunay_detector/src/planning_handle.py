@@ -43,24 +43,15 @@ class PlanningHandle():
         self.publish_msg()
 
     def publish_msg(self):
-
-        route, weight = self.planning_system.calculate_path()
-
-        msg = self.transform_to_msg_trajectory(route)
-        rospy.loginfo(msg)
-        rospy.loginfo(weight)
-        self.pub_route.publish(msg)
-
-    def transform_to_msg_trajectory(self, route: list):
-
+        route = self.planning_system.calculate_path()
         msg = Trajectory()
-        points = []
-        for p in route:
+        msg.trajectory = list()
+        for midpoint in route:
             point = Point()
-            point.x = p[0]
-            point.y = p[1]
+            point.x = midpoint[0]
+            point.y = midpoint[1]
             point.z = 0
-            points.append(point)
+            msg.trajectory.append(point)
 
-        msg.trajectory = points
-        return msg
+        rospy.loginfo(msg)
+        self.pub_route.publish(msg)
