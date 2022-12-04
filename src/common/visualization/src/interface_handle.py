@@ -176,6 +176,10 @@ class InterfaceHandle():
         marker.action = Marker.MODIFY
         marker.scale.x = 0.1
         marker.color.a = 1.0
+        marker.pose.orientation.x = 0.0
+        marker.pose.orientation.y = 0.0
+        marker.pose.orientation.z = 0.0
+        marker.pose.orientation.w = 1.0
 
         marker.points = list()
         for s in simplices.simplices:

@@ -43,7 +43,7 @@ class PlanningSystem():
         self.colours = list()
         cone_points = list()
         for c in cones:
-            if c.confidence > 0.9:
+            if c.confidence > 0.5:
                 cone_points.append((c.position.x, c.position.y))
                 self.colours.append(c.color)
         self.cones = np.array(cone_points)
@@ -86,6 +86,9 @@ class PlanningSystem():
         route[0, :] = np.zeros((1, 2))
         route[1:, :] = midpoints[path_indices]
 
+        # TODO: I don't think using a spline to "smooth" the route is worth since
+        # pure_pursuit will do it anyway with parameter changes. As of now it will
+        # remain un-splined.
         return route
 
     def get_distance(self, p1, p2):
