@@ -45,8 +45,7 @@ def train_model(kNet, epochs, dataset_images_path,
     dataloader = {'Train': DataLoader(datasetTrain, batch_train,
                                       shuffle=True, drop_last=True),
                   'Validation': DataLoader(datasetValidation, batch_validation,
-                                           shuffle=True, drop_last=True)
-                 }
+                                           shuffle=True, drop_last=True)}
 
     # Create optimizer for train
     optimizer = torch.optim.Adam(kNet.parameters(), lr=lr)

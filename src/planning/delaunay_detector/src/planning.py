@@ -14,9 +14,7 @@ from sklearn.neighbors import NearestNeighbors
 
 from common_msgs.msg import Simplex, Triangulation
 from geometry_msgs.msg import Point
-from visualization_msgs.msg import Marker
 
-from utils import spline
 
 MAX_DISTANCE = 8
 
@@ -37,7 +35,6 @@ class PlanningSystem():
         self.delaunay_publisher = rospy.Publisher('/delaunay_detector/simplices',
                                                   Triangulation,
                                                   queue_size=1)
-
 
     def update_tracklimits(self, cones: list):
         self.colours = list()

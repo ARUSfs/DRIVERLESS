@@ -4,7 +4,6 @@
 @author: Jacobo Pindado
 @date 20221113
 """
-import cv2
 import rospy
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import Point
