@@ -6,12 +6,12 @@
 """
 
 import rospy
-from handle import localization
+from handle import Localization
 
 def main():
 
     rospy.init_node('car_broadcaster', anonymous=True)
-    localization()
+    Localization()
     rospy.spin()
 
 

@@ -6,11 +6,11 @@ import geometry_msgs.msg
 from sbg_driver.msg import SbgGpsPos, SbgEkfEuler, SbgImuData, SbgGpsVel
 from sbg_driver.msg import SbgMag
 from sbg_driver.msg import SbgEkfNav
-from common_msgs.msg import velState, GpsPos
+from common_msgs.msg import velState #,GpsPos
 
 
 
-class localization():
+class Localization():
 
 
     def init(self):
@@ -38,13 +38,13 @@ class localization():
 
         self.pub.publish(vel)
         
-    def send_position(self, msg):
-        position = GpsPos()
-        position.latitude = msg.latitude
-        position.longitude = msg.longitude
-        position.altitude = msg.altitude
+    #def send_position(self, msg):
+    #    position = GpsPos()
+    #    position.latitude = msg.latitude
+    #    position.longitude = msg.longitude
+    #    position.altitude = msg.altitude
 
-        self.pub.publish(position)
+    #    self.pub.publish(position)
 
 
         #br = tf2_ros.TransforBroadcaster()
