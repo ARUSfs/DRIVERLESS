@@ -22,12 +22,12 @@ class Localization():
 
     def subscribe_topics(self):
         rospy.Subscriber("/sbg/ekf_nav", SbgEkfNav, self.send_velocity)
-        rospy.Subscriber("/sbg/gps_pos", SbgGpsPos, self.send_position)
+        # rospy.Subscriber("/sbg/gps_pos", SbgGpsPos, self.send_position)
 
 
     def publish_topics(self):
         self.pub = rospy.Publisher("vel_state", velState, queue_size=1)
-        self.pub = rospy.Publisher("gps position", GpsPos, queue_size=1)
+        # self.pub = rospy.Publisher("gps position", GpsPos, queue_size=1)
 
 
     def send_velocity(self, msg):
