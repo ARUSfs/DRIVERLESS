@@ -9,13 +9,14 @@ import rospy
 from handle import Localization
 
 def main():
-
+    rospy.logerr("AAAAAAA")
     rospy.init_node('car_broadcaster', anonymous=True)
     Localization()
     rospy.spin()
+    rospy.logwarn("spin")
 
 
-if __name__ == 'main':
+if __name__ == '__main__':
     try:
         main()
     except rospy.ROSInterruptException:
