@@ -11,11 +11,9 @@ to the car.
 import os
 from typing import Union, List, Tuple
 from dataclasses import dataclass
-import time
 
 import cv2
 import numpy as np
-import rospy
 
 from detector.utils import darknet
 from detector import YoloDetector
@@ -77,22 +75,15 @@ class Estimator:
                             self.cam_conf.dist_coefs, None,
                             self.cam_conf.new_camera_mat)
 
-        yolo_time = time.time()
         detections = self.yolo_detector.predict_from_image(img)
-        yolo_time = time.time() - yolo_time
 
         vertex_array = np.empty((3, len(detections)))
         vertex_array[2, :] = np.ones(len(detections))
         vertex_properties = list()
 
-        map_list = list()
-
-        kpt_time = 0
-        np_time = 0
         for i, (class_name, confidence, bbox) in enumerate(detections):
             xmin, ymin, xmax, ymax = darknet.bbox2points(bbox)
             # Due to rounding errors, boxes may fall outside the image
-            t = time.time()
             xmin = max(0, xmin)
             ymin = max(0, ymin)
             xmax = min(xmax, img.shape[1] - 1)
@@ -101,22 +92,16 @@ class Estimator:
 
             # keypoints relative to bounding box
             kpts_relative = self.kpt_detector.get_keypoint_from_image(cone_bbox_img)
-            kpt_time = kpt_time + ttime.time() - t + 1
 
             # Right now, we only apply homography to the vertex of the cone. Detecting 7 kpts
             # is unnecesary, but is left for future use. We also transform from relative to
             # absolute to whole image.
             vertex_array[:2, i] = kpts_relative[0] + np.array([xmin, ymin])
 
-
-
             vertex_properties.append((class_name, float(confidence)/100))
 
-        t = time.time()
         vertex_array = self.cam_conf.transform_matrix @ vertex_array
         vertex_array /= vertex_array[2, :]  # We normalize the affine point
-        np_time = time.time() - t
 
-        rospy.logwarn(f'yolo: {yolo_time} kpt: {kpt_time} np: {np_time}')
-        return list((class_name, conf, (p[0], p[1])) for (class_name, conf), p\
-                     in zip(vertex_properties, vertex_array))
+        return list((class_name, conf, (p[0], p[1])) for (class_name, conf), p
+                    in zip(vertex_properties, vertex_array.T))
