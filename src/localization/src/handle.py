@@ -5,7 +5,6 @@ import geometry_msgs.msg
 
 from sbg_driver.msg import SbgGpsPos, SbgEkfNav, SbgImuData, SbgGpsVel
 from geometry_msgs.msg import Vector3
-#from common_msgs.msg import velState
 
 
 
@@ -65,3 +64,8 @@ class Localization():
         acc.z = msg.accel.z
     
         self.pub_acc.publish(acc)
+
+    # TF Implementation. WIP.
+    def tf_car_position(msg):
+        br = tf.TransformBroadcaster()
+        br.sendTransform(msg, rospy.Time.now(), "Position")

@@ -18,7 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
    Map.msg
    Trajectory.msg
    Controls.msg
-   velState.msg
+   #velState.msg
    Camera_dofs.msg
    Mission.msg
  )

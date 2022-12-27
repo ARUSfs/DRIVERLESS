@@ -9,7 +9,6 @@ import rospy
 from handle import Localization
 
 def main():
-    rospy.logerr("AAAAAAA")
     rospy.init_node('car_broadcaster', anonymous=True)
     Localization()
     rospy.spin()
