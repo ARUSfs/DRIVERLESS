@@ -82,7 +82,6 @@ class keypoint_detector():
 
         pts2d = np.array([cone[0] for cone in pts2d])
 
-        print("Evaluated!")
         return pts2d
 
     def get_keypoint_from_image(self, image: np.ndarray):
@@ -100,7 +99,6 @@ class keypoint_detector():
                                self.device)
         pts2d = pts2d[0][0]
 
-        print("Evaluated!")
         return pts2d
 
     def show_keypoint_image(self, image: np.ndarray, keypoints: np.ndarray, name):
