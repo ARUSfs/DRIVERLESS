@@ -25,6 +25,7 @@ class Localization():
         rospy.Subscriber("/sbg/imu_data", SbgImuData, self.send_acceleration)
         rospy.Subscriber("/sbg/gps_vel", SbgGpsVel, self.send_gps_velocity)
         #TF2 WIP
+        rospy.Subscriber("/gps_position", Vector3, self.tf2_start_point)
         rospy.Subscriber("/gps_position", Vector3, self.tf2_imu_position)
         
 
@@ -70,12 +71,31 @@ class Localization():
         self.pub_acc.publish(acc)
 
     # TF Implementation. WIP.
+    def tf2_start_point(self, msg):
+        br = tf2_ros.StaticTransformBroadcaster()
+        t = geometry_msgs.msg.TransformStamped()
+
+        t.header.stamp = rospy.Time.now()
+        t.header.frame_id = "world"
+        t.child_frame_id = "start"
+        
+        t.transform.translation.x = msg.x
+        t.transform.translation.y = msg.y
+        t.transform.translation.z = 0.0
+
+        t.transform.rotation.x = 0.0
+        t.transform.rotation.y = 0.0
+        t.transform.rotation.z = 0.0
+        t.transform.rotation.w = 1.0
+
+        br.sendTransform(t)
+
     def tf2_imu_position(self, msg):
         br = tf2_ros.TransformBroadcaster()
         t = geometry_msgs.msg.TransformStamped()
 
         t.header.stamp = rospy.Time.now()
-        t.header.frame_id = "world"
+        t.header.frame_id = "start"
         t.child_frame_id = "imu"
         
         t.transform.translation.x = msg.x
