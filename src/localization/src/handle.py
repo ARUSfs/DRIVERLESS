@@ -1,7 +1,5 @@
 import rospy
-import tf
 import tf2_ros
-import tf_conversions
 import geometry_msgs.msg
 
 from sbg_driver.msg import SbgGpsPos, SbgEkfNav, SbgImuData, SbgGpsVel
@@ -10,7 +8,6 @@ from geometry_msgs.msg import Vector3
 
 
 class Localization():
-
 
     def __init__(self):
         rospy.logwarn("Running Localization Node...")
@@ -24,11 +21,9 @@ class Localization():
         rospy.Subscriber("/sbg/gps_pos", SbgGpsPos, self.send_position)
         rospy.Subscriber("/sbg/imu_data", SbgImuData, self.send_acceleration)
         rospy.Subscriber("/sbg/gps_vel", SbgGpsVel, self.send_gps_velocity)
-
         rospy.Subscriber("/gps_position", Vector3, self.tf2_start_point)
         rospy.Subscriber("/gps_position", Vector3, self.tf2_imu_position)
         rospy.Subscriber("/gps_position", Vector3, self.tf2_camera_position)
-        
 
     def publish_topics(self):
         self.pub_vel = rospy.Publisher("/velocity", Vector3, queue_size=1)
@@ -41,7 +36,6 @@ class Localization():
         vel.x = msg.velocity.x 
         vel.y = msg.velocity.y
         vel.z = msg.velocity.z
-
         self.pub_vel.publish(vel)
 
     def send_gps_velocity(self, msg):
@@ -49,14 +43,12 @@ class Localization():
         gps_vel.x = msg.velocity.x # North
         gps_vel.y = msg.velocity.y # East
         gps_vel.z = msg.velocity.z # Down
-
         self.pub_gps_vel.publish(gps_vel)
         
     def send_position(self, msg):
         position = Vector3()
         position.x = msg.latitude
         position.y = msg.longitude
-
         self.pub_pos.publish(position)
 
     def send_acceleration(self, msg):
@@ -64,7 +56,6 @@ class Localization():
         acc.x = msg.accel.x
         acc.y = msg.accel.y
         acc.z = msg.accel.z
-    
         self.pub_acc.publish(acc)
 
     # TF2 IMPLEMENTATION
