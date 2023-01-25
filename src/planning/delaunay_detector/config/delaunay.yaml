@@ -1,5 +1,5 @@
 # Topics names of planning node
-topic_map: 'vision_cone_detector/estimated_map'
+topic_map: '/vision_cone_detector/estimated_map'
 topic_route: 'route'
 
 
