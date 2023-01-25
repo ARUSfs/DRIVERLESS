@@ -12,8 +12,6 @@ def main():
     rospy.init_node('car_broadcaster', anonymous=True)
     Localization()
     rospy.spin()
-    rospy.logwarn("spin")
-
 
 if __name__ == '__main__':
     try:
