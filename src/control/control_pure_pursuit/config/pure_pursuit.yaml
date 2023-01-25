@@ -1,6 +1,5 @@
 # Topics names
 route_topic: 'route'
-state_topic: 'state'
 pursuit_topic: 'pursuit_point'
 controls_topic: 'controls'
 
