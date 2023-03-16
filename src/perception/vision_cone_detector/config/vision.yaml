@@ -9,7 +9,7 @@ kpt:
   img_size: [80, 80]
 
 camera:
-  topic: "/cam/image_raw"
+  topic: "/camera1/image_raw"
   device: "/dev/camera0"
   camera_mat: [1, 0, 0,
                0, 1, 0,
