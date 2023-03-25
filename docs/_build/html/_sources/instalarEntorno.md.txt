@@ -1,4 +1,4 @@
-# Instalación de entorno
+# Environment setup
 
 ```{warning}
 This documentation is under development
@@ -20,3 +20,5 @@ emphasize-lines: 1
 $ rosdep install --from-paths src --ignore-src -r -y
 ```
 
+## Setting up git and Github
+We mainly use Github during development, being [::code::`ARUSfs/DRIVERLESS`](https://github.com/ARUSfs/DRIVERLESS) the main repository. Some other repositories exist for MCU code or secondary projects that don't quite fit the main repository.

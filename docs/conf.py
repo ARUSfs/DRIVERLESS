@@ -24,7 +24,7 @@ release = '0.1'
 
 extensions = [
 	'myst_parser',
-	'autodoc',
+	#'autodoc',
 	'sphinx.ext.autodoc',
     	'sphinx.ext.mathjax',
     	'sphinx.ext.autosummary',
