@@ -3,6 +3,27 @@
 ```{warning}
 This documentation is under development
 ```
+## Setting up git and Github
+We mainly use Github during development, being [`ARUSfs/DRIVERLESS`](https://github.com/ARUSfs/DRIVERLESS) the main repository. Some other repositories exist for MCU code or secondary projects that don't quite fit the main repository. Since most repositories are private, during push/pull operations you will need to introduce your credentials. Another option is to save credentials in plain text configuration file, which isn't a good security practice. Here we will detail how to setup ssh keys to be used with Github, which is more secure and convinient than the former options.
+
+```{note}
+We will only cover how to set up ssh keys for development in `Ubuntu/Debian` distros, though the steps will probably be similar in other environments.
+```
+
+1. Run `ssh-keygen` in a console. If you aren't sure about the prompts, you can use the default values by pressing `Enter` until the process has finished. This will create two files:
+    * `~/.ssh/id_rsa`: You should keep this file secret. Never give it away.
+    * `~/.ssh/id_rsa.pub`: This is the *public* key.
+2. Open your Github `Settings` page
+    1. `SSH and GPG keys` > `New SSH key` 
+    2. `Title`: Enter a descriptive name for your computer.
+    3. `Key`: Copy all the contents of `~/.ssh/id_rsa.pub` and paste in this field.
+    4. `Add SSH key`
+    Try to only keep keys that you are certain are safe and remove any that you know you won't use again. Anyone with your private key could impersonate you!
+3. To make sure everything works correctly, you can run `ssh -T git@github.com`. Github should greet you back!
+4. Now go to wherever you wish to download the repository, and run `git clone ssh://git@github.com/ARUSfs/DRIVERLESS`. **Important**: always precede `ARUSfs` repositories with `ssh://git@github.com` instead of `https://github.com/`.
+5. Move into the directory and configure your mail and name for `git`. It's recommended to set these as global values, but you may ommit the `--global` argument if for any reason you wish to configure it only for this repository. Run
+    * `git config --global user.email "you@example.com"`
+    * `git config --global user.name "Your Name"`
 
 ## Instalar ROS Noetic
 
@@ -20,24 +41,3 @@ emphasize-lines: 1
 $ rosdep install --from-paths src --ignore-src -r -y
 ```
 
-## Setting up git and Github
-We mainly use Github during development, being [`ARUSfs/DRIVERLESS`](https://github.com/ARUSfs/DRIVERLESS) the main repository. Some other repositories exist for MCU code or secondary projects that don't quite fit the main repository. Since most repositories are private, during push/pull operations you will need to introduce your credentials. The other option is to save credentials in plain text configuration file, which isn't a good security practice. We detail here how to setup ssh keys to be used with Github, as well as explaining some git basics.
-
-```{note}
-We will only cover how to set up ssh keys for development in `Ubuntu/Debian` distros, though the steps will probably be similar in other environments.
-```
-
-1. Run `ssh-keygen` in a console. If you aren't sure about the prompts, you can use the default values by pressing `Enter` until the process has finished. This will create two files:
-    * `~/.ssh/id_rsa`: You should keep this file secret. Never give it away.
-    * `~/.ssh/id_rsa.pub`: This is the *public* key.
-2. Open your Github `Settings` page
-    1. `SSH and GPG keys` > `New SSH key` 
-    2. `Title`: Enter a descriptive name for your computer.
-    3. `Key`: Copy all the contents of `~/.ssh/id_rsa.pub` and paste in this field.
-    4. `Add SSH key`
-3. Try to only keep keys that you are certain are safe and remove any that you know you won't use again. Anyone with your private key could impersonate you!
-4. To make sure everything works correctly, you can run `ssh -T git@github.com`. Github should greet you back!
-5. Now go to wherever you wish to download the repository, and run `git clone ssh://git@github.com/ARUSfs/DRIVERLESS`. **Important**: always precede `ARUSfs` repositories with `ssh://git@github.com` instead of `https://github.com/`.
-6. Move into the directory and configure your mail and name for `git`. It's recommended to set these as global values, but you may ommit the `--global` argument if for any reason you wish to configure it only for this repository. Run
-    * `git config --global user.email "you@example.com"`
-    * `git config --global user.name "Your Name"`
