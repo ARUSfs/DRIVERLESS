@@ -6,6 +6,6 @@ This is the **Perception Node documentation** of ARUSfs.
 This documentation is under development
 ```
 
-$$
+```{math}
 \begin{bmat} 1&1\\1&1\end{bmat}
-$$
+```
