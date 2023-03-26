@@ -26,3 +26,14 @@ We mainly use Github during development, being [`ARUSfs/DRIVERLESS`](https://git
 ```{note}
 We will only cover how to set up ssh keys for development in `Ubuntu/Debian` distros, though the steps will probably be similar in other environments.
 ```
+
+1. Run `ssh-keygen`{console} in a console. If you aren't sure about the prompts, you can use the default values by pressing `Enter` until the process has finished. This will create two files:
+    * `~/.ssh/id_rsa`: You should keep this file secret. Never give it away.
+    * `~/.ssh/id_rsa.pub`: This is the *public* key.
+2. Open your Github `Settings` page
+    1. `SSH and GPG keys`
+    2. `New SSH key`
+    3. `Title`: Enter a descriptive name for your computer.
+    4. `Key`: Copy all the contents of `~/.ssh/id_rsa.pub` and paste in this field.
+    5. `Add SSH key`
+4. If not already configured, you should 
