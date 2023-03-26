@@ -39,5 +39,5 @@ We will only cover how to set up ssh keys for development in `Ubuntu/Debian` dis
 4. To make sure everything works correctly, you can run `ssh -T git@github.com`. Github should greet you back!
 5. Now go to wherever you wish to download the repository, and run `git clone ssh://git@github.com/ARUSfs/DRIVERLESS`. **Important**: always precede `ARUSfs` repositories with `ssh://git@github.com` instead of `https://github.com/`.
 6. Move into the directory and configure your mail and name for `git`. It's recommended to set these as global values, but you may ommit the `--global` argument if for any reason you wish to configure it only for this repository. Run
-    *`git config --global user.email "you@example.com"`
-    *`git config --global user.name "Your Name"`
+    * `git config --global user.email "you@example.com"`
+    * `git config --global user.name "Your Name"`
