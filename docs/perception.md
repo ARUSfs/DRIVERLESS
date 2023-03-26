@@ -7,5 +7,5 @@ This documentation is under development
 ```
 
 ```{math}
-\begin{bmat} 1&1\\1&1\end{bmat}
+\begin{bmatrix} 1&1\\1&1\end{bmatrix}
 ```
