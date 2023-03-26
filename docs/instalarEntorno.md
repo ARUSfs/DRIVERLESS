@@ -18,6 +18,7 @@ We will only cover how to set up ssh keys for development in `Ubuntu/Debian` dis
     2. `Title`: Enter a descriptive name for your computer.
     3. `Key`: Copy all the contents of `~/.ssh/id_rsa.pub` and paste in this field.
     4. `Add SSH key`
+
     Try to only keep keys that you are certain are safe and remove any that you know you won't use again. Anyone with your private key could impersonate you!
 3. To make sure everything works correctly, you can run `ssh -T git@github.com`. Github should greet you back!
 4. Now go to wherever you wish to download the repository, and run `git clone ssh://git@github.com/ARUSfs/DRIVERLESS`. **Important**: always precede `ARUSfs` repositories with `ssh://git@github.com` instead of `https://github.com/`.
