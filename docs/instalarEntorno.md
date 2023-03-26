@@ -21,4 +21,8 @@ $ rosdep install --from-paths src --ignore-src -r -y
 ```
 
 ## Setting up git and Github
-We mainly use Github during development, being [::code::`ARUSfs/DRIVERLESS`](https://github.com/ARUSfs/DRIVERLESS) the main repository. Some other repositories exist for MCU code or secondary projects that don't quite fit the main repository.
+We mainly use Github during development, being [`ARUSfs/DRIVERLESS`](https://github.com/ARUSfs/DRIVERLESS) the main repository. Some other repositories exist for MCU code or secondary projects that don't quite fit the main repository. Since most repositories are private, during push/pull operations you will need to introduce your credentials. The other option is to save credentials in plain text configuration file, which isn't a good security practice. We detail here how to setup ssh keys to be used with Github, as well as explaining some git basics.
+
+:::{note}
+We will only cover how to up ssh keys for development in `Ubuntu/Debian` distros, though the steps will probably be similar in other environments.
+:::
