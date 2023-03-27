@@ -16,7 +16,7 @@ s\begin{bmatrix}u\\v\\1\end{bmatrix} = \begin{bmatrix}f_x&0&c_x\\0&f_y&c_y\\0&0&
 From right to left, we have a point in {math}`\mathbb A^3`, a reference frame change describing the translation and rotation of the world reference frame {math}`\mathcal R_w` to the camera reference frame {math}`\mathcal R_c`, as well as the projection from {math}`\mathbb A^3` to {math}`\mathbb P^2` (also called extrinsics matrix); the camera matrix that models the focal length and center of the camera (also called intrinsics matrix), and finally {math}`u` and {math}`v` representing the pixels where the 3d point will appear on.
 
 ```{figure} https://docs.opencv.org/4.x/pinhole_camera_model.png
-:scale: 1 %
+:width: 300 px
 :alt: Pinhole camera model
 Visualization of how {eq}`pinhole` works.
 ```
