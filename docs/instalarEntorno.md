@@ -26,19 +26,12 @@ We will only cover how to set up ssh keys for development in `Ubuntu/Debian` dis
     * `git config --global user.email "you@example.com"`
     * `git config --global user.name "Your Name"`
 
-## Instalar ROS Noetic
+## Installation of ROS Noetic
 
-- Para instalar ROS Noetic, se debe seguir el tutorial de instalación de ROS Noetic en Ubuntu 20.04 Focal Fossa, disponible en [este enlace](http://wiki.ros.org/noetic/Installation/Ubuntu).
-- Es importante tener en cuenta que se debe instalar la versión de ROS Noetic Desktop-Full, ya que es la que contiene todos los paquetes necesarios para el proyecto.
-- También es importante usar la versión de Ubuntu 20.04 Focal Fossa, ya que es la que soporta ROS Noetic.
-
-## Instalar paquetes de ROS
-Para instalar los paquetes de ROS necesarios para el proyecto, se debe ejecutar el siguiente comando:
-
-```{code-block}
----
-emphasize-lines: 1
----
-$ rosdep install --from-paths src --ignore-src -r -y
-```
-
+To install Ros Noetic on `Ubuntu 20.04` you may follow their [official tutorial](http://wiki.ros.org/noetic/Installation/Ubuntu). If installing for your computer, I would recommend installing the `ros-noetic-desktop-full` package, which includes `rviz` and other tools for visualization. If installing on a machine for inference it will suffice with `ros-noetic-ros-base`. After the installation, you may:
+- Make sure that `setup.bash` is sourced on your `.bashrc`(step 1.5 of your tutorial).
+- Install `rosdep`.
+- Automatically install necessary packages by running {code}
+    ```{code-block}
+    $ rosdep install --from-paths src --ignore-src -r -y
+    ```
