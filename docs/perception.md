@@ -16,17 +16,18 @@ s\begin{bmatrix}u\\v\\1\end{bmatrix} = \begin{bmatrix}f_x&0&c_x\\0&f_y&c_y\\0&0&
 From right to left, we have a point in {math}`\mathbb A^3`, a reference frame change describing the translation and rotation of the world reference frame {math}`\mathcal R_w` to the camera reference frame {math}`\mathcal R_c`, as well as the projection from {math}`\mathbb A^3` to {math}`\mathbb P^2` (also called extrinsics matrix); the camera matrix that models the focal length and center of the camera (also called intrinsics matrix), and finally {math}`u` and {math}`v` representing the pixels where the 3d point will appear on.
 
 ```{figure} https://docs.opencv.org/4.x/pinhole_camera_model.png
-:width: 500 px
+:width: 400 px
 :alt: Pinhole camera model
 Visualization of how {eq}`pinhole` works.
 ```
 
-Seems simple enough but mind you, this is a simplified model for **pinhole cameras**, not real cameras. The difference comes because of camera lenses, which distort images. The best known distortion is the *fish lens* efect that GoPros or 360º cameras experience; though there are more types of distortion, described in the OpenCV Documentation[^pinhole]. In theory it isn't too much of an issue, but it is certainly an inconvenience. Instead of only having the linear nature of {eq}`pinhole`, we have to apply some *relatively complicated* non-linear undistortions which will slow down our pipeline and introduce numerican instabilities.
+Seems simple enough but mind you, this is a simplified model for **pinhole cameras**, not real cameras. The difference comes because of camera lenses, which distort images. The best known distortion is the *fish lens* efect that GoPros or 360º cameras experience; though there are more types of distortion, described in the OpenCV Documentation[^pinhole]. In theory it isn't too much of an issue, but it is certainly an inconvenience. Instead of only having the linear nature of {eq}`pinhole`, we have to apply some *relatively complicated*[^undistortion] non-linear undistortions which will slow down our pipeline and introduce numerican instabilities.
 
 ```{figure} https://docs.opencv.org/4.x/distortion_examples.png
-:scale: 70%
+:width: 400 px
 :alt: distortion examples
 Some examples of radial distortion on a chessboard pattern.
 ```
 
 [^pinhole]: See the *Detailed Description* section of the [OpenCV documentation](https://docs.opencv.org/4.x/d9/d0c/group__calib3d.html) for more information.
+[^undistortion]: The actual implementation of undistortion is in OpenCV, so we aren't concerned with the intricacies of it . The problem arrises with the aproximation of distortion parameters which in some cases will undistort too much or cause the *ROI* (Region of Interest) of the undistorted image to be too small, reducing by a considerable factor the usable part of the image.

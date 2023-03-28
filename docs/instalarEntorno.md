@@ -29,9 +29,9 @@ We will only cover how to set up ssh keys for development in `Ubuntu/Debian` dis
 ## Installation of ROS Noetic
 
 To install Ros Noetic on `Ubuntu 20.04` you may follow their [official tutorial](http://wiki.ros.org/noetic/Installation/Ubuntu). If installing for your computer, I would recommend installing the `ros-noetic-desktop-full` package, which includes `rviz` and other tools for visualization. If installing on a machine for inference it will suffice with `ros-noetic-ros-base`. After the installation, you may:
-- Make sure that `setup.bash` is sourced on your `.bashrc`(step 1.5 of your tutorial).
+- Make sure that `setup.bash` is sourced on your `.bashrc`(step 1.5 of the ROS tutorial).
 - Install `rosdep`.
-- Automatically install necessary packages by running {code}
+- Automatically install necessary packages by running
     ```{code-block}
     $ rosdep install --from-paths src --ignore-src -r -y
     ```
