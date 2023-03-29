@@ -38,7 +38,8 @@ To install Ros Noetic on `Ubuntu 20.04` you may follow their [official tutorial]
 
 ## Installation of CUDA and cuDNN
 > *lasciate ogni speranza, voi ch'entrate*
-> - Dante Alighieri
+
+CUDA is a parallel computing platform and API which allows programming for Nvidia GPUs parallelization capabilities. Some other packages exist which include predesigned functions for some aplications like cuBLAS (Basic Linear Algebra Sobprograms) or cuDNN (Deep Neural Networks). While the first one is usually packaged along CUDA, cuDNN isn't so it must be installed separately.
 
 ## Compilation of OpenCV
 
