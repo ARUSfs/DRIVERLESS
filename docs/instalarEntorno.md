@@ -35,3 +35,11 @@ To install Ros Noetic on `Ubuntu 20.04` you may follow their [official tutorial]
     ```{code-block}
     $ rosdep install --from-paths src --ignore-src -r -y
     ```
+
+## Installation of CUDA and cuDNN
+> *lasciate ogni speranza, voi ch'entrate*
+> - Dante Alighieri
+
+## Compilation of OpenCV
+
+Whenever installing and profiling on a machine with GPU
