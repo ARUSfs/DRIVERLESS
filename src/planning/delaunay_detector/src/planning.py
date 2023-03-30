@@ -86,7 +86,7 @@ class PlanningSystem():
         # TODO: I don't think using a spline to "smooth" the route is worth since
         # pure_pursuit will do it anyway with parameter changes. As of now it will
         # remain un-splined.
-        return route
+        return route, preproc_simplices
 
     def get_distance(self, p1, p2):
         p1b = p1.tobytes()
