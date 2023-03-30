@@ -41,6 +41,8 @@ To install Ros Noetic on `Ubuntu 20.04` you may follow their [official tutorial]
 
 CUDA is a parallel computing platform and API which allows programming for Nvidia GPUs parallelization capabilities. Some other packages exist which include predesigned functions for some aplications like cuBLAS (Basic Linear Algebra Sobprograms) or cuDNN (Deep Neural Networks). While the first one is usually packaged along CUDA, cuDNN isn't so it must be installed separately.
 
+Even though the *theory* of installing these packages is simple, everyone's experience differs. During installation, various problems will arise. These issues will differ from OS to OS, hardware to hardware, and version to version. My intention for this wiki is to be autocontained, but if for any reason you have to install these and are completely unable to fix the problems, feel free to contact me ([Jacobo Pindado Perea](pindado.jacobo@gmail.com)).
+
 ## Compilation of OpenCV
 
 Whenever installing and profiling on a machine with GPU
