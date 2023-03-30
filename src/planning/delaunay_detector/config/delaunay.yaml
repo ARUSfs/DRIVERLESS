@@ -2,7 +2,7 @@
 topic_map: 'perception_map'
 topic_route: 'route'
 topic_simplices: 'simplices'
-send_simplices_marker: true],
+send_simplices_marker: true,
 
 # Hiperparameters of delaunay detector
 W_DISTANCE: 1
