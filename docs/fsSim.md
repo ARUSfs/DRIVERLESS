@@ -58,8 +58,9 @@ To start the simulation, run:
 `./src/fssim/fssim/scripts/launch.py --config src/fssim/fssim/config/automated_simulation.yaml --output ~/sim_output`
 
 ## Example of a simulation
-Is posible to make a simulation example with a basic control system already implemented. To do this, we just need to clone the repository that contains this test. It is a fork to adapt it to ROS-Noetic, since it is originally designed for ROS-Kinetic and we will not be able to run it correctly. To run the simulation, the following steps must be followed:
+Is posible to make a simulation example with a basic control system already implemented. To do this, we just need to clone the repository that contains this test. I made a fork adapt it to ROS-Noetic, since it is originally designed for ROS-Kinetic and we will not be able to run it correctly. To run the simulation, the following steps must be followed:
 1. Clone the repository (fork to adapt to ROS-Noetic):
+    - `git clone https://github.com/jormunrod/fsd_skeleton_noetic.git`
     - `cd fsd_skeleton_noetic`
     - `./update_dependencies.sh -f`
     - `catkin build`
