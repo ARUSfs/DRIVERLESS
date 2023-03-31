@@ -13,6 +13,7 @@ This documentation is under development!!
 :hidden:
 
 nodos
+fsSim
 aboutUs
 instalarEntorno
 howToDoc
