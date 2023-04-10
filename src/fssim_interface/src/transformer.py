@@ -89,6 +89,7 @@ class transformerFssim():
         state.yaw = msg.yaw
         state.roll = 0
         state.pitch = 0
+        state.r = msg.r
         state.vx = msg.vx
         state.vy = msg.vy
         state.vz = 0
