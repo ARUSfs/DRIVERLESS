@@ -15,6 +15,8 @@ import numpy as np
 
 N_LANDMARKS = 10
 ASSOCIATION_THRESH = 0.4
+P = np.eye(3, dtype=np.float32)  # Cov. matrix of (3)
+P_inv = np.linalg.inv(P)         # Precomputing since it's contant.
 
 class FastSLAM2:
 
@@ -40,7 +42,16 @@ class FastSLAM2:
         self.position += (B @ self.motion) * delta_time
         self.position[2] = bound_angle(self.position[2])
 
-    def pose_sampling(self):
+    def pose_sampling(self, Gs: np.ndarray, Gtheta: np.ndarray,
+                      Q_inv: np.ndarray, delta_z: np.ndarray):
+        '''Q defined in (15). Its an input parameter because the matrix is shared with
+        landmark updating.
+        delta_z: (z-\hat z)
+        '''
+        self.position_cov = np.linalg.inv(Gs.T @ G_inv @ Gs + P_inv)
+        self.position += self.position_cov @ (Gs.T @ (Q_inv @ delta_z))
+        # Right-to-left matmul is faster in this case since delta_z is a vector. Parenthesis are
+        # ugly, but I am unsure of @ precedence and havent found much in numpy's doc.
 
     def update_with_observations(self):
         pass
