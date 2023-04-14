@@ -29,18 +29,34 @@ class FastSLAM2:
 
         self.landmarks = np.zeros((2, N_LANDMARKS), dtype=np.float32)  # \Theta^t in [1]
         self.landmarks_cov = np.zeros((2, N_LANDMARKS*2), dtype=np.float32)  # \Sigma_\Theta in [1]
+        # TODO: Transform landmarks_cov into 3d array to prevent cumbersome slicing.
         self.populated_landmarks = np.array(N_LANDMARKS, dtype=np.bool)
 
         self.motion = np.zeros((2, 1), dtype=np.float32)  # Equivalent to u^t in [1]
         self.last_rostime = 0
 
-    def forward_observation(self, observation: np.ndarray):
+    def forward_observation(self, observation: np.ndarray, delta_time: float):
         '''Will apply 4.4 -> 4.1 -> 4.2 for each observation.
         observation: [x, y, 1] position of observed landmark with respect to vehicle frame.
         '''
-        pass
+        self.update_particle(delta_time)
 
-    def update_particle(self, delta_time):
+        inv_observation_func = self.get_inv_observation_func()
+
+        landmark_ind = self.get_corresponding_landmark(observation, inv_observation_func)
+        Gtheta, Gs = self.calculate_jacobians(landmark_ind)
+
+        # Equivalent to original \hat z in [1] since our g is linear with \theta.
+        delta_z = inv_observation_func @ observation - self.landmarks[:, landmark_ind]
+
+        cov_slice = (slice(-1), slice(2*landmark_index, 2*(landmark_index + 1)))
+        Q_inv = R + Gtheta @ self.landmarks_cov[cov_slice] @ Gtheta.T
+
+        self.pose_sampling(Gs, Q_inv, delta_z)
+
+        self.update_landmark_estimate(Gs, Gtheta, Q_inv, delta_z, landmark_ind)
+
+    def update_particle(self, delta_time: float):
         '''Updates the state of the particle with a bicycle model. Takes current linear velocity
         and yaw to update the particle's position. Corresponds to (3) in [1].
         '''
@@ -69,12 +85,8 @@ class FastSLAM2:
         self.landmarks[:, landmark_index] += K @ delta_z  # (17)
         self.landmarks_cov[cov_slice] -= K @ Gtheta @ self.landmarks_cov[cov_slice]  # (18)
 
-    def get_corresponding_landmark(self, observation: np.ndarray):
-        t_mat = np.empty((2, 3), dtype=np.float32)
-        t_mat[:2, :2] = np.array([[np.cos(self.position[2]), -np.sin(self.position[2])],
-                                  [np.sin(self.position[2]),  np.cos(self.position[2])]])
-        t_mat[:2, 2] = self.position[:2]
-        predicted_coordinates = t_mat @ observation
+    def get_corresponding_landmark(self, observation: np.ndarray, inv_observation_mat: np.ndarray):
+        predicted_coordinates = inv_observation_mat @ observation
 
         observation_probability = np.zeros(N_LANDMARKS, dtype=np.float32)
         for ind in np.nonzero(self.populated_landmarks):
@@ -92,7 +104,7 @@ class FastSLAM2:
             return max_prob_index
 
 
-    def calculate_jacobians(self, previous_landmark_position):
+    def calculate_jacobians(self, landmark_index: int):
         '''Notation follows [1] using euclidean form of g where instead of distance and bearing
         we directly consider landmark position with respect to the car reference frame.
 
@@ -111,9 +123,18 @@ class FastSLAM2:
 
         Gs = np.empty((2, 3), dtype=np.float32)
         Gs[:, :2] = Rt.copy()
-        Gs[2, :] = Rtprime @ (previous_landmark_position - self.position[:2]).reshape((2, 1))
+        Gs[2, :] = Rtprime @ (self.landmarks[:, i] - self.position[:2]).reshape((2, 1))
 
         return Gtheta, Gs
+
+    def get_inv_observation_func(self):
+        '''Matrix that changes reference frame from the car's frame to global frame.
+        '''
+        t_mat = np.empty((2, 3), dtype=np.float32)
+        t_mat[:2, :2] = np.array([[np.cos(self.position[2]), -np.sin(self.position[2])],
+                                  [np.sin(self.position[2]),  np.cos(self.position[2])]])
+        t_mat[:2, 2] = self.position[:2]
+        return t_mat
 
 
 def bound_angle(angle: float):
