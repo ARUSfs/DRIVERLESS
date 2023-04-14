@@ -24,8 +24,8 @@ class FastSLAM2:
         self.position = np.zeros((3, 1), dtype=np.float32)  # [x, y, yaw]^t
         self.position_cov = np.eye(3, dtype=np.float32)  # \Sigma_s in [1]
         self.motion = np.zeros((2, 1), dtype=np.float32)  # Equivalent to u^t in [1]
-        self.landmarks = np.zeros((N_LANDMARKS, 2), dtype=np.float32)  # \Theta^t in [1]
-        self.landmarks_cov = np.zeros((N_LANDMARKS*2, 2), dtype=np.float32)  # \Sigma_\Theta in [1]
+        self.landmarks = np.zeros((2, N_LANDMARKS), dtype=np.float32)  # \Theta^t in [1]
+        self.landmarks_cov = np.zeros((2, N_LANDMARKS*2), dtype=np.float32)  # \Sigma_\Theta in [1]
 
         self.last_rostime = 0
 
@@ -42,13 +42,12 @@ class FastSLAM2:
         self.position += (B @ self.motion) * delta_time
         self.position[2] = bound_angle(self.position[2])
 
-    def pose_sampling(self, Gs: np.ndarray, Gtheta: np.ndarray,
-                      Q_inv: np.ndarray, delta_z: np.ndarray):
+    def pose_sampling(self, Gs: np.ndarray, Q_inv: np.ndarray, delta_z: np.ndarray):
         '''Q defined in (15). Its an input parameter because the matrix is shared with
         landmark updating.
         delta_z: (z-\hat z)
         '''
-        self.position_cov = np.linalg.inv(Gs.T @ G_inv @ Gs + P_inv)
+        self.position_cov = np.linalg.inv(Gs.T @ Q_inv @ Gs + P_inv)
         self.position += self.position_cov @ (Gs.T @ (Q_inv @ delta_z))
         # Right-to-left matmul is faster in this case since delta_z is a vector. Parenthesis are
         # ugly, but I am unsure of @ precedence and havent found much in numpy's doc.
@@ -78,7 +77,7 @@ class FastSLAM2:
         Rt = np.array([[cosphi, -sinphi],
                        [sinphi, cosphi]], dtype=np.float32)
         Rtprime = np.array([[-sinphi, -cosphi],
-                            [ cosphi, -sinphi]], dtype=np.float32)
+                            [cosphi , -sinphi]], dtype=np.float32)
         Gtheta = Rt.copy()
 
         Gs = np.empty((2, 3), dtype=np.float32)
