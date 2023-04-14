@@ -53,6 +53,14 @@ class FastSLAM2:
         # Right-to-left matmul is faster in this case since delta_z is a vector. Parenthesis are
         # ugly, but I am unsure of @ precedence and havent found much in numpy's doc.
 
+    def update_landmark_estimate(self, Gs: np.ndarray, Gtheta: np.ndarray, Q_inv: np.ndarray,
+                                 delta_z: np.ndarray, landmark_index: int):
+        cov_slice = (slice(-1), slice(2*landmark_index, 2*(landmark_index + 1)))
+        K = self.landmarks_cov[cov_slice] @ Gtheta.T @ Q_inv  # (16)
+
+        self.landmarks[:, landmark_index] += K @ delta_z  # (17)
+        self.landmarks_cov[cov_slice] -= K @ Gtheta @ self.landmarks_cov[cov_slice]  # (18)
+
     def update_with_observations(self):
         pass
 
