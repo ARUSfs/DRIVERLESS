@@ -12,24 +12,33 @@ where t is now. For any notation doubts consult [1].
 
 import rospy
 import numpy as np
+from scipy.stats import multivariate_normal
 
 N_LANDMARKS = 10
 ASSOCIATION_THRESH = 0.4
 P = np.eye(3, dtype=np.float32)  # Cov. matrix of (3)
 P_inv = np.linalg.inv(P)         # Precomputing since it's contant.
+R = np.linalg.eye(3, dtype=np.float32)
+
 
 class FastSLAM2:
 
     def __init__(self):
         self.position = np.zeros((3, 1), dtype=np.float32)  # [x, y, yaw]^t
-        self.position_cov = np.eye(3, dtype=np.float32)  # \Sigma_s in [1]
-        self.motion = np.zeros((2, 1), dtype=np.float32)  # Equivalent to u^t in [1]
+        self.position_cov = P.copy()                        # \Sigma_s in [1]
+
         self.landmarks = np.zeros((2, N_LANDMARKS), dtype=np.float32)  # \Theta^t in [1]
         self.landmarks_cov = np.zeros((2, N_LANDMARKS*2), dtype=np.float32)  # \Sigma_\Theta in [1]
+        self.populated_landmarks = np.array(N_LANDMARKS, dtype=np.bool)
 
+        self.motion = np.zeros((2, 1), dtype=np.float32)  # Equivalent to u^t in [1]
         self.last_rostime = 0
 
-    def process
+    def forward_observation(self, observation: np.ndarray):
+        '''Will apply 4.4 -> 4.1 -> 4.2 for each observation.
+        observation: [x, y, 1] position of observed landmark with respect to vehicle frame.
+        '''
+        pass
 
     def update_particle(self, delta_time):
         '''Updates the state of the particle with a bicycle model. Takes current linear velocity
@@ -60,8 +69,28 @@ class FastSLAM2:
         self.landmarks[:, landmark_index] += K @ delta_z  # (17)
         self.landmarks_cov[cov_slice] -= K @ Gtheta @ self.landmarks_cov[cov_slice]  # (18)
 
-    def update_with_observations(self):
-        pass
+    def get_corresponding_landmark(self, observation: np.ndarray):
+        t_mat = np.empty((2, 3), dtype=np.float32)
+        t_mat[:2, :2] = np.array([[np.cos(self.position[2]), -np.sin(self.position[2])],
+                                  [np.sin(self.position[2]),  np.cos(self.position[2])]])
+        t_mat[:2, 2] = self.position[:2]
+        predicted_coordinates = t_mat @ observation
+
+        observation_probability = np.zeros(N_LANDMARKS, dtype=np.float32)
+        for ind in np.nonzero(self.populated_landmarks):
+            cov_slice = (slice(-1), slice(2*ind, 2*(ind + 1)))
+            observation_probability = multivariate_normal.pdf(predicted_coordinates,
+                                                              mean=self.landmarks[:, i],
+                                                              cov=self.landmarks_cov[cov_slice])
+
+        max_prob_index = np.argmax(observation_probability)
+
+        if observation_probability[max_prob_index] < ASSOCIATION_THRESH:
+            # TODO: Create new landmark
+            pass
+        else:
+            return max_prob_index
+
 
     def calculate_jacobians(self, previous_landmark_position):
         '''Notation follows [1] using euclidean form of g where instead of distance and bearing
@@ -90,5 +119,3 @@ class FastSLAM2:
 def bound_angle(angle: float):
     '''Bounds an angle between [-pi, pi] centered at 0'''
     return (angle + np.pi) % (2 * np.pi) - np.pi
-
-
