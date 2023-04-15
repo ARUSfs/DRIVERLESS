@@ -28,8 +28,7 @@ class FastSLAM2:
         self.position_cov = P.copy()                        # \Sigma_s in [1]
 
         self.landmarks = np.zeros((2, N_LANDMARKS), dtype=np.float32)  # \Theta^t in [1]
-        self.landmarks_cov = np.zeros((2, N_LANDMARKS*2), dtype=np.float32)  # \Sigma_\Theta in [1]
-        # TODO: Transform landmarks_cov into 3d array to prevent cumbersome slicing.
+        self.landmarks_cov = np.zeros((N_LANDMARKS, 2, 2), dtype=np.float32)  # \Sigma_\Theta in [1]
         self.populated_landmarks = np.array(N_LANDMARKS, dtype=np.bool)
 
         self.motion = np.zeros((2, 1), dtype=np.float32)  # Equivalent to u^t in [1]
@@ -49,8 +48,7 @@ class FastSLAM2:
         # Equivalent to original \hat z in [1] since our g is linear with \theta.
         delta_z = inv_observation_func @ observation - self.landmarks[:, landmark_ind]
 
-        cov_slice = (slice(-1), slice(2*landmark_index, 2*(landmark_index + 1)))
-        Q_inv = R + Gtheta @ self.landmarks_cov[cov_slice] @ Gtheta.T
+        Q_inv = R + Gtheta @ self.landmarks_cov[landmark_ind] @ Gtheta.T
 
         self.pose_sampling(Gs, Q_inv, delta_z)
 
@@ -79,21 +77,19 @@ class FastSLAM2:
 
     def update_landmark_estimate(self, Gs: np.ndarray, Gtheta: np.ndarray, Q_inv: np.ndarray,
                                  delta_z: np.ndarray, landmark_index: int):
-        cov_slice = (slice(-1), slice(2*landmark_index, 2*(landmark_index + 1)))
-        K = self.landmarks_cov[cov_slice] @ Gtheta.T @ Q_inv  # (16)
+        K = self.landmarks_cov[landmark_index] @ Gtheta.T @ Q_inv  # (16)
 
         self.landmarks[:, landmark_index] += K @ delta_z  # (17)
-        self.landmarks_cov[cov_slice] -= K @ Gtheta @ self.landmarks_cov[cov_slice]  # (18)
+        self.landmarks_cov[landmark_index] -= K @ Gtheta @ self.landmarks_cov[landmark_index]  # (18)
 
     def get_corresponding_landmark(self, observation: np.ndarray, inv_observation_mat: np.ndarray):
         predicted_coordinates = inv_observation_mat @ observation
 
         observation_probability = np.zeros(N_LANDMARKS, dtype=np.float32)
         for ind in np.nonzero(self.populated_landmarks):
-            cov_slice = (slice(-1), slice(2*ind, 2*(ind + 1)))
             observation_probability = multivariate_normal.pdf(predicted_coordinates,
                                                               mean=self.landmarks[:, i],
-                                                              cov=self.landmarks_cov[cov_slice])
+                                                              cov=self.landmarks_cov[ind])
 
         max_prob_index = np.argmax(observation_probability)
 
