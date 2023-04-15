@@ -27,7 +27,7 @@ class FastSLAM2:
         self.position = np.zeros((3, 1), dtype=np.float32)  # [x, y, yaw]^t
         self.position_cov = P.copy()                        # \Sigma_s in [1]
 
-        self.landmarks = np.zeros((2, N_LANDMARKS), dtype=np.float32)  # \Theta^t in [1]
+        self.landmarks = np.zeros((N_LANDMARKS, 2), dtype=np.float32)  # \Theta^t in [1]
         self.landmarks_cov = np.zeros((N_LANDMARKS, 2, 2), dtype=np.float32)  # \Sigma_\Theta in [1]
         self.populated_landmarks = np.array(N_LANDMARKS, dtype=np.bool)
 
@@ -40,13 +40,13 @@ class FastSLAM2:
         '''
         self.update_particle(delta_time)
 
-        inv_observation_func = self.get_inv_observation_func()
+        observed_landmark = self.get_inv_observation_func() @ observation
 
-        landmark_ind = self.get_corresponding_landmark(observation, inv_observation_func)
+        landmark_ind = self.get_corresponding_landmark(observed_landmark)
         Gtheta, Gs = self.calculate_jacobians(landmark_ind)
 
         # Equivalent to original \hat z in [1] since our g is linear with \theta.
-        delta_z = inv_observation_func @ observation - self.landmarks[:, landmark_ind]
+        delta_z = observed_landmark - self.landmarks[landmark_ind, :]
 
         Q_inv = R + Gtheta @ self.landmarks_cov[landmark_ind] @ Gtheta.T
 
@@ -79,23 +79,27 @@ class FastSLAM2:
                                  delta_z: np.ndarray, landmark_index: int):
         K = self.landmarks_cov[landmark_index] @ Gtheta.T @ Q_inv  # (16)
 
-        self.landmarks[:, landmark_index] += K @ delta_z  # (17)
+        self.landmarks[landmark_index, :] += K @ delta_z  # (17)
         self.landmarks_cov[landmark_index] -= K @ Gtheta @ self.landmarks_cov[landmark_index]  # (18)
 
-    def get_corresponding_landmark(self, observation: np.ndarray, inv_observation_mat: np.ndarray):
-        predicted_coordinates = inv_observation_mat @ observation
-
+    def get_corresponding_landmark(self, observed_landmark: np.ndarray):
         observation_probability = np.zeros(N_LANDMARKS, dtype=np.float32)
         for ind in np.nonzero(self.populated_landmarks):
-            observation_probability = multivariate_normal.pdf(predicted_coordinates,
-                                                              mean=self.landmarks[:, i],
+            observation_probability = multivariate_normal.pdf(observed_landmark,
+                                                              mean=self.landmarks[i, :],
                                                               cov=self.landmarks_cov[ind])
 
         max_prob_index = np.argmax(observation_probability)
 
         if observation_probability[max_prob_index] < ASSOCIATION_THRESH:
-            # TODO: Create new landmark
-            pass
+            available_positions = np.nonzero(self.populated_landmarks == False)
+            if len(available_positions) == 0:
+                rospy.logwarn('No available landmark indices in array')
+            else:
+                new_lm_ind = available_positions[0]
+                self.landmarks[new_lm_ind, :] = observed_landmark
+                self.landmarks_cov[new_lm_ind] = R.copy()
+                self.populated_landmarks[new_lm_ind] = True
         else:
             return max_prob_index
 
@@ -119,7 +123,7 @@ class FastSLAM2:
 
         Gs = np.empty((2, 3), dtype=np.float32)
         Gs[:, :2] = Rt.copy()
-        Gs[2, :] = Rtprime @ (self.landmarks[:, i] - self.position[:2]).reshape((2, 1))
+        Gs[2, :] = Rtprime @ (self.landmarks[i, :] - self.position[:2]).reshape((2, 1))
 
         return Gtheta, Gs
 
