@@ -18,32 +18,36 @@ N_LANDMARKS = 10
 ASSOCIATION_THRESH = 0.4
 P = np.eye(3, dtype=np.float32)  # Cov. matrix of (3)
 P_inv = np.linalg.inv(P)         # Precomputing since it's contant.
-R = np.linalg.eye(3, dtype=np.float32)
+R = np.eye(2, dtype=np.float32)
 
 
 class FastSLAM2:
 
     def __init__(self):
-        self.position = np.zeros((3, 1), dtype=np.float32)  # [x, y, yaw]^t
+        self.position = np.zeros(3, dtype=np.float32)  # [x, y, yaw]^t
         self.position_cov = P.copy()                        # \Sigma_s in [1]
 
         self.landmarks = np.zeros((N_LANDMARKS, 2), dtype=np.float32)  # \Theta^t in [1]
         self.landmarks_cov = np.zeros((N_LANDMARKS, 2, 2), dtype=np.float32)  # \Sigma_\Theta in [1]
-        self.populated_landmarks = np.array(N_LANDMARKS, dtype=np.bool)
+        self.populated_landmarks = np.zeros(N_LANDMARKS, dtype=np.bool)
 
-        self.motion = np.zeros((2, 1), dtype=np.float32)  # Equivalent to u^t in [1]
+        self.motion = np.zeros(2, dtype=np.float32)  # Equivalent to u^t in [1]
         self.last_rostime = 0
 
-    def forward_observation(self, observation: np.ndarray, delta_time: float):
+    def process_map(self, observations: np.ndarray, delta_time: float):
+        self.update_particle(delta_time)
+        for observation in observations:
+            self.forward_observation(observation)
+
+    def forward_observation(self, observation: np.ndarray):
         '''Will apply 4.4 -> 4.1 -> 4.2 for each observation.
         observation: [x, y, 1] position of observed landmark with respect to vehicle frame.
         '''
-        self.update_particle(delta_time)
-
         observed_landmark = self.get_inv_observation_func() @ observation
 
         landmark_ind = self.get_corresponding_landmark(observed_landmark)
         Gtheta, Gs = self.calculate_jacobians(landmark_ind)
+        print("jac", self.landmarks_cov[0])
 
         # Equivalent to original \hat z in [1] since our g is linear with \theta.
         delta_z = observed_landmark - self.landmarks[landmark_ind, :]
@@ -51,8 +55,10 @@ class FastSLAM2:
         Q_inv = R + Gtheta @ self.landmarks_cov[landmark_ind] @ Gtheta.T
 
         self.pose_sampling(Gs, Q_inv, delta_z)
+        print("samp", self.landmarks_cov[0])
 
         self.update_landmark_estimate(Gs, Gtheta, Q_inv, delta_z, landmark_ind)
+        print("update", self.landmarks_cov[0])
 
     def update_particle(self, delta_time: float):
         '''Updates the state of the particle with a bicycle model. Takes current linear velocity
@@ -62,7 +68,7 @@ class FastSLAM2:
         B = np.array([[np.cos(self.position[2]), 0],
                       [np.sin(self.position[2]), 0],
                       [0,                        1]], dtype=np.float32)
-        self.position += (B @ self.motion) * delta_time
+        self.position += (B @ self.motion.reshape(2, 1) * delta_time).flat
         self.position[2] = bound_angle(self.position[2])
 
     def pose_sampling(self, Gs: np.ndarray, Q_inv: np.ndarray, delta_z: np.ndarray):
@@ -84,22 +90,27 @@ class FastSLAM2:
 
     def get_corresponding_landmark(self, observed_landmark: np.ndarray):
         observation_probability = np.zeros(N_LANDMARKS, dtype=np.float32)
-        for ind in np.nonzero(self.populated_landmarks):
+        for ind in np.nonzero(self.populated_landmarks)[0]:
+            print(self.landmarks_cov[ind, :, :])
             observation_probability = multivariate_normal.pdf(observed_landmark,
-                                                              mean=self.landmarks[i, :],
-                                                              cov=self.landmarks_cov[ind])
+                                                              mean=self.landmarks[ind, :].flatten(),
+                                                              cov=self.landmarks_cov[ind, :, :]
+                                                                      .reshape(2,2))
 
         max_prob_index = np.argmax(observation_probability)
 
         if observation_probability[max_prob_index] < ASSOCIATION_THRESH:
-            available_positions = np.nonzero(self.populated_landmarks == False)
+            available_positions = np.nonzero(self.populated_landmarks == False)[0]
             if len(available_positions) == 0:
                 rospy.logwarn('No available landmark indices in array')
+                return max_prob_index
             else:
                 new_lm_ind = available_positions[0]
                 self.landmarks[new_lm_ind, :] = observed_landmark
                 self.landmarks_cov[new_lm_ind] = R.copy()
                 self.populated_landmarks[new_lm_ind] = True
+                return new_lm_ind
+
         else:
             return max_prob_index
 
@@ -123,7 +134,8 @@ class FastSLAM2:
 
         Gs = np.empty((2, 3), dtype=np.float32)
         Gs[:, :2] = Rt.copy()
-        Gs[2, :] = Rtprime @ (self.landmarks[i, :] - self.position[:2]).reshape((2, 1))
+        Gs[:, 2] = (Rtprime @ (self.landmarks[landmark_index, :]
+                               - self.position[:2]).reshape((2, 1))).flat
 
         return Gtheta, Gs
 
@@ -131,8 +143,9 @@ class FastSLAM2:
         '''Matrix that changes reference frame from the car's frame to global frame.
         '''
         t_mat = np.empty((2, 3), dtype=np.float32)
-        t_mat[:2, :2] = np.array([[np.cos(self.position[2]), -np.sin(self.position[2])],
+        rmat = np.array([[np.cos(self.position[2]), -np.sin(self.position[2])],
                                   [np.sin(self.position[2]),  np.cos(self.position[2])]])
+        t_mat[:2, :2] = rmat
         t_mat[:2, 2] = self.position[:2]
         return t_mat
 
