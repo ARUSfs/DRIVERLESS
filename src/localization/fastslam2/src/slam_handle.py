@@ -15,7 +15,7 @@ import numpy as np
 from scipy.stats import multivariate_normal
 
 N_LANDMARKS = 10
-ASSOCIATION_THRESH = 0.4
+ASSOCIATION_THRESH = 0.1
 P = np.eye(3, dtype=np.float32)  # Cov. matrix of (3)
 P_inv = np.linalg.inv(P)         # Precomputing since it's contant.
 R = np.eye(2, dtype=np.float32)
@@ -47,18 +47,15 @@ class FastSLAM2:
 
         landmark_ind = self.get_corresponding_landmark(observed_landmark)
         Gtheta, Gs = self.calculate_jacobians(landmark_ind)
-        print("jac", self.landmarks_cov[0])
 
         # Equivalent to original \hat z in [1] since our g is linear with \theta.
         delta_z = observed_landmark - self.landmarks[landmark_ind, :]
 
-        Q_inv = R + Gtheta @ self.landmarks_cov[landmark_ind] @ Gtheta.T
+        Q_inv = np.linalg.inv(R + Gtheta @ self.landmarks_cov[landmark_ind] @ Gtheta.T)
 
         self.pose_sampling(Gs, Q_inv, delta_z)
-        print("samp", self.landmarks_cov[0])
 
         self.update_landmark_estimate(Gs, Gtheta, Q_inv, delta_z, landmark_ind)
-        print("update", self.landmarks_cov[0])
 
     def update_particle(self, delta_time: float):
         '''Updates the state of the particle with a bicycle model. Takes current linear velocity
@@ -91,11 +88,11 @@ class FastSLAM2:
     def get_corresponding_landmark(self, observed_landmark: np.ndarray):
         observation_probability = np.zeros(N_LANDMARKS, dtype=np.float32)
         for ind in np.nonzero(self.populated_landmarks)[0]:
-            print(self.landmarks_cov[ind, :, :])
-            observation_probability = multivariate_normal.pdf(observed_landmark,
-                                                              mean=self.landmarks[ind, :].flatten(),
-                                                              cov=self.landmarks_cov[ind, :, :]
-                                                                      .reshape(2,2))
+            observation_probability[ind] = multivariate_normal.pdf(observed_landmark,
+                                                                   mean=self.landmarks[ind, :]
+                                                                            .flatten(),
+                                                                   cov=self.landmarks_cov[ind, :, :]
+                                                                           .reshape(2,2))
 
         max_prob_index = np.argmax(observation_probability)
 
