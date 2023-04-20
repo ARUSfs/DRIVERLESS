@@ -13,12 +13,19 @@ where t is now. For any notation doubts consult [1].
 import rospy
 import numpy as np
 from scipy.stats import multivariate_normal
+import tf
 
-N_LANDMARKS = 10
-ASSOCIATION_THRESH = 0.1
+from geometry_msgs.msg import Twist
+from sensor_msgs.msg import PointCloud2
+from fssim_common.msg import State
+from ros_numpy.point_cloud2 import pointcloud2_to_xyz_array
+
+N_LANDMARKS = 200
+ASSOCIATION_THRESH = 0.05
 P = np.eye(3, dtype=np.float32)  # Cov. matrix of (3)
 P_inv = np.linalg.inv(P)         # Precomputing since it's contant.
 R = np.eye(2, dtype=np.float32)
+TF_FRAME = 'SLAM_POS'
 
 
 class FastSLAM2:
@@ -32,10 +39,14 @@ class FastSLAM2:
         self.populated_landmarks = np.zeros(N_LANDMARKS, dtype=np.bool)
 
         self.motion = np.zeros(2, dtype=np.float32)  # Equivalent to u^t in [1]
-        self.last_rostime = 0
+        self.last_rostime = rospy.get_rostime().secs
+        self.got_map = False
 
-    def process_map(self, observations: np.ndarray, delta_time: float):
-        self.update_particle(delta_time)
+        self.br = tf.TransformBroadcaster()
+        #rospy.Subscriber('/fssim/base_pose_ground_truth', State, self.state_callback)
+        rospy.Subscriber('/camera/cones', PointCloud2, self.camera_callback)
+
+    def process_map(self, observations: np.ndarray):
         for observation in observations:
             self.forward_observation(observation)
 
@@ -61,6 +72,8 @@ class FastSLAM2:
         '''Updates the state of the particle with a bicycle model. Takes current linear velocity
         and yaw to update the particle's position. Corresponds to (3) in [1].
         '''
+        if not self.got_map:
+            return
 
         B = np.array([[np.cos(self.position[2]), 0],
                       [np.sin(self.position[2]), 0],
@@ -95,7 +108,10 @@ class FastSLAM2:
                                                                            .reshape(2,2))
 
         max_prob_index = np.argmax(observation_probability)
-
+        rospy.logwarn(self.landmarks[self.populated_landmarks])
+        rospy.logwarn(observed_landmark)
+        #rospy.logwarn((observation_probability[observation_probability>0]))
+        #rospy.logwarn(self.landmarks_cov[self.populated_landmarks])
         if observation_probability[max_prob_index] < ASSOCIATION_THRESH:
             available_positions = np.nonzero(self.populated_landmarks == False)[0]
             if len(available_positions) == 0:
@@ -145,6 +161,19 @@ class FastSLAM2:
         t_mat[:2, :2] = rmat
         t_mat[:2, 2] = self.position[:2]
         return t_mat
+
+    def state_callback(self, msg: State):
+        self.motion[0] = np.linalg.norm([msg.vx, msg.vy])
+        self.motion[1] = msg.r
+        delta_time = msg.header.stamp.secs - self.last_rostime
+        self.update_particle(delta_time)
+        self.last_rostime = msg.header.stamp.secs
+
+    def camera_callback(self, msg: PointCloud2):
+        points = pointcloud2_to_xyz_array(msg)
+        points[:, 2] = 1
+        self.process_map(points)
+        rospy.logerr(self.landmarks[(self.landmarks != 0).all(axis=1), :].shape)
 
 
 def bound_angle(angle: float):
