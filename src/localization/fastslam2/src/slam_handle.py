@@ -11,8 +11,11 @@ where t is now. For any notation doubts consult [1].
 """
 
 import rospy
+from visualization_msgs.msg import MarkerArray, Marker
 import numpy as np
 from scipy.stats import multivariate_normal
+import tf
+from threading import Lock
 import tf
 
 from geometry_msgs.msg import Twist
@@ -20,11 +23,14 @@ from sensor_msgs.msg import PointCloud2
 from fssim_common.msg import State
 from ros_numpy.point_cloud2 import pointcloud2_to_xyz_array
 
-N_LANDMARKS = 200
-ASSOCIATION_THRESH = 0.05
-P = np.eye(3, dtype=np.float32)  # Cov. matrix of (3)
+
+import time
+
+N_LANDMARKS = 400
+ASSOCIATION_THRESH = 0.00001
+P = 0.01*np.eye(3, dtype=np.float32)  # Cov. matrix of (3)
 P_inv = np.linalg.inv(P)         # Precomputing since it's contant.
-R = np.eye(2, dtype=np.float32)
+R = 0.2*np.eye(2, dtype=np.float32)
 TF_FRAME = 'SLAM_POS'
 
 
@@ -33,6 +39,7 @@ class FastSLAM2:
     def __init__(self):
         self.position = np.zeros(3, dtype=np.float32)  # [x, y, yaw]^t
         self.position_cov = P.copy()                        # \Sigma_s in [1]
+        self.lock = Lock()
 
         self.landmarks = np.zeros((N_LANDMARKS, 2), dtype=np.float32)  # \Theta^t in [1]
         self.landmarks_cov = np.zeros((N_LANDMARKS, 2, 2), dtype=np.float32)  # \Sigma_\Theta in [1]
@@ -41,14 +48,41 @@ class FastSLAM2:
         self.motion = np.zeros(2, dtype=np.float32)  # Equivalent to u^t in [1]
         self.last_rostime = rospy.get_rostime().secs
         self.got_map = False
+        self.allow_pose_sampling = False
 
         self.br = tf.TransformBroadcaster()
-        #rospy.Subscriber('/fssim/base_pose_ground_truth', State, self.state_callback)
+        try:
+            listener = tf.TransformListener()
+            rospy.logerr("ACTUALIZADO")
+            trans, rot = listener.lookupTransform('fssim/vehicle/cog', 'map', rospy.get_rostime())
+
+            self.position[:2] = trans[:2]
+            self.position[2] = tf.transformations.euler_from_quaternion(rot)[2]
+        except:
+            pass
+        rospy.Subscriber('/fssim/base_pose_ground_truth', State, self.state_callback, queue_size=20)
         rospy.Subscriber('/camera/cones', PointCloud2, self.camera_callback)
+        self.tf_broad = tf.TransformBroadcaster()
+        self.p = rospy.Publisher('/landmarks', MarkerArray, queue_size=1)
+
+        self.vels = list()
+
+        self.i = 0
+
 
     def process_map(self, observations: np.ndarray):
-        for observation in observations:
-            self.forward_observation(observation)
+        rospy.logwarn(np.nonzero(self.populated_landmarks)[0].shape)
+        t = time.time()
+        #rospy.logwarn(np.mean(self.vels))
+        if self.i == 60:
+            self.allow_pose_sampling = True
+            rospy.logerr("HOLAAAAAAAAAAAA")
+        self.i += 1
+        with self.lock:
+            for observation in observations:
+                self.forward_observation(observation)
+        self.got_map = True
+        self.pub_markers()
 
     def forward_observation(self, observation: np.ndarray):
         '''Will apply 4.4 -> 4.1 -> 4.2 for each observation.
@@ -64,7 +98,9 @@ class FastSLAM2:
 
         Q_inv = np.linalg.inv(R + Gtheta @ self.landmarks_cov[landmark_ind] @ Gtheta.T)
 
-        self.pose_sampling(Gs, Q_inv, delta_z)
+        if self.allow_pose_sampling:
+            self.pose_sampling(Gs, Q_inv, delta_z)
+        self.update_frame()
 
         self.update_landmark_estimate(Gs, Gtheta, Q_inv, delta_z, landmark_ind)
 
@@ -78,8 +114,9 @@ class FastSLAM2:
         B = np.array([[np.cos(self.position[2]), 0],
                       [np.sin(self.position[2]), 0],
                       [0,                        1]], dtype=np.float32)
-        self.position += (B @ self.motion.reshape(2, 1) * delta_time).flat
-        self.position[2] = bound_angle(self.position[2])
+        with self.lock:
+            self.position += (B @ self.motion.reshape(2, 1) * delta_time).flat
+            self.position[2] = bound_angle(self.position[2])
 
     def pose_sampling(self, Gs: np.ndarray, Q_inv: np.ndarray, delta_z: np.ndarray):
         '''Q defined in (15). Its an input parameter because the matrix is shared with
@@ -99,34 +136,23 @@ class FastSLAM2:
         self.landmarks_cov[landmark_index] -= K @ Gtheta @ self.landmarks_cov[landmark_index]  # (18)
 
     def get_corresponding_landmark(self, observed_landmark: np.ndarray):
-        observation_probability = np.zeros(N_LANDMARKS, dtype=np.float32)
-        for ind in np.nonzero(self.populated_landmarks)[0]:
-            observation_probability[ind] = multivariate_normal.pdf(observed_landmark,
-                                                                   mean=self.landmarks[ind, :]
-                                                                            .flatten(),
-                                                                   cov=self.landmarks_cov[ind, :, :]
-                                                                           .reshape(2,2))
-
-        max_prob_index = np.argmax(observation_probability)
-        rospy.logwarn(self.landmarks[self.populated_landmarks])
-        rospy.logwarn(observed_landmark)
-        #rospy.logwarn((observation_probability[observation_probability>0]))
-        #rospy.logwarn(self.landmarks_cov[self.populated_landmarks])
-        if observation_probability[max_prob_index] < ASSOCIATION_THRESH:
+        distances = np.full(N_LANDMARKS, np.Inf)
+        distances[self.populated_landmarks] = np.linalg.norm(self.landmarks[self.populated_landmarks] - observed_landmark,
+                                                             axis=1)
+        min_dist_index = np.argmin(distances)
+        if not self.got_map or distances[min_dist_index] > 1:
             available_positions = np.nonzero(self.populated_landmarks == False)[0]
             if len(available_positions) == 0:
                 rospy.logwarn('No available landmark indices in array')
-                return max_prob_index
+                return min_dist_index
             else:
                 new_lm_ind = available_positions[0]
                 self.landmarks[new_lm_ind, :] = observed_landmark
                 self.landmarks_cov[new_lm_ind] = R.copy()
                 self.populated_landmarks[new_lm_ind] = True
                 return new_lm_ind
-
         else:
-            return max_prob_index
-
+            return min_dist_index
 
     def calculate_jacobians(self, landmark_index: int):
         '''Notation follows [1] using euclidean form of g where instead of distance and bearing
@@ -146,7 +172,7 @@ class FastSLAM2:
         Gtheta = Rt.copy()
 
         Gs = np.empty((2, 3), dtype=np.float32)
-        Gs[:, :2] = Rt.copy()
+        Gs[:, :2] = -Rt.copy()
         Gs[:, 2] = (Rtprime @ (self.landmarks[landmark_index, :]
                                - self.position[:2]).reshape((2, 1))).flat
 
@@ -157,25 +183,78 @@ class FastSLAM2:
         '''
         t_mat = np.empty((2, 3), dtype=np.float32)
         rmat = np.array([[np.cos(self.position[2]), -np.sin(self.position[2])],
-                                  [np.sin(self.position[2]),  np.cos(self.position[2])]])
+                        [ np.sin(self.position[2]),  np.cos(self.position[2])]])
         t_mat[:2, :2] = rmat
         t_mat[:2, 2] = self.position[:2]
         return t_mat
 
     def state_callback(self, msg: State):
-        self.motion[0] = np.linalg.norm([msg.vx, msg.vy])
+        delta_time = msg.header.stamp.to_sec() - self.last_rostime
+        self.last_rostime = msg.header.stamp.to_sec()
+        if not self.allow_pose_sampling:
+            return
+        self.motion[0] = np.linalg.norm([msg.vx, msg.vy]) - 0.010
         self.motion[1] = msg.r
-        delta_time = msg.header.stamp.secs - self.last_rostime
         self.update_particle(delta_time)
-        self.last_rostime = msg.header.stamp.secs
+        self.update_frame()
 
     def camera_callback(self, msg: PointCloud2):
         points = pointcloud2_to_xyz_array(msg)
         points[:, 2] = 1
         self.process_map(points)
-        rospy.logerr(self.landmarks[(self.landmarks != 0).all(axis=1), :].shape)
+
+    def pub_markers(self):
+        marray = MarkerArray()
+        m1 = Marker()
+        m1.action = Marker.DELETEALL
+        marray.markers.append(m1)
+        for i, lm in enumerate(self.landmarks[self.populated_landmarks]):
+            marker = Marker()
+            marker.id = i
+            marker.header.frame_id = 'map'
+            marker.header.stamp = rospy.Time().now()
+            marker.type = Marker.CYLINDER
+            marker.action = Marker.MODIFY
+            marker.pose.position.x = lm[0]
+            marker.pose.position.y = lm[1]
+            marker.pose.position.z = 0
+            marker.pose.orientation.x = 0.0
+            marker.pose.orientation.y = 0.0
+            marker.pose.orientation.z = 0.0
+            marker.pose.orientation.w = 1.0
+            marker.scale.x = 0.3
+            marker.scale.y = 0.3
+            marker.scale.z = 0.3
+            marker.color.r = 0
+            marker.color.g = 0
+            marker.color.b = 0
+            marker.color.a = 1.0
+
+            marker.lifetime = rospy.Duration()
+
+            marray.markers.append(marker)
+            marker.lifetime = rospy.Duration()
+            marray.markers.append(marker)
+
+        self.p.publish(marray)
+
+    def update_frame(self):
+        self.tf_broad.sendTransform((self.position[0], self.position[1], 0),
+                                    tf.transformations.quaternion_from_euler(0,
+                                                                             0,
+                                                                             self.position[2]),
+                                    rospy.Time.now(),
+                                    'coche',
+                                    'map')
+
+    def prune_landmarks(self):
+        di
 
 
 def bound_angle(angle: float):
     '''Bounds an angle between [-pi, pi] centered at 0'''
     return (angle + np.pi) % (2 * np.pi) - np.pi
+
+def point_set_distances(point_set: np.ndarray):
+    pass
+
