@@ -185,12 +185,6 @@ def detect_image(network, class_names, image, thresh=.5, hier_thresh=.5, nms=.45
     return sorted(predictions, key=lambda x: x[1])
 
 
-def nparray_to_image(img):
-    data = img.ctypes.data_as(POINTER(c_ubyte))
-    image = ndarray_image(data, img.ctypes.shape, img.ctypes.strides)
-
-    return image
-
 
 hasGPU = True
 lib_path = os.path.join(os.path.dirname(__file__), "libdarknet.so")
@@ -203,11 +197,6 @@ lib.network_height.restype = c_int
 
 copy_image_from_bytes = lib.copy_image_from_bytes
 copy_image_from_bytes.argtypes = [IMAGE, c_char_p]
-
-ndarray_image = lib.ndarray_to_image
-ndarray_image.argtypes = [POINTER(c_ubyte), POINTER(c_long), POINTER(c_long)]
-ndarray_image.restype = IMAGE
-
 
 predict = lib.network_predict_ptr
 predict.argtypes = [c_void_p, POINTER(c_float)]
