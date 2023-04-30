@@ -27,22 +27,24 @@ from ros_numpy.point_cloud2 import pointcloud2_to_xyz_array
 import time
 
 N_LANDMARKS = 400
+N_PARTICLES = 10
 ASSOCIATION_THRESH = 0.00001
 P = 0.01*np.eye(3, dtype=np.float32)  # Cov. matrix of (3)
+P[2, 2] = 0.001
 P_inv = np.linalg.inv(P)         # Precomputing since it's contant.
-R = 0.2*np.eye(2, dtype=np.float32)
+R = 0.1*np.eye(2, dtype=np.float32)
 TF_FRAME = 'SLAM_POS'
 
 
 class FastSLAM2:
 
     def __init__(self):
-        self.position = np.zeros(3, dtype=np.float32)  # [x, y, yaw]^t
-        self.position_cov = P.copy()                        # \Sigma_s in [1]
+        self.position = np.zeros((N_PARTICLES, 3), dtype=np.float32)  # [x, y, yaw]^t
+        self.position_cov = np.empty((3, 3), dtype=np.float32)        # \Sigma_s in [1]
         self.lock = Lock()
 
-        self.landmarks = np.zeros((N_LANDMARKS, 2), dtype=np.float32)  # \Theta^t in [1]
-        self.landmarks_cov = np.zeros((N_LANDMARKS, 2, 2), dtype=np.float32)  # \Sigma_\Theta in [1]
+        self.landmarks = np.zeros((N_PARTICLES, N_LANDMARKS, 2), dtype=np.float32)  # \Theta^t in [1]
+        self.landmarks_cov = np.zeros((N_PARTICLES, N_LANDMARKS, 2, 2), dtype=np.float32)  # \Sigma_\Theta in [1]
         self.populated_landmarks = np.zeros(N_LANDMARKS, dtype=np.bool)
 
         self.motion = np.zeros(2, dtype=np.float32)  # Equivalent to u^t in [1]
@@ -50,16 +52,6 @@ class FastSLAM2:
         self.got_map = False
         self.allow_pose_sampling = False
 
-        self.br = tf.TransformBroadcaster()
-        try:
-            listener = tf.TransformListener()
-            rospy.logerr("ACTUALIZADO")
-            trans, rot = listener.lookupTransform('fssim/vehicle/cog', 'map', rospy.get_rostime())
-
-            self.position[:2] = trans[:2]
-            self.position[2] = tf.transformations.euler_from_quaternion(rot)[2]
-        except:
-            pass
         rospy.Subscriber('/fssim/base_pose_ground_truth', State, self.state_callback, queue_size=20)
         rospy.Subscriber('/camera/cones', PointCloud2, self.camera_callback)
         self.tf_broad = tf.TransformBroadcaster()
@@ -74,7 +66,7 @@ class FastSLAM2:
         rospy.logwarn(np.nonzero(self.populated_landmarks)[0].shape)
         t = time.time()
         #rospy.logwarn(np.mean(self.vels))
-        if self.i == 60:
+        if self.i == 5:
             self.allow_pose_sampling = True
             rospy.logerr("HOLAAAAAAAAAAAA")
         self.i += 1
@@ -88,21 +80,22 @@ class FastSLAM2:
         '''Will apply 4.4 -> 4.1 -> 4.2 for each observation.
         observation: [x, y, 1] position of observed landmark with respect to vehicle frame.
         '''
-        observed_landmark = self.get_inv_observation_func() @ observation
+        for i in range(N_PARTICLES):
+            observed_landmark = self.get_inv_observation_func(i) @ observation
 
-        landmark_ind = self.get_corresponding_landmark(observed_landmark)
-        Gtheta, Gs = self.calculate_jacobians(landmark_ind)
+            landmark_ind = self.get_corresponding_landmark(observed_landmark)
+            Gtheta, Gs = self.calculate_jacobians(landmark_ind)
 
-        # Equivalent to original \hat z in [1] since our g is linear with \theta.
-        delta_z = observed_landmark - self.landmarks[landmark_ind, :]
+            # Equivalent to original \hat z in [1] since our g is linear with \theta.
+            delta_z = observed_landmark - self.landmarks[i, landmark_ind, :]
 
-        Q_inv = np.linalg.inv(R + Gtheta @ self.landmarks_cov[landmark_ind] @ Gtheta.T)
+            Q_inv = np.linalg.inv(R + Gtheta @ self.landmarks_cov[:, landmark_ind] @ Gtheta.T)
 
-        if self.allow_pose_sampling:
-            self.pose_sampling(Gs, Q_inv, delta_z)
-        self.update_frame()
+            if self.allow_pose_sampling:
+                self.pose_sampling(Gs, Q_inv, delta_z, i)
+            self.update_frame()
 
-        self.update_landmark_estimate(Gs, Gtheta, Q_inv, delta_z, landmark_ind)
+            self.update_landmark_estimate(Gs, Gtheta, Q_inv, delta_z, landmark_ind, i)
 
     def update_particle(self, delta_time: float):
         '''Updates the state of the particle with a bicycle model. Takes current linear velocity
@@ -111,12 +104,15 @@ class FastSLAM2:
         if not self.got_map:
             return
 
-        B = np.array([[np.cos(self.position[2]), 0],
-                      [np.sin(self.position[2]), 0],
-                      [0,                        1]], dtype=np.float32)
+        B = np.zeros((N_PARTICLES, 3, 2), dtype.np.float32)
+        B[:, 0, 0] = np.cos(self.position[:, 2])
+        B[:, 1, 0] = np.sin(self.position[:, 2])
+        B[:, 2, 1] = 1
+
         with self.lock:
-            self.position += (B @ self.motion.reshape(2, 1) * delta_time).flat
-            self.position[2] = bound_angle(self.position[2])
+            self.position += B @ (np.random.multivariate_normal(0, P, size=N_PARTICLES) + self.motion.reshape(2, 1) * delta_time)
+            for i in range(N_PARTICLES): # TODO: Change to apply_along_axis
+                self.position[i, 2] = bound_angle(self.position[i, 2])
 
     def pose_sampling(self, Gs: np.ndarray, Q_inv: np.ndarray, delta_z: np.ndarray):
         '''Q defined in (15). Its an input parameter because the matrix is shared with
@@ -124,7 +120,7 @@ class FastSLAM2:
         delta_z: (z-\hat z)
         '''
         self.position_cov = np.linalg.inv(Gs.T @ Q_inv @ Gs + P_inv)
-        self.position += self.position_cov @ (Gs.T @ (Q_inv @ delta_z))
+        self.position[particle] += self.position_cov @ (Gs.T @ (Q_inv @ delta_z))
         # Right-to-left matmul is faster in this case since delta_z is a vector. Parenthesis are
         # ugly, but I am unsure of @ precedence and havent found much in numpy's doc.
 
@@ -140,7 +136,7 @@ class FastSLAM2:
         distances[self.populated_landmarks] = np.linalg.norm(self.landmarks[self.populated_landmarks] - observed_landmark,
                                                              axis=1)
         min_dist_index = np.argmin(distances)
-        if not self.got_map or distances[min_dist_index] > 1:
+        if not self.got_map or distances[min_dist_index] > 2:
             available_positions = np.nonzero(self.populated_landmarks == False)[0]
             if len(available_positions) == 0:
                 rospy.logwarn('No available landmark indices in array')
@@ -167,25 +163,25 @@ class FastSLAM2:
         sinphi = np.sin(self.position[2])
         Rt = np.array([[cosphi, -sinphi],
                        [sinphi, cosphi]], dtype=np.float32)
-        Rtprime = np.array([[-sinphi, -cosphi],
-                            [cosphi , -sinphi]], dtype=np.float32)
+        Rprime = np.array([[-sinphi, cosphi],
+                            [-cosphi , -sinphi]], dtype=np.float32)
         Gtheta = Rt.copy()
 
         Gs = np.empty((2, 3), dtype=np.float32)
         Gs[:, :2] = -Rt.copy()
-        Gs[:, 2] = (Rtprime @ (self.landmarks[landmark_index, :]
+        Gs[:, 2] = (Rprime @ (self.landmarks[landmark_index, :]
                                - self.position[:2]).reshape((2, 1))).flat
 
         return Gtheta, Gs
 
-    def get_inv_observation_func(self):
+    def get_inv_observation_func(self, particle):
         '''Matrix that changes reference frame from the car's frame to global frame.
         '''
         t_mat = np.empty((2, 3), dtype=np.float32)
-        rmat = np.array([[np.cos(self.position[2]), -np.sin(self.position[2])],
-                        [ np.sin(self.position[2]),  np.cos(self.position[2])]])
+        rmat = np.array([[np.cos(self.position[particle, 2]), -np.sin(self.position[particle, 2])],
+                        [ np.sin(self.position[particle, 2]),  np.cos(self.position[particle, 2])]])
         t_mat[:2, :2] = rmat
-        t_mat[:2, 2] = self.position[:2]
+        t_mat[:2, 2] = self.position[particle, :2]
         return t_mat
 
     def state_callback(self, msg: State):
@@ -239,17 +235,14 @@ class FastSLAM2:
         self.p.publish(marray)
 
     def update_frame(self):
-        self.tf_broad.sendTransform((self.position[0], self.position[1], 0),
+        avg_pos = np.mean(self.position, axis=0)
+        self.tf_broad.sendTransform((avg_pos[0], avg_pos[1], 0),
                                     tf.transformations.quaternion_from_euler(0,
                                                                              0,
-                                                                             self.position[2]),
+                                                                             avg_pos[2]),
                                     rospy.Time.now(),
                                     'coche',
                                     'map')
-
-    def prune_landmarks(self):
-        di
-
 
 def bound_angle(angle: float):
     '''Bounds an angle between [-pi, pi] centered at 0'''
