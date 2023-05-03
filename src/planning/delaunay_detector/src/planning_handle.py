@@ -26,7 +26,7 @@ class PlanningHandle():
         self.planning_system = PlanningSystem()
 
         topic_map = rospy.get_param('~topic_map')
-        rospy.Subscriber(topic_map, Map, self.get_trajectory)
+        rospy.Subscriber(topic_map, Map, self.get_trajectory, queue_size=1)
 
         topic_route = rospy.get_param('~topic_route')
         self.pub_route = rospy.Publisher(topic_route, Trajectory, queue_size=1)
@@ -61,7 +61,7 @@ class PlanningHandle():
 
     def publish_marker(self, simplices):
         marker = Marker()
-        marker.header.frame_id = 'map'
+        marker.header.frame_id = 'fssim/vehicle/cog'
         marker.header.stamp = rospy.Time.now()
 
         marker.ns = 'delaunay'
