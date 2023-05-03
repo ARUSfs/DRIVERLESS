@@ -10,13 +10,16 @@ from itertools import combinations
 import rospy
 import numpy as np
 from scipy.spatial import Delaunay
-from sklearn.neighbors import NearestNeighbors
+from scipy.interpolate import BSpline
 
 from common_msgs.msg import Simplex, Triangulation
 from geometry_msgs.msg import Point
 
 
 MAX_DISTANCE = 8
+W_DISTANCE = 0.5
+W_ANGLE = 0.5
+W_THRESH = 7
 
 
 class PlanningSystem():
@@ -40,13 +43,15 @@ class PlanningSystem():
         self.colours = list()
         cone_points = list()
         for c in cones:
-            if c.confidence > 0.5:
+            if c.confidence > 0.5 and c.color != 'o':
                 cone_points.append((c.position.x, c.position.y))
                 self.colours.append(c.color)
         self.cones = np.array(cone_points)
         self.distances = dict()
 
     def calculate_path(self):
+        if len(self.cones) < 3:
+            return list(), list()
         triangles = Delaunay(self.cones)
 
         preproc_simplices = list()
@@ -56,36 +61,40 @@ class PlanningSystem():
             if all(self.get_distance(self.cones[p1], self.cones[p2]) < MAX_DISTANCE
                    for p1, p2 in combinations(simplex, 2)):
                 for p1, p2 in combinations(simplex, 2):  # TODO Could be optimized.
-                    print(self.colours[p1], self.colours[p2])
                     if not self.colours[p1] == self.colours[p2]:
                         midpoints.append((self.cones[p1] + self.cones[p2])/2)
                         preproc_simplices.append(simplex)
                         break
 
-        self.publish_delaunay_triangles(preproc_simplices)
+
+        last_element = np.array([0, 0])
         midpoints = np.array(midpoints)
-        neighbors = NearestNeighbors(n_neighbors=7, algorithm='auto').fit(midpoints)
+        non_used_midpoints = np.full(midpoints.shape[0], True, dtype=np.bool)
+        path = [last_element]
 
-        last_element = np.array((0, 0))
-        path_indices = list()
-        stop = False
-        while len(path_indices) < len(midpoints) and not stop:
-            indices = neighbors.kneighbors([last_element], return_distance=False)
-            stop = True
-            for i in indices[0]:
-                if i not in path_indices:
-                    path_indices.append(i)
-                    last_element = midpoints[i]
-                    stop = False
-                    break
+        while len(path) < len(midpoints):
+            vectors = np.full(midpoints.shape, np.Inf)
+            distances = np.full(midpoints.shape[0], np.Inf)
+            angles = np.full(midpoints.shape[0], np.Inf)
+            weights = np.full(midpoints.shape[0], np.Inf)
 
-        route = np.empty((len(path_indices) + 1, 2))
-        route[0, :] = np.zeros((1, 2))
-        route[1:, :] = midpoints[path_indices]
+            vectors[non_used_midpoints] = midpoints[non_used_midpoints] - last_element
+            distances[non_used_midpoints] = np.linalg.norm(vectors[non_used_midpoints], axis=1)
+            angles[non_used_midpoints] = np.abs(np.arctan2(vectors[non_used_midpoints, 1], vectors[non_used_midpoints, 0]))
 
-        # TODO: I don't think using a spline to "smooth" the route is worth since
-        # pure_pursuit will do it anyway with parameter changes. As of now it will
-        # remain un-splined.
+
+            weights = W_DISTANCE*distances + W_ANGLE*angles
+
+            next_midpoint = np.nanargmin(weights)
+            if weights[next_midpoint] < W_THRESH:
+                non_used_midpoints[next_midpoint] = False
+                path.append(midpoints[next_midpoint])
+                last_element = midpoints[next_midpoint]
+            else:
+                break
+
+        route = np.array(path)
+
         return route, preproc_simplices
 
     def get_distance(self, p1, p2):
@@ -99,18 +108,3 @@ class PlanningSystem():
             distance = np.linalg.norm(p1 - p2)
             self.distances[(p1b, p2b)] = distance
             return distance
-
-    def publish_delaunay_triangles(self, simplices):
-        triang = Triangulation()
-        triang.simplices = list()
-        for simplex_indices in simplices:
-            simplex = Simplex()
-            simplex.simplex = list()
-            for i in simplex_indices:
-                point = Point()
-                point.x = self.cones[i, 0]
-                point.y = self.cones[i, 1]
-                simplex.simplex.append(point)
-
-            triang.simplices.append(simplex)
-        self.delaunay_publisher.publish(triang)

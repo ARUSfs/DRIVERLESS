@@ -117,7 +117,7 @@ class transformerFssim():
 
         msg = PolygonStamped()
         msg.polygon = pol
-        msg.header.frame_id = 'fssim_map'
+        msg.header.frame_id = 'fssim/vehicle/cog'
 
         rospy.loginfo(msg)
         self.pub_marker.publish(msg)
