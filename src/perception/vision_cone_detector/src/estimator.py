@@ -5,7 +5,7 @@ perception pipeline. The estimator will take an image as an input,
 and will output an estimation of the position of each cone relative
 to the car.
 
-@author: Jacobo Pindado
+@author: Jacobo Pindado (modified by Jorge Muñoz to add no homography topic)
 @date: 20221030
 """
 import os
@@ -67,10 +67,23 @@ class Estimator:
         self.cam_conf = camera
 
     def map_from_image(self,
-                       img: np.ndarray) -> List[Tuple[str, float, Tuple[float, float]]]:
+                   img: np.ndarray) -> Tuple[List[Tuple[str, float, Tuple[float, float]]], List[Tuple[str, float, Tuple[float, float]]]]:
+
+        # First process image and detect keypoints without applying homography
+        detections_without_homography = self._get_detections_without_homography(img)
+
+        # Then apply homography to the detections
+        detections_with_homography = self._apply_homography(detections_without_homography)
+
+        return detections_without_homography, detections_with_homography
+
+    
+    def _get_detections_without_homography(self,
+                                       img: np.ndarray) -> List[Tuple[str, float, Tuple[float, float]]]:
 
         if img.shape != (1088, 1920, 3):
             img = cv2.resize(img, (1920, 1088))
+            
         img = cv2.undistort(img, self.cam_conf.camera_mat,
                             self.cam_conf.dist_coefs, None,
                             self.cam_conf.new_camera_mat)
@@ -99,6 +112,19 @@ class Estimator:
             vertex_array[:2, i] = kpts_relative[0] + np.array([xmin, ymin])
 
             vertex_properties.append((class_name, float(confidence)/100))
+
+        return list((class_name, conf, (p[0], p[1])) for (class_name, conf), p
+                    in zip(vertex_properties, vertex_array.T))
+
+        
+    def _apply_homography(self,
+                          detections: List[Tuple[str, float, Tuple[float, float]]]) -> List[Tuple[str, float, Tuple[float, float]]]:
+        vertex_array = np.empty((3, len(detections)))
+        vertex_array[2, :] = np.ones(len(detections))
+        vertex_properties = [detection[:2] for detection in detections]
+
+        for i, (_, _, kpts_relative) in enumerate(detections):
+            vertex_array[:2, i] = kpts_relative
 
         vertex_array = self.cam_conf.transform_matrix @ vertex_array
         vertex_array /= vertex_array[2, :]  # We normalize the affine point

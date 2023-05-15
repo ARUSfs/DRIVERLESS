@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Script to execute the node visual perception node handle
 
-@author: Jacobo Pindado
-@date 20221113
+@author: Jacobo Pindado (modified by Jorge Muñoz to add no homography topic)
+@date: 20221113
 """
 import rospy
 from sensor_msgs.msg import Image
@@ -36,6 +36,7 @@ class EstimatorHandle():
         rospy.Subscriber(camera["topic"], Image, self.camera_callback, queue_size=1)
 
         self.pub = rospy.Publisher("/vision_cone_detector/estimated_map", Map, queue_size=10)
+        self.pub_without_homography = rospy.Publisher("/vision_cone_detector/estimated_map_without_homography", Map, queue_size=10)
 
     def camera_callback(self, msg: Image):
         pub_map = Map()
@@ -48,8 +49,12 @@ class EstimatorHandle():
         encoding = "passthrough" if camera["img_format"] == "RGB" else "rgb8"
         image = CvBridge().imgmsg_to_cv2(msg, desired_encoding=encoding)
 
-        estimated_points = self.estimator.map_from_image(image)
+        estimated_points_without_homography, estimated_points_with_homography = self.estimator.map_from_image(image)
 
+        self._publish_points(estimated_points_without_homography, self.pub_without_homography, pub_map)
+        self._publish_points(estimated_points_with_homography, self.pub, pub_map)
+
+    def _publish_points(self, estimated_points, publisher, pub_map):
         pub_map.cones = list()
         for color, confidence, (x, y) in estimated_points:
             cone = Cone()
@@ -68,8 +73,9 @@ class EstimatorHandle():
                 cone.color = 'O'
             else:
                 cone.color = 'u'
-
+            
             cone.confidence = confidence
             pub_map.cones.append(cone)
 
-        self.pub.publish(pub_map)
+        publisher.publish(pub_map)
+
