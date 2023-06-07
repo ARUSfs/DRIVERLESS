@@ -24,7 +24,7 @@ The Vision Cone Detector node receives the image from the camera and returns the
     1. Download the [weights](https://github.com/ARUSfs/DRIVERLESS/releases/download/weights/weights.zip).
     2. Unzip the file and copy the `WEIGHTS` folder to the desired location.
     3. Edit the `WEIGHTS/cones.data` file with the correct paths for our system.
-    4. Edit the `DRIVERLESS/src/perception/vision_cone_detector/config/vision.yaml` file with the correct paths for our system.
+    4. Edit the `DRIVERLESS/src/perception/vision_cone_detector/config/vision.yaml` file with the correct paths for our system. Also, we can add here the distance coefficients and the homography matrix.
 3. Send the video to the node. We have several options:
     1. If we want to use a live camera, we must look for the device number assigned to the camera (on a laptop, it will usually be 2). To do this, we run the following command:
     * `ls -ltrh /dev/video*`, the device number is the last number that appears on the line.
