@@ -45,7 +45,7 @@ class ControlHandle():
     def publish_topics(self):
 
         topic_pub = rospy.get_param('/control_pure_pursuit/controls_topic')
-        self.pub = rospy.Publisher(topic_pub, Controls, queue_size=10)
+        self.pub = rospy.Publisher(topic_pub, Controls, queue_size=1)
 
         topic_pursuit = rospy.get_param('/control_pure_pursuit/pursuit_topic')
         self.pub2 = rospy.Publisher(topic_pursuit, Point, queue_size=10)
