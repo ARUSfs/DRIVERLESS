@@ -20,7 +20,7 @@ class SteeringAngle(threading.Thread):
     def run(self):
         while not self._stop_event:
             self.ser.write([0xFF])
-            angle = (int(self.ser.readline()) - ZERO_OFFSET)*MULTIPLICATOR
+            angle = (int(self.ser.readline()) - self.ZERO_OFFSET)*self.MULTIPLICATOR
             # Redundant, but more thread safe
             self.wheel_angle = angle
 
