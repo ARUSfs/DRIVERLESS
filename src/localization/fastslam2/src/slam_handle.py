@@ -69,14 +69,14 @@ class FastSLAM2:
         t = time.time()
         if self.i == 5:
             self.allow_pose_sampling = True
-            rospy.logerr('='*100)
+            rospy.logwarn('='*100)
         self.i += 1
         with self.lock:
             for observation in observations:
                 self.forward_observation(observation)
         self.got_map = True
         self.pub_markers()
-        rospy.logwarn(f'{np.nonzero(self.populated_landmarks)[0].shape}, {1/(time.time() - t)}')
+        rospy.loginfo(self.weighted_position)
 
     def forward_observation(self, observation: np.ndarray):
         '''Will apply 4.4 -> 4.1 -> 4.2 for each observation.
