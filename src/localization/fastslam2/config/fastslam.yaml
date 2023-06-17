@@ -1,0 +1,8 @@
+# Topic names
+local_map_topic: 'map_estimation'
+global_map_topic: 'global_map'
+state_topic: 'control_state'
+
+# Frames
+local_map_frame: 'local_map'
+global_map_frame: 'global_map'
