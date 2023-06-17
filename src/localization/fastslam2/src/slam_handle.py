@@ -12,16 +12,18 @@ where t is now. For any notation doubts consult [1].
 """
 
 import rospy
-from visualization_msgs.msg import MarkerArray, Marker
 import numpy as np
 from numba import jit, prange, float32
 from scipy.stats import multivariate_normal
 import tf
 from threading import Lock
 
+from visualization_msgs.msg import MarkerArray, Marker
+from rospy.numpy_msg import numpy_msg
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import PointCloud2
 from fssim_common.msg import State
+from common_msgs.msg import Cone, Map
 from ros_numpy.point_cloud2 import pointcloud2_to_xyz_array
 
 
@@ -59,8 +61,7 @@ class FastSLAM2:
         rospy.Subscriber('/camera/cones', PointCloud2, self.camera_callback, queue_size=1)
         self.tf_broad = tf.TransformBroadcaster()
         self.p = rospy.Publisher('/landmarks', MarkerArray, queue_size=1)
-
-        self.vels = list()
+        self.map_publisher = rospy.Publisher('/slam/map', Map, queue_size=1)
 
         self.i = 0
 
@@ -263,6 +264,23 @@ class FastSLAM2:
                                     rospy.Time.now(),
                                     'coche',
                                     'map')
+
+    def prune_landmarks(self):
+        pass
+
+    def publish_map(self):
+        with self.lock:
+            self.prune_landmarks()
+            slam_map = Map()
+            slam_map.cones = list()
+            for coords in self.weighted_landmarks[self.populated_landmarks]:
+                cone = Cone()
+                cone.position.x = coords[0]
+                cone.position.y = coords[1]
+                slam_map.cones.append(cone)
+
+            self.map_publisher.publish(slam_map)
+
 
 @jit(float32(float32), nopython=True, nogil=True, cache=True)
 def bound_angle(angle: float):

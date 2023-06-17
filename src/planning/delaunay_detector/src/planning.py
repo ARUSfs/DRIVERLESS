@@ -18,8 +18,8 @@ from geometry_msgs.msg import Point
 
 MAX_DISTANCE = 8
 W_DISTANCE = 0.5
-W_ANGLE = 0.5
-W_THRESH = 7
+W_ANGLE = 0.9
+W_THRESH = 2
 
 
 class PlanningSystem():
@@ -43,9 +43,8 @@ class PlanningSystem():
         self.colours = list()
         cone_points = list()
         for c in cones:
-            if c.confidence > 0.5 and c.color != 'o':
-                cone_points.append((c.position.x, c.position.y))
-                self.colours.append(c.color)
+            cone_points.append((c.position.x, c.position.y))
+            self.colours.append(c.color)
         self.cones = np.array(cone_points)
         self.distances = dict()
 
@@ -57,15 +56,19 @@ class PlanningSystem():
         preproc_simplices = list()
         midpoints = list()
 
-        for simplex in triangles.simplices:
-            if all(self.get_distance(self.cones[p1], self.cones[p2]) < MAX_DISTANCE
-                   for p1, p2 in combinations(simplex, 2)):
-                for p1, p2 in combinations(simplex, 2):  # TODO Could be optimized.
-                    if not self.colours[p1] == self.colours[p2]:
-                        midpoints.append((self.cones[p1] + self.cones[p2])/2)
-                        preproc_simplices.append(simplex)
-                        break
+        valid_simplices = list()
+        for i, simplex in enumerate(triangles.simplices):
+            simplex_valid = True
+            tmp_midpoints = []
+            for p1, p2 in combinations(simplex, 2):
+                if self.get_distance(self.cones[p1], self.cones[p2]) > MAX_DISTANCE:
+                    simplex_valid = False
+                    break
+                midpoints.append((self.cones[p1] + self.cones[p2])/2)
 
+            if simplex_valid:
+                midpoints += tmp_midpoints
+                preproc_simplices.append(simplex)
 
         last_element = np.array([0, 0])
         midpoints = np.array(midpoints)

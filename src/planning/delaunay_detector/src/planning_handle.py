@@ -61,7 +61,7 @@ class PlanningHandle():
 
     def publish_marker(self, simplices):
         marker = Marker()
-        marker.header.frame_id = 'fssim/vehicle/cog'
+        marker.header.frame_id = 'map'
         marker.header.stamp = rospy.Time.now()
 
         marker.ns = 'delaunay'

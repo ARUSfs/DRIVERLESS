@@ -4,9 +4,13 @@ import rospy
 from slam_handle import *
 
 def main():
-    rospy.init_node("map", anonymous=True)
+    rospy.init_node("slam_map", anonymous=False)
     slam = FastSLAM2()
-    rospy.spin()
+    rate = rospy.Rate(5)
+
+    while not rospy.is_shutdown():
+        slam.publish_map()
+        rate.sleep()
 
 
 if __name__ == '__main__':
