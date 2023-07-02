@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="prev" title="About Us" href="aboutUs.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="How to document" href="howToDoc.html" /><link rel="prev" title="About Us" href="aboutUs.html" />
 
     <link rel="shortcut icon" href="https://images.squarespace-cdn.com/content/v1/5e45d3a8e509f61738454469/4d7d9627-f1a6-4210-bc4d-6e90076418d1/favicon.ico?format=100w"/><!-- Generated with Sphinx 5.3.0 and Furo 2022.12.07 -->
         <title>Environment setup - ARUS DRIVERLESS</title>
@@ -171,8 +171,11 @@
 <li class="toctree-l2"><a class="reference internal" href="planning.html">Planning Node</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="vision_cone_detector.html">Vision Cone Detector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fsSim.html">FSSim</a></li>
 <li class="toctree-l1"><a class="reference internal" href="aboutUs.html">About Us</a></li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Environment setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="howToDoc.html">How to document</a></li>
 </ul>
 
 </div>
@@ -213,24 +216,63 @@
 <p class="admonition-title">Warning</p>
 <p>This documentation is under development</p>
 </div>
-<section id="instalar-ros-noetic">
-<h2>Instalar ROS Noetic<a class="headerlink" href="#instalar-ros-noetic" title="Permalink to this heading">#</a></h2>
-<ul class="simple">
-<li><p>Para instalar ROS Noetic, se debe seguir el tutorial de instalación de ROS Noetic en Ubuntu 20.04 Focal Fossa, disponible en <a class="reference external" href="http://wiki.ros.org/noetic/Installation/Ubuntu">este enlace</a>.</p></li>
-<li><p>Es importante tener en cuenta que se debe instalar la versión de ROS Noetic Desktop-Full, ya que es la que contiene todos los paquetes necesarios para el proyecto.</p></li>
-<li><p>También es importante usar la versión de Ubuntu 20.04 Focal Fossa, ya que es la que soporta ROS Noetic.</p></li>
-</ul>
-</section>
-<section id="instalar-paquetes-de-ros">
-<h2>Instalar paquetes de ROS<a class="headerlink" href="#instalar-paquetes-de-ros" title="Permalink to this heading">#</a></h2>
-<p>Para instalar los paquetes de ROS necesarios para el proyecto, se debe ejecutar el siguiente comando:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="hll">$ rosdep install --from-paths src --ignore-src -r -y
-</span></pre></div>
-</div>
-</section>
 <section id="setting-up-git-and-github">
 <h2>Setting up git and Github<a class="headerlink" href="#setting-up-git-and-github" title="Permalink to this heading">#</a></h2>
-<p>We mainly use Github during development, being <a class="reference external" href="https://github.com/ARUSfs/DRIVERLESS">::code::<code class="docutils literal notranslate"><span class="pre">ARUSfs/DRIVERLESS</span></code></a> the main repository. Some other repositories exist for MCU code or secondary projects that don’t quite fit the main repository.</p>
+<p>We mainly use Github during development, being <a class="reference external" href="https://github.com/ARUSfs/DRIVERLESS"><code class="docutils literal notranslate"><span class="pre">ARUSfs/DRIVERLESS</span></code></a> the main repository. Some other repositories exist for MCU code or secondary projects that don’t quite fit the main repository. Since most repositories are private, during push/pull operations you will need to introduce your credentials. Another option is to save credentials in plain text configuration file, which isn’t a good security practice. Here we will detail how to setup ssh keys to be used with Github, which is more secure and convinient than the former options.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>We will only cover how to set up ssh keys for development in <code class="docutils literal notranslate"><span class="pre">Ubuntu/Debian</span></code> distros, though the steps will probably be similar in other environments.</p>
+</div>
+<ol class="arabic">
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">ssh-keygen</span></code> in a console. If you aren’t sure about the prompts, you can use the default values by pressing <code class="docutils literal notranslate"><span class="pre">Enter</span></code> until the process has finished. This will create two files:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">~/.ssh/id_rsa</span></code>: You should keep this file secret. Never give it away.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">~/.ssh/id_rsa.pub</span></code>: This is the <em>public</em> key.</p></li>
+</ul>
+</li>
+<li><p>Open your Github <code class="docutils literal notranslate"><span class="pre">Settings</span></code> page</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">SSH</span> <span class="pre">and</span> <span class="pre">GPG</span> <span class="pre">keys</span></code> &gt; <code class="docutils literal notranslate"><span class="pre">New</span> <span class="pre">SSH</span> <span class="pre">key</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Title</span></code>: Enter a descriptive name for your computer.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Key</span></code>: Copy all the contents of <code class="docutils literal notranslate"><span class="pre">~/.ssh/id_rsa.pub</span></code> and paste in this field.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Add</span> <span class="pre">SSH</span> <span class="pre">key</span></code></p></li>
+</ol>
+<p>Try to only keep keys that you are certain are safe and remove any that you know you won’t use again. Anyone with your private key could impersonate you!</p>
+</li>
+<li><p>To make sure everything works correctly, you can run <code class="docutils literal notranslate"><span class="pre">ssh</span> <span class="pre">-T</span> <span class="pre">git&#64;github.com</span></code>. Github should greet you back!</p></li>
+<li><p>Now go to wherever you wish to download the repository, and run <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span> <span class="pre">ssh://git&#64;github.com/ARUSfs/DRIVERLESS</span></code>. <strong>Important</strong>: always precede <code class="docutils literal notranslate"><span class="pre">ARUSfs</span></code> repositories with <code class="docutils literal notranslate"><span class="pre">ssh://git&#64;github.com</span></code> instead of <code class="docutils literal notranslate"><span class="pre">https://github.com/</span></code>.</p></li>
+<li><p>Move into the directory and configure your mail and name for <code class="docutils literal notranslate"><span class="pre">git</span></code>. It’s recommended to set these as global values, but you may ommit the <code class="docutils literal notranslate"><span class="pre">--global</span></code> argument if for any reason you wish to configure it only for this repository. Run</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">config</span> <span class="pre">--global</span> <span class="pre">user.email</span> <span class="pre">&quot;you&#64;example.com&quot;</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">config</span> <span class="pre">--global</span> <span class="pre">user.name</span> <span class="pre">&quot;Your</span> <span class="pre">Name&quot;</span></code></p></li>
+</ul>
+</li>
+</ol>
+</section>
+<section id="installation-of-ros-noetic">
+<h2>Installation of ROS Noetic<a class="headerlink" href="#installation-of-ros-noetic" title="Permalink to this heading">#</a></h2>
+<p>To install Ros Noetic on <code class="docutils literal notranslate"><span class="pre">Ubuntu</span> <span class="pre">20.04</span></code> you may follow their <a class="reference external" href="http://wiki.ros.org/noetic/Installation/Ubuntu">official tutorial</a>. If installing for your computer, I would recommend installing the <code class="docutils literal notranslate"><span class="pre">ros-noetic-desktop-full</span></code> package, which includes <code class="docutils literal notranslate"><span class="pre">rviz</span></code> and other tools for visualization. If installing on a machine for inference it will suffice with <code class="docutils literal notranslate"><span class="pre">ros-noetic-ros-base</span></code>. After the installation, you may:</p>
+<ul>
+<li><p>Make sure that <code class="docutils literal notranslate"><span class="pre">setup.bash</span></code> is sourced on your <code class="docutils literal notranslate"><span class="pre">.bashrc</span></code>(step 1.5 of the ROS tutorial).</p></li>
+<li><p>Install <code class="docutils literal notranslate"><span class="pre">rosdep</span></code>.</p></li>
+<li><p>Automatically install necessary packages by running</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ rosdep install --from-paths src --ignore-src -r -y
+</pre></div>
+</div>
+</li>
+</ul>
+</section>
+<section id="installation-of-cuda-and-cudnn">
+<h2>Installation of CUDA and cuDNN<a class="headerlink" href="#installation-of-cuda-and-cudnn" title="Permalink to this heading">#</a></h2>
+<blockquote>
+<div><p><em>lasciate ogni speranza, voi ch’entrate</em></p>
+</div></blockquote>
+<p>CUDA is a parallel computing platform and API which allows programming for Nvidia GPUs parallelization capabilities. Some other packages exist which include predesigned functions for some aplications like cuBLAS (Basic Linear Algebra Sobprograms) or cuDNN (Deep Neural Networks). While the first one is usually packaged along CUDA, cuDNN isn’t so it must be installed separately.</p>
+<p>Even though the <em>theory</em> of installing these packages is simple, everyone’s experience differs. During installation, various problems will arise. These issues will differ from OS to OS, hardware to hardware, and version to version. My intention for this wiki is to be autocontained, but if for any reason you have to install these and are completely unable to fix the problems, feel free to contact me (<a class="reference internal" href="#pindado.jacobo&#64;gmail.com"><span class="xref myst">Jacobo Pindado Perea</span></a>).</p>
+</section>
+<section id="compilation-of-opencv">
+<h2>Compilation of OpenCV<a class="headerlink" href="#compilation-of-opencv" title="Permalink to this heading">#</a></h2>
+<p>Whenever installing and profiling on a machine with GPU</p>
 </section>
 </section>
 
@@ -239,7 +281,15 @@
       <footer>
         
         <div class="related-pages">
-          
+          <a class="next-page" href="howToDoc.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">How to document</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
           <a class="prev-page" href="aboutUs.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
@@ -288,9 +338,10 @@
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Environment setup</a><ul>
-<li><a class="reference internal" href="#instalar-ros-noetic">Instalar ROS Noetic</a></li>
-<li><a class="reference internal" href="#instalar-paquetes-de-ros">Instalar paquetes de ROS</a></li>
 <li><a class="reference internal" href="#setting-up-git-and-github">Setting up git and Github</a></li>
+<li><a class="reference internal" href="#installation-of-ros-noetic">Installation of ROS Noetic</a></li>
+<li><a class="reference internal" href="#installation-of-cuda-and-cudnn">Installation of CUDA and cuDNN</a></li>
+<li><a class="reference internal" href="#compilation-of-opencv">Compilation of OpenCV</a></li>
 </ul>
 </li>
 </ul>

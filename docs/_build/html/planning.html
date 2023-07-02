@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="About Us" href="aboutUs.html" /><link rel="prev" title="Perception Node" href="perception.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Vision Cone Detector" href="vision_cone_detector.html" /><link rel="prev" title="Perception Node" href="perception.html" />
 
     <link rel="shortcut icon" href="https://images.squarespace-cdn.com/content/v1/5e45d3a8e509f61738454469/4d7d9627-f1a6-4210-bc4d-6e90076418d1/favicon.ico?format=100w"/><!-- Generated with Sphinx 5.3.0 and Furo 2022.12.07 -->
         <title>Planning Node - ARUS DRIVERLESS</title>
@@ -138,7 +138,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -171,8 +171,11 @@
 <li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Planning Node</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="vision_cone_detector.html">Vision Cone Detector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fsSim.html">FSSim</a></li>
 <li class="toctree-l1"><a class="reference internal" href="aboutUs.html">About Us</a></li>
 <li class="toctree-l1"><a class="reference internal" href="instalarEntorno.html">Environment setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="howToDoc.html">How to document</a></li>
 </ul>
 
 </div>
@@ -201,7 +204,7 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
@@ -209,11 +212,19 @@
         <article role="main">
           <section id="planning-node">
 <h1>Planning Node<a class="headerlink" href="#planning-node" title="Permalink to this heading">#</a></h1>
-<p>This is the <strong>Planning Node documentation</strong> of ARUSfs.</p>
+<p>We define planning as the process of taking a given map with cones, and from it extracting tracklimits and the desired path for our car to take. With respect to path-planning, we are currently only concerned with extracting the middle path of a track. After performing some tests with our Laptime Simulator, we observed that the time difference between the middle path and the <em>time-optimized</em> path wasn’t significant enough to justify it’s more complex implementation and slower execution time. There are are middle points, such as minimum curvature, which may be useful in some contexts.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>This documentation is under development</p>
 </div>
+<section id="delaunay-triangulation">
+<h2>Delaunay triangulation<a class="headerlink" href="#delaunay-triangulation" title="Permalink to this heading">#</a></h2>
+<p>For both track-limits and middle-path extraction we make use of Delaunay triangulation[^delaunay]. We may define a Delaunay triangulation of a given set of points <span class="math notranslate nohighlight">\(\bold P\)</span> as</p>
+<blockquote>
+<div><p>A triangulation of <span class="math notranslate nohighlight">\(\bold P\)</span> which for any given triangle, there is no point <span class="math notranslate nohighlight">\(p\in\bold P\)</span> strictly contained within the circumcircle of the triangle.</p>
+</div></blockquote>
+<p>[^delaunay] <a class="reference external" href="https://en.wikipedia.org/wiki/Delaunay_triangulation">Delaunay trianguluation wikipedia page</a></p>
+</section>
 </section>
 
         </article>
@@ -221,12 +232,12 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="aboutUs.html">
+          <a class="next-page" href="vision_cone_detector.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">About Us</div>
+                <div class="title">Vision Cone Detector</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
@@ -265,8 +276,27 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Planning Node</a><ul>
+<li><a class="reference internal" href="#delaunay-triangulation">Delaunay triangulation</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>
@@ -278,5 +308,6 @@
     <script src="_static/doctools.js"></script>
     <script src="_static/sphinx_highlight.js"></script>
     <script src="_static/scripts/furo.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     </body>
 </html>

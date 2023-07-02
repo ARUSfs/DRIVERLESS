@@ -138,7 +138,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -171,8 +171,11 @@
 <li class="toctree-l2"><a class="reference internal" href="planning.html">Planning Node</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="vision_cone_detector.html">Vision Cone Detector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fsSim.html">FSSim</a></li>
 <li class="toctree-l1"><a class="reference internal" href="aboutUs.html">About Us</a></li>
 <li class="toctree-l1"><a class="reference internal" href="instalarEntorno.html">Environment setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="howToDoc.html">How to document</a></li>
 </ul>
 
 </div>
@@ -201,7 +204,7 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
@@ -214,6 +217,51 @@
 <p class="admonition-title">Warning</p>
 <p>This documentation is under development</p>
 </div>
+<section id="objective">
+<h2>Objective<a class="headerlink" href="#objective" title="Permalink to this heading">#</a></h2>
+<p>The objective of the Localization node is to allow the car to know its position and any object perceived by it, being able to apply transformations in the space easily. It also allows us to know other important aspects, such as speed and acceleration. In addition, all this in function of time.</p>
+</section>
+<section id="structure">
+<h2>Structure<a class="headerlink" href="#structure" title="Permalink to this heading">#</a></h2>
+<p>The Localization node is composed of two parts:</p>
+<ul class="simple">
+<li><p>The first part is in charge of the communication with the IMU. It selectively chooses the messages that interest us from this, and sends them through different topics so that we can make use of them later.</p></li>
+<li><p>The second part of the node reads the messages that were previously sent through the topics, to implement the TF2 system.</p></li>
+</ul>
+<section id="imu-communication">
+<h3>IMU communication<a class="headerlink" href="#imu-communication" title="Permalink to this heading">#</a></h3>
+<p>To communicate with the IMU, the SBG drivers for ROS are used. With them, we have access to a wide range of parameters.
+At the moment, the values collected by Localization are:</p>
+<ul class="simple">
+<li><p>Speed.</p></li>
+<li><p>Speed (GPS).</p></li>
+<li><p>Position (GPS).</p></li>
+<li><p>Acceleration.
+All of them are sent through new topics, with a Vector3 type message (a vector with three parameters).</p></li>
+</ul>
+<p>The implementation consists of several parts:</p>
+<ul class="simple">
+<li><p>Subscription to topics: Communicates the node with the outputs of the data emitted by the IMU. It is implemented through the subscribe_topics() function.</p></li>
+<li><p>“Send” functions: They are functions that are in charge of reading the messages sent by the IMU and transforming them into Vector3 type with the relevant data from the message.</p></li>
+<li><p>Publication to topics: Creates new topics through which it sends the messages created by the “send” functions. It is implemented through the publish_topics() function.</p></li>
+</ul>
+</section>
+<section id="tf2-system">
+<h3>TF2 system<a class="headerlink" href="#tf2-system" title="Permalink to this heading">#</a></h3>
+<p>The TF2 library is the second version of the Transform library of ROS. It allows the tracking of frames over time, being able to apply transformations in the different reference systems easily. TF2 allows you to create as many frames as you need. In localization there are the following:</p>
+<figure class="align-default">
+<a class="reference internal image-reference" href="https://i.ibb.co/hDDrnyx/imagen.png"><img alt="TF2 tree" src="https://i.ibb.co/hDDrnyx/imagen.png" style="width: 250px;" /></a>
+</figure>
+<p>The world frame is the main one, by default in TF2. It is from it that start, in charge of registering the position of the IMU at the moment the node is started. After this, imu is deployed, which collects in real time the position of the IMU itself. To be more precise, there is a fourth frame that comes from imu, called camera. This last one defines the position in which the camera will be with respect to the IMU, since the camera will be the one that perceives the cones, not the IMU.</p>
+<p>*Currently the distance between the camera and the IMU is not defined.</p>
+<p>The implementation of TF2 is carried out by creating a new function for each new frame. These functions are composed as follows:</p>
+<ul class="simple">
+<li><p>Call to the broadcaster, which will be in charge of sending the transformation later. In this call, we define whether our frame will be static or not, depending on the type of broadcaster that we define. A transformation is also created at the beginning.</p></li>
+<li><p>Call to the listener, which will be in charge of listening to the transformations that are sent. In this call, we define the frame that we want to listen to, and the frame that we want to transform.</p></li>
+<li><p>Call to the transform, which will be in charge of applying the transformation to the data that we want. In this call, we define the frame that we want to transform, the frame to which we want to transform it, and the data that we want to transform.</p></li>
+</ul>
+</section>
+</section>
 </section>
 
         </article>
@@ -265,8 +313,32 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Localization Node</a><ul>
+<li><a class="reference internal" href="#objective">Objective</a></li>
+<li><a class="reference internal" href="#structure">Structure</a><ul>
+<li><a class="reference internal" href="#imu-communication">IMU communication</a></li>
+<li><a class="reference internal" href="#tf2-system">TF2 system</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>
