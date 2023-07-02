@@ -1,5 +1,13 @@
 # FSSim
 
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+fssimConfig
+
+```
+
 ## Introduction
 FSSim is a vehicle simulator dedicated for Formula Student Driverless Competition. It was developed for autonomous software testing purposes and not for gaming. FSSim is developed by [Juraj Kabzan](https://www.linkedin.com/in/juraj-kabzan-143698a1/), member of [AMZ-Driverless](http://driverless.amzracing.ch/). 
 Their more extensive documentation can be found [here](https://github.com/AMZ-Driverless/fssim/blob/master/fssim_doc/index.md).
