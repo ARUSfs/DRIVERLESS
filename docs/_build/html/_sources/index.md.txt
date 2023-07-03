@@ -2,25 +2,18 @@
 
 This is the **driverless pipeline documentation** of ARUSfs.
 
-```{warning}
-This documentation is under development!!
-```
-
-
 ```{toctree}
 :maxdepth: 2
 :caption: Index
 :hidden:
 
-nodos
+nodes
 vision_cone_detector
 fsSim
-aboutUs
 instalarEntorno
 howToDoc
 
 ```
-
 
 ## Download
 
@@ -30,5 +23,5 @@ To download the source code, do:
 ---
 emphasize-lines: 1
 ---
-$ git clone www.github.com/arusfs/driverless
+$ git clone www.github.com/arusfs/DRIVERLESS
 ```

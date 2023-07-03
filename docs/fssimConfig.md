@@ -1,11 +1,14 @@
 # FSSim Configuration
 
-This is the **FSSim Configuration** of ARUSfs.
+This is the **FSSim extensive documentation**.
 
 ## Setup
 To configure the simulator, we follow the following steps:
 1. Create a ROS workspace.
-2. In the src folder of the workspace, clone the [FSSim](https://github.com/ARUSfs/fssim_noetic_23) y el de [DRIVERLESS](https://github.com/ARUSfs/DRIVERLESS) _Pendiente de actualización 07-02-23_ repositories. Compile both repositories. Make sure all dependencies of both repositories are installed.
+2. In the src folder of the workspace, clone the [FSSim](https://github.com/ARUSfs/fssim_noetic_23) y el de [DRIVERLESS](https://github.com/ARUSfs/DRIVERLESS) repositories. Compile both repositories. Make sure all dependencies of both repositories are installed.
+```{note}
+(07.02.2023) The DRIVERLESS repository is not updated to run with the FSSim repository. Use this [repo](https://github.com/ARUSfs/tools_and_ideas/tree/main/Lola/driverless).
+```
 3. To launch the simulator together with our repository, we must execute the following launchers (automatically with the command `roslaunch fssim auto_fssim.launch`):
 - `roslaunch fssim_interface simulation.launch`
 - `roslaunch visualization visualization.launch`

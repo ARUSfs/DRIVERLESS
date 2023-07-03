@@ -19,16 +19,18 @@ To install ROS Noetic, follow the instructions located [here](https://arusfs.git
 Now we need to create a workspace for our project. To do so, in a terminal, type:
 1. `mkdir ros_ws/src`
 2. In the `ros_ws` folder type `catkin init`
-3. In the `src` folder type `git clone https://github.com/Huguet57/fssim-2021.git`
-4. In the `fssim-2021` folder type `./update_dependencies.sh`
+3. In the `src` folder type `git clone https://github.com/ARUSfs/fssim_noetic_23`
+4. In the `src` folder type `git clone https://github.com/ARUSfs/DRIVERLESS`
+5. In the `fssim_noetic_23` folder type `./update_dependencies.sh`
     1. If you get an error, try this and then try again: 
         - `sudo apt-get install python3-rosdep`
         - `sudo rosdep init`
         - `rosdep update`
-5. `catkin build`
-6. In the `ros_ws` folder type `source devel/setup.bash`
-7. To start the simulator, type `roslaunch fssim auto_fssim.launch`
-    1. The first time you run this command, it will take a while to download the map.
+6. `catkin build`
+7. In the `ros_ws` folder type `source devel/setup.bash`
+8. To start the simulator, type `roslaunch fssim auto_fssim.launch`
+    1. The first time you run this command, it will take a while.
+    2. For a better experience, read the extensive [documentation](https://arusfs.github.io/DRIVERLESS/fssimConfig.html).
 
 ## Configure a simulation
 The basic configuration file (fssim/config/simulation.yaml) for the simulation follows the following model. The following parameters are collected in this:
@@ -60,7 +62,7 @@ We can create a new track (skidpad, acceleration or trackdrive) thanks to the FS
     - **Important:** Do not use python3, it will not work. Use python. Also, install `sudo apt-get install python-lxml`.
 3. In the editor, press and hold Ctrl and with the left click draw the center of the track. The origin is always 0,0. The car always starts at the origin to positive X.
 Do not close the circuit by hand. Leave a reasonable distance between the first and last point, the editor will take care of closing the circuit when pressing compute track.
-4. Click on Compute Track to generate the cones (later is posible add or delete cones manually), choose a name and press Export Track. This will automatically generate the circuit files, so it can already be used in the configuration file (in track_name). The files are generated in fssim/fssim_gazebo/models/track.
+4. Click on Compute Track to generate the cones (later is posible add or delete cones manually), choose a name and press Export Track. This will automatically generate the circuit files, so it can already be used in the configuration file (in track_name). The files are generated in `fssim/fssim_gazebo/models/track`.
 5. In fssim/fssim_gazebo/models/track there is a file called track_corrector.py. Run `python3 track_corrector.py  track_name.sdf`. This will correct the circuit so that the car does not leave the track. The corrected file overwrites the previous one (be careful not to overwrite previous circuits). 
 6. To use the created circuit, in the simulation configuration file (fssim/config/simulation.yaml) in the repetitions section, in track_name, we put the name of the circuit we have created. If we want to change the name of an already created circuit, modify the track_name.sdf and track_name.yaml file.
 
@@ -69,18 +71,6 @@ A multiple simulation is a simulation that is repeated several times with differ
 To configure a multiple simulation, the only parameter that we must modify is the repetitions parameter. [Example](https://github.com/Huguet57/fssim-2021/blob/master/fssim/config/automated_simulation.yaml).  
 To start the simulation, run:  
 `./src/fssim/fssim/scripts/launch.py --config src/fssim/fssim/config/automated_simulation.yaml --output ~/sim_output`
-
-## Example of a simulation
-Is posible to make a simulation example with a basic control system already implemented. To do this, we just need to clone the repository that contains this test. I made a fork adapt it to ROS-Noetic, since it is originally designed for ROS-Kinetic and we will not be able to run it correctly. To run the simulation, the following steps must be followed:
-1. Clone the repository (fork to adapt to ROS-Noetic):
-    - `git clone https://github.com/jormunrod/fsd_skeleton_noetic.git`
-    - `cd fsd_skeleton_noetic`
-    - `./update_dependencies.sh -f`
-    - `catkin build`
-    - `source fsd_environment.sh // source devel/setup.bash`
-2. In different terminals, run `roscore` and:
-    - `roslaunch fssim_interface fssim.launch`
-    - `roslaunch control_meta trackdrive.launch`
 
 
 

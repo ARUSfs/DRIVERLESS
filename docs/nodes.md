@@ -1,10 +1,10 @@
-Nodos
+Nodes
 =========
 
-Aquí se muestran todos los nodos.
+Here are all the nodes.
 
 ```{toctree}
-:maxdepth: 2
+:maxdepth: 1
 
 common
 control

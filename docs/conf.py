@@ -12,7 +12,7 @@ import sys
 project = 'ARUS DRIVERLESS'
 copyright = '2023, ARUS'
 author = 'ARUS'
-release = '0.2.0'
+release = '0.3.0'
 
 # -- Importations ------------------------------------------------------------
 
