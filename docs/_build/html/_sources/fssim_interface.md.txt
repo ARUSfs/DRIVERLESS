@@ -1,7 +1,8 @@
 # FSSim_Interface Node
 
-This is the **FSSim_Interface Node documentation** of ARUSfs.
+This is the **FSSim Interface Node documentation**.
 
-```{warning}
-This documentation is under development!
-```
+## Overview
+This node is in charge of communicating the simulation system with the control system. For this, it is in charge of:
+- Receive the sensor data from the simulation system.
+- Send the control commands to the simulation system.

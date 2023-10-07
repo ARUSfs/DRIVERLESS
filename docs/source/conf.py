@@ -20,7 +20,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'ARUS_DRIVERLESS'
-copyright = '2022, ARUS'
+copyright = '2023, ARUS'
 author = 'ARUS'
 
 # The short X.Y version

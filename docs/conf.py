@@ -61,6 +61,6 @@ html_theme_options = {
         },
     ],
 
-    "announcement": "🚧  <em>This website is under development, come back soon!!</em>  🚧",
+    "announcement": "🚧  <em>This website is under development!!</em>  🚧",
     }
 

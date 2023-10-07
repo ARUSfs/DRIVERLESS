@@ -11,6 +11,7 @@ nodes
 vision_cone_detector
 fsSim
 instalarEntorno
+lidar
 howToDoc
 
 ```

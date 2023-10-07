@@ -1,16 +1,11 @@
-# LiDAR's
+# LiDARs
+=========
 
-This is the **LiDARs information page** of ARUSfs.
+Here you can find the documentation for the lidar sensors.
 
-## Table
-```{list-table}
-:header-rows: 1
-:align: center
+```{toctree}
+:maxdepth: 1
 
-* - Header 1
-  - Header 2
-* - Item 1 a
-  - Item 2 a
-* - Item 1 b
-  - Item 2 b
+RS-LiDAR-16
+
 ```
