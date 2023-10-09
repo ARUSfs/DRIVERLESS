@@ -1,4 +1,0 @@
-[project]
-name = "suma"
-authors = [{name = "Jorge", email = "jorgemr@pm.me"}]
-dynamic = ["version", "description"]

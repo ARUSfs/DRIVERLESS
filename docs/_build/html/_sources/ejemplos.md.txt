@@ -1,4 +1,0 @@
-Ejemplos
-=========
-
-Aquí se muestran todos los nodos disponibles en este documento de Sphinx.
