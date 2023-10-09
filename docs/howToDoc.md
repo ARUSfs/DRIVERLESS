@@ -16,6 +16,10 @@
     5. Open the index.html file located in the /build/html folder.
     6. Alternatively to point 5, you can open a local web server to view the documentation in the web browser (https://0.0.0.0:8000). To do this, run the following command in the /build/html folder:
         - `python3 -m http.server 8000`
+    7. Another alternative to point 5 is to use sphinx-autobuild, which allows you to automatically generate the HTML files when you modify the Markdown (.md) files. To do this, run the following command in the /docs folder:
+        - `pip install sphinx-autobuild` (only the first time)
+        - `sphinx-autobuild . _build/html`
+
 
 ## How to document
 - To add a new page to the documentation, create a new Markdown (.md) file in the /docs folder. This file must necessarily contain a title (#), and can contain other Markdown elements, such as lists, tables, etc. In addition, it can contain Python, RST, etc. code. For more information on how to write code in Markdown, you can consult the [official documentation](https://myst-parser.readthedocs.io/en/latest/using/syntax.html#syntax). 
