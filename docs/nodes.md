@@ -10,7 +10,8 @@ common
 control
 fssim_interface
 localization
-perception
+camera_perception
+lidar_perception
 planning
 
 ```

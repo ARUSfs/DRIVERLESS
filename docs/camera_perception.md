@@ -1,4 +1,4 @@
-# Perception Node
+# Camera Perception Node
 
 ```{warning}
 This documentation is under development
