@@ -20,7 +20,8 @@ Now we need to create a workspace for our project. To do so, in a terminal, type
 1. `mkdir ros_ws/src`
 2. In the `ros_ws` folder type `catkin init`
 3. In the `src` folder type `git clone https://github.com/ARUSfs/fssim_noetic_23`
-4. In the `src` folder type `git clone https://github.com/ARUSfs/DRIVERLESS`
+    1. If you get an error, you can try with this version: `git clone https://github.com/ARUSfs/fssim-2021`
+4. In the `src` folder type `git clone -b develop https://github.com/ARUSfs/DRIVERLESS`
 5. In the `fssim_noetic_23` folder type `./update_dependencies.sh`
     1. If you get an error, try this and then try again: 
         - `sudo apt-get install python3-rosdep`
