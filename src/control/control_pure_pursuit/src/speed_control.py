@@ -56,4 +56,4 @@ class PIDController():
 
         cmd = self.kp * self.Cp + self.ki * self.Ci + self.kd * self.Cd
 
-        return cmd
+        return min(cmd, 0.2) #cmd

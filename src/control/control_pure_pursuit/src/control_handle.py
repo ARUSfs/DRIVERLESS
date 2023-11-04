@@ -7,11 +7,14 @@
 import rospy
 import tf2_ros
 import tf_conversions
+import time
 
 from common_msgs.msg import Controls, Trajectory
 from geometry_msgs.msg import Point
 from common_msgs.srv import Spawn
 from control import ControlCar
+from fssim_common.msg import State
+import math
 
 
 class ControlHandle():
@@ -21,8 +24,8 @@ class ControlHandle():
 
     def __init__(self):
 
-        time = rospy.Time.now()
-        self.control = ControlCar(time)
+        #time = rospy.Time.now()
+        self.control = ControlCar(time.time())
 
         self.subscribe_topics()
         self.pub = None
@@ -41,6 +44,7 @@ class ControlHandle():
 
         topic1 = rospy.get_param('/control_pure_pursuit/route_topic')
         rospy.Subscriber(topic1, Trajectory, self.update_trajectory_callback)
+        rospy.Subscriber('/fssim/base_pose_ground_truth', State, self.update_state, queue_size=1)
 
     def publish_topics(self):
 
@@ -50,7 +54,7 @@ class ControlHandle():
         topic_pursuit = rospy.get_param('/control_pure_pursuit/pursuit_topic')
         self.pub2 = rospy.Publisher(topic_pursuit, Point, queue_size=10)
 
-    def update_state(self):
+    def update_state(self, msg: State):
 
         origin_frame = 'local_map'
         target_frame = 'global_map'
@@ -68,10 +72,12 @@ class ControlHandle():
              trans.transform.rotation.z,
              trans.transform.rotation.w)
         euler_angles = tf_conversions.transformations.euler_from_quaternion(q)
-        yaw = euler_angles[2]
+        #yaw = euler_angles[2]
+        yaw = msg.yaw
 
-        v = 0  # Not using velocity now.
-
+        #v = 0  # Not using velocity now.
+        v = math.hypot(msg.vx,msg.vy)  # get velocity from fssim
+        
         self.control.update_state(rospy.Time.now(), x, y, yaw, v)
 
     def update_trajectory_callback(self, msg):
@@ -86,7 +92,7 @@ class ControlHandle():
 
     def publish_msg(self):
 
-        self.update_state()
+        #self.update_state()
 
         ai, di = self.control.get_cmd()
         msg = Controls()

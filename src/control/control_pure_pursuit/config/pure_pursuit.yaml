@@ -4,13 +4,13 @@ pursuit_topic: 'pursuit_point'
 controls_topic: 'controls'
 
 # Parameters of pure pursuit controller
-K: 0.3                  # look forward gain
-LFC: 8.55               # [m] look-ahead distance
+K: 0 #0.3                  # look forward gain
+LFC: 6 #8.55               # [m] look-ahead distance
 WB: 1.5                 # [m] Wheel base of vehicle
 
 
 # Parameters of PID controller
-KP: 1.0                 # Speed proportional gain
+KP: 0.5 #1.0                 # Speed proportional gain
 KI: 0.0                 # Speed integrative gain
 KD: 0.0                 # Speed derivate gain
-TARGET_SPEED: 10 / 3.6  # [m/s]
+TARGET_SPEED: 6 #10 / 3.6  # [m/s]

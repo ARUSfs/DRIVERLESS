@@ -1,6 +1,6 @@
 <launch>
-	<node name="interface_rviz" pkg="rviz" type="rviz" args="-d $(find visualization)/rviz/interface.rviz">
-	</node>
+	<!-- <node name="interface_rviz" pkg="rviz" type="rviz" args="-d $(find visualization)/rviz/interface.rviz">
+	</node> -->
 
 	<node name="interface" pkg="visualization" type="main_interface.py">
 	<rosparam command="load" file="$(find visualization)/config/interface.yaml"/>
