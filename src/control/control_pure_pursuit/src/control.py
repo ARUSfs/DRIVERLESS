@@ -52,9 +52,9 @@ class ControlCar():
         self.previous_states.append(self.state)
 
     def get_cmd(self):
-
-        # ai = self.pid.accelerator_control(self.state.v, TARGET_SPEED)
-        ai = 0.2
+        
+        ai = self.pid.accelerator_control(self.state.v, TARGET_SPEED)
+        # ai = 0.2
         di, ind = pure_pursuit_control(self.state, self.target_course,
                                        self.target_ind, WB)
         self.target_ind = ind

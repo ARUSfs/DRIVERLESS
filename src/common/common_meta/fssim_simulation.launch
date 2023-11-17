@@ -1,0 +1,8 @@
+<launch>
+
+  <include file="$(find delaunay_detector)/launch/planning.launch"/>
+  <include file="$(find fssim_interface)/launch/simulation.launch"/>
+  <include file="$(find visualization)/launch/visualization.launch"/>
+  <include file="$(find control_pure_pursuit)/launch/control.launch"/>
+
+</launch>

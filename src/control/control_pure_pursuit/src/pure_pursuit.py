@@ -84,7 +84,7 @@ def pure_pursuit_control(state: State, trajectory: list, pind: int, WB: float):
             ty = trajectory.cy[-1]
             ind = len(trajectory.cx) - 1
 
-        alpha = math.atan2(ty - state.rear_y, tx - state.rear_x) - state.yaw
+        alpha = math.atan2(ty - state.rear_y, tx - state.rear_x)# - state.yaw
 
         delta = math.atan2(2.0 * WB * math.sin(alpha) / Lf, 1.0)
 
