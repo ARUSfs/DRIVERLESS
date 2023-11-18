@@ -10,8 +10,13 @@ from can_handle import CANHandle
 
 def main():
     rospy.init_node('can_interface', anonymous=True)
-    can_handle = CANHandle()
+    CANHandle()
     rospy.spin()
     
+if __name__ == '__main__':
+    try:
+        main()
+    except rospy.ROSInterruptException:
+        pass
 
 
