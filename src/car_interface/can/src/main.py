@@ -9,6 +9,7 @@ import rospy
 from can_handle import CANHandle
 
 def main():
+    """Initialize and run the CAN interface node."""
     rospy.init_node('can_interface', anonymous=True)
     CANHandle()
     rospy.spin()
