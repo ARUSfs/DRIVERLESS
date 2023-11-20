@@ -1,4 +1,0 @@
-<launch>
-  <node pkg="can_interface" name="can_interface" type="main.py">
-  </node>
-</launch>
