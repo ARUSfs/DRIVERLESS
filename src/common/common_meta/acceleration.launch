@@ -33,7 +33,8 @@
    <rosparam command="load" file="$(find accel_control)/config/accel_control.yaml"/>
     <rosparam>
       perception_topic: "/perception_map"
-      KP: 0.5
+      KP: 43.87
+      KI: 1.29
       target: 10
       track_length: 75
 

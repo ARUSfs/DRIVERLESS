@@ -32,7 +32,7 @@ LQR_PARAMS = np.array([rospy.get_param('/accel_control/lqr_dist'),
                        rospy.get_param('/accel_control/lqr_beta'),
                        rospy.get_param('/accel_control/lqr_r')],np.float64) 
 perception_topic = rospy.get_param('/accel_control/perception_topic')
-
+REACH_TARGET_TIME = 2.4
 
 class AccelControl():
 
@@ -120,10 +120,11 @@ class AccelControl():
 
 
     def get_acc(self):
-        error = TARGET - self.speed
+        error = self.get_target() - self.speed
 
         dt=time.time()-self.prev_t
-        self.integral += error*dt
+        if self.speed>0.1:
+            self.integral += error*dt
         derivative = (error-self.prev_err)/dt
 
         self.prev_t = time.time()
@@ -140,3 +141,7 @@ class AccelControl():
         controls.accelerator = self.acc
         self.cmd_publisher.publish(controls)
 
+   
+    def get_target(self):
+        t = time.time() - self.start_time
+        return max(0.5,min(t/REACH_TARGET_TIME,1)*TARGET)

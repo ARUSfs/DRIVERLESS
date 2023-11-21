@@ -62,7 +62,7 @@ class EBSTestControl():
         self.braking_publisher = rospy.Publisher('/braking', Bool, queue_size=10)
         self.pub_AS_status = rospy.Publisher('can/AS_status', Int16, queue_size=10)
         self.recta_publisher = rospy.Publisher("/accel_control/recta", Point, queue_size=10)
-        #rospy.Subscriber(perception_topic, PointCloud2, self.update_route, queue_size=10)
+        rospy.Subscriber(perception_topic, PointCloud2, self.update_route, queue_size=10)
         rospy.Subscriber('/car_state/state', CarState, self.update_state, queue_size=1)
 
 
@@ -76,13 +76,13 @@ class EBSTestControl():
 
         self.speed = math.hypot(msg.vx,msg.vy)
         
-        if self.speed > 0.95*TARGET:
-            emergency_msg = Int16()
-            emergency_msg.data = 4
-            self.pub_AS_status.publish(emergency_msg)
-            self.ebs_opened=True
-            self.acc = 0
-            self.publish_cmd()
+        # if self.speed > TARGET:
+        #     emergency_msg = Int16()
+        #     emergency_msg.data = 4
+        #     self.pub_AS_status.publish(emergency_msg)
+        #     self.ebs_opened=True
+        #     self.acc = 0
+        #     self.publish_cmd()
 
         if self.start_time == 0 and self.speed > 0.1:
             self.start_time = time.time()
@@ -104,15 +104,16 @@ class EBSTestControl():
             self.publish_cmd()
 
 
-    def update_route(self, msg: PointCloud2):
-        self.steer = 0
+    #def update_route(self, msg: PointCloud2):
+    #    self.steer = 0
 
 
     def get_acc(self):
         error = self.get_target() - self.speed
 
         dt=time.time()-self.prev_t
-        self.integral += error*dt
+        if self.speed > 0.1:
+            self.integral += error*dt
         derivative = (error-self.prev_err)/dt
 
         self.prev_t = time.time()
@@ -132,33 +133,34 @@ class EBSTestControl():
 
     def get_target(self):
         t = time.time()-self.start_time
-        return max(1,min(t/REACH_TARGET_TIME,1)*TARGET)
+        # max 0.5 para que el target no sea 0 al empezar (creo)
+        return max(0.5,min(t/REACH_TARGET_TIME,1)*TARGET)
     
 
-    # def update_route(self, msg: PointCloud2):
-    #     try:
-    #         a,b = self.accel_localizator.get_route(msg)
-    #         if abs(a) < 0.5 and abs(b) < 2:
-    #             self.a_media = self.a_media*0.7 + a*0.3
-    #             self.b_media = self.b_media*0.7 + b*0.3
-    #         else:
-    #             a,b = self.a_media, self.b_media
-    #     except Exception as e:
-    #         a,b = self.a_media, self.b_media
-    #         rospy.logwarn(e)
+    def update_route(self, msg: PointCloud2):
+        try:
+            a,b = self.accel_localizator.get_route(msg)
+            if abs(a) < 0.5 and abs(b) < 2:
+                self.a_media = self.a_media*0.7 + a*0.3
+                self.b_media = self.b_media*0.7 + b*0.3
+            else:
+                a,b = self.a_media, self.b_media
+        except Exception as e:
+            a,b = self.a_media, self.b_media
+            rospy.logwarn(e)
 
-    #     self.steer = self.get_steer(a, b)
-    #     msg = Point()
-    #     msg.x = a
-    #     msg.y = b
-    #     self.recta_publisher.publish(msg)
+        self.steer = self.get_steer(a, b)
+        msg = Point()
+        msg.x = a
+        msg.y = b
+        self.recta_publisher.publish(msg)
 
-    # def get_steer(self, a, b):
-    #     dist = -b/np.sqrt(a**2 + 1)   # Distancia del coche a la trayectoria
-    #     yaw = - math.atan(a)               # Ángulo entre la trayectoria y el coche
-    #     beta = 0
+    def get_steer(self, a, b):
+        dist = -b/np.sqrt(a**2 + 1)   # Distancia del coche a la trayectoria
+        yaw = - math.atan(a)               # Ángulo entre la trayectoria y el coche
+        beta = 0
 
-    #     w = np.array([dist, yaw, beta, self.r], np.float64) 
-    #     steer = -np.dot(LQR_PARAMS, w)         # u = -K*w
+        w = np.array([dist, yaw, beta, self.r], np.float64) 
+        steer = -np.dot(LQR_PARAMS, w)         # u = -K*w
 
-    #     return max(min(steer, 19.9),-19.9)
+        return max(min(steer, 19.9),-19.9)
