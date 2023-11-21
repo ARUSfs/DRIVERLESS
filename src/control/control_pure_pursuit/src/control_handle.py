@@ -16,6 +16,9 @@ from control import ControlCar
 from fssim_common.msg import State
 import math
 
+# Constants
+sim_mode = rospy.get_param('/control_pure_pursuit/simulation') # look for simulation mode
+
 
 class ControlHandle():
     """Listen route and state and generate command controls of steering and
@@ -44,7 +47,10 @@ class ControlHandle():
 
         topic1 = rospy.get_param('/control_pure_pursuit/route_topic')
         rospy.Subscriber(topic1, Trajectory, self.update_trajectory_callback)
-        rospy.Subscriber('/fssim/base_pose_ground_truth', State, self.update_state, queue_size=1)
+        if sim_mode:
+            rospy.Subscriber('/fssim/base_pose_ground_truth', State, self.update_state, queue_size=1)
+        else:
+            rospy.Subscriber('/motor_speed', State, self.update_state, queue_size=1)
 
     def publish_topics(self):
 
@@ -76,7 +82,10 @@ class ControlHandle():
         yaw = msg.yaw
 
         #v = 0  # Not using velocity now.
-        v = math.hypot(msg.vx,msg.vy)  # get velocity from fssim
+        if sim_mode:
+            v = math.hypot(msg.vx,msg.vy)  # get velocity from fssim
+        else:
+            v = msg
         
         self.control.update_state(rospy.Time.now(), x, y, yaw, v)
 
