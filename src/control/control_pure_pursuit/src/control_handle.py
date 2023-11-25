@@ -14,6 +14,7 @@ from geometry_msgs.msg import Point
 from common_msgs.srv import Spawn
 from control import ControlCar
 from fssim_common.msg import State
+from std_msgs.msg import Float32
 import math
 
 # Constants
@@ -48,9 +49,9 @@ class ControlHandle():
         topic1 = rospy.get_param('/control_pure_pursuit/route_topic')
         rospy.Subscriber(topic1, Trajectory, self.update_trajectory_callback)
         if sim_mode:
-            rospy.Subscriber('/fssim/base_pose_ground_truth', State, self.update_state, queue_size=1)
+            rospy.Subscriber('/fssim/base_pose_ground_truth', State, self.update_state_sim, queue_size=1)
         else:
-            rospy.Subscriber('/motor_speed', State, self.update_state, queue_size=1)
+            rospy.Subscriber('/motor_speed', Float32, self.update_state, queue_size=1)
 
     def publish_topics(self):
 
@@ -60,7 +61,32 @@ class ControlHandle():
         topic_pursuit = rospy.get_param('/control_pure_pursuit/pursuit_topic')
         self.pub2 = rospy.Publisher(topic_pursuit, Point, queue_size=10)
 
-    def update_state(self, msg: State):
+    def update_state(self, msg: Float32):
+
+        origin_frame = 'local_map'
+        target_frame = 'global_map'
+        trans = self.tfBuffer.lookup_transform(origin_frame,
+                                               target_frame,
+                                               rospy.Time.now(),
+                                               rospy.Duration(1.0))
+
+        # Read system reference data from TF
+        x = trans.transform.translation.x
+        y = trans.transform.translation.y
+
+        q = (trans.transform.rotation.x,
+             trans.transform.rotation.y,
+             trans.transform.rotation.z,
+             trans.transform.rotation.w)
+        euler_angles = tf_conversions.transformations.euler_from_quaternion(q)
+        yaw = euler_angles[2]
+        #yaw = msg.yaw
+
+        v = msg.data
+        
+        self.control.update_state(rospy.Time.now(), x, y, yaw, v)
+
+    def update_state_sim(self, msg: State):
 
         origin_frame = 'local_map'
         target_frame = 'global_map'
@@ -81,11 +107,7 @@ class ControlHandle():
         #yaw = euler_angles[2]
         yaw = msg.yaw
 
-        #v = 0  # Not using velocity now.
-        if sim_mode:
-            v = math.hypot(msg.vx,msg.vy)  # get velocity from fssim
-        else:
-            v = msg
+        v = math.hypot(msg.vx,msg.vy)  # get velocity from fssim
         
         self.control.update_state(rospy.Time.now(), x, y, yaw, v)
 

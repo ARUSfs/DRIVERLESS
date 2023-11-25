@@ -69,7 +69,7 @@ class PlanningSystem():
 
         last_element = np.array([0, 0])
         midpoints = np.array(midpoints)
-        non_used_midpoints = np.full(midpoints.shape[0], True, dtype=np.bool)
+        non_used_midpoints = np.full(midpoints.shape[0], True, dtype=np.bool_)
         path = [last_element]
 
         while len(path) < len(midpoints):

@@ -9,25 +9,35 @@ import math
 import rospy
 import asyncio
 from std_msgs.msg import Float32
+from common_msgs.msg import Controls
 
 class CANHandle:
     """ Class to manage CAN communication """
     def __init__(self):
         """Initialize the CAN Handle by subscribing and publishing topics and starting the main asynchronous loop."""
-        self.subscribe_topics()
+        #   DESCOMENTAR CON CUIDADO, ENVIARÁ COMANDAS AL INVERSOR
+        ###   self.subscribe_topics()
+        #   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         self.publish_topics()
         """Start the main asynchronous loop."""
         loop = asyncio.get_event_loop()
         loop.run_until_complete(asyncio.gather(
-            #self.get_and_send_motor_speed(),
-            self.async_function(),
-            self.other_async_function()
+            self.get_and_send_motor_speed(),
             ))
     def subscribe_topics(self):
-        pass
-    
+        rospy.Subscriber("/controls",Controls, self.cmd_callback)
+
     def publish_topics(self):
         self.speed_publisher = rospy.Publisher("/motor_speed", Float32, queue_size=10)
+
+    def cmd_callback(self, msg: Controls):
+        acc =  msg.accelerator
+        acc = min(acc,0.2)
+        datos_comanda = list(int.to_bytes(int(-acc*(2**15))-1, byteorder='little', length=2, signed=True))
+        msg = can.Message(arbitration_id=0x201, is_extended_id=False, data=[0x90]+datos_comanda)
+        print(msg)
+        with can.Bus(interface='socketcan', channel='can0', bitrate=500000) as bus:
+            bus.send(msg)
 
     async def get_and_send_motor_speed(self):
         """Retrieve motor speed and send it over ROS."""
@@ -36,7 +46,6 @@ class CANHandle:
         transmission_ratio = 11/45
 
         msg = can.Message(arbitration_id=0x201, is_extended_id=False, data=[0x3D, 0x30, 0x0A])
-
         with can.Bus(interface='socketcan', channel='can0', bitrate=500000) as bus:
             bus.send(msg)
             for msg in bus:
@@ -45,20 +54,5 @@ class CANHandle:
                     angular_v = int_val / 2**15 * vel_max
                     final_v = -angular_v * 2*math.pi*wheel_radius*transmission_ratio/60
 
-                    print("Velocity: " + str(final_v))
+                    rospy.logerr("Velocity: " + str(final_v))
                     self.speed_publisher.publish(final_v)
-
-    async def async_function(self):
-        x = 0
-        while True:
-            rospy.logerr("Hello: " + str(x))
-            x += 1
-            await asyncio.sleep(1)
-
-    async def other_async_function(self):
-        x = 0
-        while True:
-            rospy.logerr("Bye: " + str(x))
-            x += 1
-            await asyncio.sleep(1)
-    
