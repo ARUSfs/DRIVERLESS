@@ -5,7 +5,10 @@
 """
 
 import time
+import rospy
 
+# Constants
+MAX_CMD = rospy.get_param('/control_pure_pursuit/max_cmd')  # maximum command
 
 class PIDController():
 
@@ -56,4 +59,4 @@ class PIDController():
 
         cmd = self.kp * self.Cp + self.ki * self.Ci + self.kd * self.Cd
 
-        return min(cmd, 0.2) #cmd
+        return min(cmd, MAX_CMD) 

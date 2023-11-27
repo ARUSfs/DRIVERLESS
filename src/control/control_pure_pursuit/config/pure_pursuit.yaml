@@ -16,4 +16,7 @@ KD: 0.0                 # Speed derivate gain
 TARGET_SPEED: 6 #10 / 3.6  # [m/s]
 
 # Simulation mode: (true for get velocity from fssim)
-simulation: false
+simulation: true
+
+# Maximum command to the inverter
+max_cmd: 0.2

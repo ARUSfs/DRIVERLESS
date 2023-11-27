@@ -14,7 +14,7 @@ class SteeringHandle:
         self.epos.enable()
         self._is_shutdown = False
 
-        rospy.Subscriber('/control_pure_pursuit/controls_topic', Controls,
+        rospy.Subscriber('/controls', Controls,
                          callback=self.command_callback, queue_size=1)
 
 
