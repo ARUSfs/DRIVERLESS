@@ -1,11 +1,5 @@
 # Localization Node
 
-This is the **Localization Node documentation** of ARUSfs.
-
-```{warning}
-This documentation is under development
-```
-
 ## Objective
 The objective of the Localization node is to allow the car to know its position and any object perceived by it, being able to apply transformations in the space easily. It also allows us to know other important aspects, such as speed and acceleration. In addition, all this in function of time.
 

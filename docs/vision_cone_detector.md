@@ -1,7 +1,7 @@
 # Vision Cone Detector
 
 ```{note}
-This documentation is under development and may contain errors. If you find any, please report it.
+This documentation may contain errors. If you find any, please report it.
 ```
 
 ## Introduction

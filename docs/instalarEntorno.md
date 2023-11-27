@@ -1,8 +1,5 @@
 # Environment setup
 
-```{warning}
-This documentation is under development
-```
 ## Setting up git and Github
 We mainly use Github during development, being [`ARUSfs/DRIVERLESS`](https://github.com/ARUSfs/DRIVERLESS) the main repository. Some other repositories exist for MCU code or secondary projects that don't quite fit the main repository. Since most repositories are private, during push/pull operations you will need to introduce your credentials. Another option is to save credentials in plain text configuration file, which isn't a good security practice. Here we will detail how to setup ssh keys to be used with Github, which is more secure and convinient than the former options.
 

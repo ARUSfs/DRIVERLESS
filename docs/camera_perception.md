@@ -1,9 +1,5 @@
 # Camera Perception Node
 
-```{warning}
-This documentation is under development
-```
-
 ## Camera basics
 
 To represent how a camera, or even our eyes, work we use [Affine Geometry](https://en.wikipedia.org/wiki/Affine_geometry) and [Projective Geometry](https://en.wikipedia.org/wiki/Projective_geometry). An affine space will be denoted by {math}`\mathbb A^n` and a projective one as {math}`\mathbb P^n`. In a nutshell, we *project* all the points in a straight line, so that we may represent any point {math}`[x_1, x_2, x_3]` in {math}`\mathbb R^3` by the line it is contained by, represented as {math}`[x_1/x_3, x_2/x_3, 1]`. In other words, any point in the line {math}`[u, v, 1]` has coordinates {math}`s\cdot [u,v,1]`.

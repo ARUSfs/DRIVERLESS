@@ -1,9 +1,5 @@
 # LiDAR Perception Node
 
-```{warning}
-This documentation is under development
-```
-
 ## LiDAR basics
 The [LiDAR](https://en.wikipedia.org/wiki/Lidar) sensor returns a 360º pointcloud by emitting thousands of infrared light beams per second, which is transformed into an array of points (x,y,z,i), where "x,y,z" are the coordinates of the points detected (being the LiDAR the origin) and "i" is the instensity of return of the beam.
 

@@ -24,11 +24,10 @@ release = '0.3.0'
 
 extensions = [
 	'myst_parser',
-	#'autodoc',
 	'sphinx.ext.autodoc',
-    	'sphinx.ext.mathjax',
-    	'sphinx.ext.autosummary',
-    	'numpydoc',
+    'sphinx.ext.mathjax',
+    'sphinx.ext.autosummary',
+    'numpydoc',
 ]
 
 templates_path = ['_templates']
@@ -60,7 +59,5 @@ html_theme_options = {
             """,
         },
     ],
-
-    "announcement": "🚧  <em>This website is under development!!</em>  🚧",
-    }
+}
 
