@@ -1,6 +1,0 @@
-<launch>
-  <node pkg="delaunay_detector" name="delaunay_detector" type="main.py">
-  <rosparam command="load" file="$(find delaunay_detector)/config/delaunay.yaml"/>
-  </node>
-
-</launch>

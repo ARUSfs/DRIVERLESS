@@ -1,4 +1,0 @@
-<launch>
-  <node pkg="localization" name="car_broadcaster" type="main.py">
-  </node>
-</launch>
