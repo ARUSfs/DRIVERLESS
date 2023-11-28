@@ -3,5 +3,5 @@
 This is the **Control Node documentation** of ARUSfs.
 
 ```{warning}
-This documentation is under development!
+Control Node documentation is not available yet.
 ```

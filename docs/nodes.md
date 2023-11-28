@@ -13,5 +13,6 @@ localization
 camera_perception
 lidar_perception
 planning
+can
 
 ```
