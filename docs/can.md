@@ -1,7 +1,7 @@
 # Can Node
 
 ```{warning}
-It is necessary to handle with care to avoid the execution of unwanted commands to the inverter.
+It's  necessary to handle with care to avoid the execution of unwanted commands to the inverter.
 ```
 
 ## Introduction
