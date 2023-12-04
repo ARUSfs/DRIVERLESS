@@ -14,6 +14,7 @@ from common_msgs.msg import Controls
 class CANHandle:
     """ Class to manage CAN communication """
     def __init__(self):
+        self.MAX_ACC = 0.2
         """Initialize the CAN Handle by subscribing and publishing topics and starting the main asynchronous loop."""
         #   DESCOMENTAR CON CUIDADO, ENVIARÁ COMANDAS AL INVERSOR
         ###   self.subscribe_topics()
@@ -32,8 +33,8 @@ class CANHandle:
 
     def cmd_callback(self, msg: Controls):
         acc =  msg.accelerator
-        acc = min(acc,0.2)
-        datos_comanda = list(int.to_bytes(int(-acc*(2**15))-1, byteorder='little', length=2, signed=True))
+        acc = min(acc,self.MAX_ACC)
+        datos_comanda = list(int.to_bytes(int(acc*(2**15))-1, byteorder='little', length=2, signed=True))
         msg = can.Message(arbitration_id=0x201, is_extended_id=False, data=[0x90]+datos_comanda)
         print(msg)
         with can.Bus(interface='socketcan', channel='can0', bitrate=500000) as bus:
@@ -54,5 +55,5 @@ class CANHandle:
                     angular_v = int_val / 2**15 * vel_max
                     final_v = -angular_v * 2*math.pi*wheel_radius*transmission_ratio/60
 
-                    rospy.logerr("Velocity: " + str(final_v))
+                    #rospy.logerr("Velocity: " + str(final_v))
                     self.speed_publisher.publish(final_v)
