@@ -70,7 +70,7 @@ def pure_pursuit_control(state: State, trajectory: list, pind: int, WB: float):
 
     ind, Lf = trajectory.search_target_index(state)
 
-    if ind == -1:
+    if ind == -1 or state.v <0.5:
         delta = 0
     else:
         if pind >= ind:

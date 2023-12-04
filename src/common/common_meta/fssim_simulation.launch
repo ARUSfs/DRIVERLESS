@@ -1,8 +1,30 @@
 <launch>
 
-  <include file="$(find delaunay_detector)/launch/planning.launch"/>
-  <include file="$(find fssim_interface)/launch/simulation.launch"/>
-  <include file="$(find visualization)/launch/visualization.launch"/>
-  <include file="$(find control_pure_pursuit)/launch/control.launch"/>
+  <node pkg="delaunay_detector" name="delaunay_detector" type="main.py" output="screen">
+    <rosparam command="load" file="$(find delaunay_detector)/config/delaunay.yaml"/>
+    <rosparam>
+      topic_map: 'perception_map'
+    </rosparam>
+  </node>
+
+  <node pkg="fssim_interface" name="fssim_interface" type="main.py">
+  </node>
+
+  <node name="interface" pkg="visualization" type="main_interface.py">
+	  <rosparam command="load" file="$(find visualization)/config/interface.yaml"/>
+	</node>
+	<node name="car_broadcaster" pkg="visualization" type="car_broadcaster.py">
+	</node>
+
+  <node pkg="control_pure_pursuit" name="control_pure_pursuit" type="main.py" output="screen">
+    <rosparam command="load" file="$(find control_pure_pursuit)/config/pure_pursuit.yaml"/>
+    <rosparam>
+      LFC: 6
+      TARGET_SPEED: 4
+      simulation: true
+      max_cmd: 0.2
+    </rosparam>
+  </node>
+
 
 </launch>

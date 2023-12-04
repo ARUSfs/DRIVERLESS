@@ -96,7 +96,7 @@ class EPOSHandle:
     def move_to(self, wheel_angle):
         pErrorCode = c_uint()
 
-        motor_position = int(wheel_angle*2048*5*66/360)
+        motor_position = int(2*wheel_angle*2048*5*66/360)
         if self._is_enabled:
             ret = self.epos.VCS_MoveToPosition(self.keyhandle, self.NodeID, motor_position, 1,
                                                1, byref(pErrorCode))
