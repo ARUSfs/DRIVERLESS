@@ -1,6 +1,6 @@
 # ARUS DRIVERLESS
 
-This is the **driverless pipeline documentation** of ARUSfs.
+This is the **driverless pipeline documentation** of ARUSfs. It is divided in the following sections:
 
 ```{toctree}
 :maxdepth: 2
