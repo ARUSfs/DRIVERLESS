@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Vision Cone Detector" href="vision_cone_detector.html" /><link rel="prev" title="LiDAR Perception Node" href="lidar_perception.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Delaunay Detector Node" href="delaunay.html" /><link rel="prev" title="LiDAR Perception Node" href="lidar_perception.html" />
 
     <link rel="shortcut icon" href="https://images.squarespace-cdn.com/content/v1/5e45d3a8e509f61738454469/4d7d9627-f1a6-4210-bc4d-6e90076418d1/favicon.ico?format=100w"/><!-- Generated with Sphinx 6.2.1 and Furo 2022.12.07 -->
-        <title>Planning Node - ARUS DRIVERLESS</title>
+        <title>Planning Package - ARUS DRIVERLESS</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
@@ -134,7 +134,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -158,25 +158,41 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Index</span></p>
 <ul class="current">
-<li class="toctree-l1 current has-children"><a class="reference internal" href="nodes.html">Nodes</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="common.html">Common Node</a></li>
-<li class="toctree-l2"><a class="reference internal" href="control.html">Control Node</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="nodes.html">Packages and Nodes</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="common.html">Common Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="control.html">Control Package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fssim_interface.html">FSSim_Interface Node</a></li>
-<li class="toctree-l2"><a class="reference internal" href="localization.html">Localization Node</a></li>
-<li class="toctree-l2"><a class="reference internal" href="camera_perception.html">Camera Perception Node</a></li>
-<li class="toctree-l2"><a class="reference internal" href="lidar_perception.html">LiDAR Perception Node</a></li>
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Planning Node</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="localization.html">Localization Package</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="sbg_transforms.html">SBG Transforms Node</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fastslam2.html">FastSLAM2 Node</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="perception.html">Perception Package</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="camera_perception.html">Camera Perception Node</a></li>
+<li class="toctree-l3"><a class="reference internal" href="lidar_perception.html">LiDAR Perception Node</a></li>
+</ul>
+</li>
+<li class="toctree-l2 current has-children current-page"><a class="current reference internal" href="#">Planning Package</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="delaunay.html">Delaunay Detector Node</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="car_interface.html">Car Interface Package</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="can.html">Can Node</a></li>
+<li class="toctree-l3"><a class="reference internal" href="steering.html">Steering Node</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="vision_cone_detector.html">Vision Cone Detector</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="fsSim.html">FSSim</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="fsSim.html">FSSim</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="fssimConfig.html">FSSim Configuration</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="instalarEntorno.html">Environment setup</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+<li class="toctree-l1 has-children"><a class="reference internal" href="instalarEntorno.html">Environment setup</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="can_connection.html">Can Connection</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="lidar.html">LiDARs</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="lidar.html">LiDARs</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="RS-LiDAR-16.html">RS-LiDAR-16</a></li>
 </ul>
 </li>
@@ -209,27 +225,21 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main">
-          <section id="planning-node">
-<h1>Planning Node<a class="headerlink" href="#planning-node" title="Permalink to this heading">#</a></h1>
-<p>We define planning as the process of taking a given map with cones, and from it extracting tracklimits and the desired path for our car to take. With respect to path-planning, we are currently only concerned with extracting the middle path of a track. After performing some tests with our Laptime Simulator, we observed that the time difference between the middle path and the <em>time-optimized</em> path wasn’t significant enough to justify it’s more complex implementation and slower execution time. There are are middle points, such as minimum curvature, which may be useful in some contexts.</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>This documentation is under development</p>
+          <section id="planning-package">
+<h1>Planning Package<a class="headerlink" href="#planning-package" title="Permalink to this heading">#</a></h1>
+<p>This is the <strong>Planning Package documentation</strong> of ARUSfs.</p>
+<p>This package contains the following nodes:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="delaunay.html">Delaunay Detector Node</a></li>
+</ul>
 </div>
-<section id="delaunay-triangulation">
-<h2>Delaunay triangulation<a class="headerlink" href="#delaunay-triangulation" title="Permalink to this heading">#</a></h2>
-<p>For both track-limits and middle-path extraction we make use of Delaunay triangulation[^delaunay]. We may define a Delaunay triangulation of a given set of points <span class="math notranslate nohighlight">\(\bold P\)</span> as</p>
-<blockquote>
-<div><p>A triangulation of <span class="math notranslate nohighlight">\(\bold P\)</span> which for any given triangle, there is no point <span class="math notranslate nohighlight">\(p\in\bold P\)</span> strictly contained within the circumcircle of the triangle.</p>
-</div></blockquote>
-<p>[^delaunay] <a class="reference external" href="https://en.wikipedia.org/wiki/Delaunay_triangulation">Delaunay trianguluation wikipedia page</a></p>
-</section>
 </section>
 
         </article>
@@ -237,12 +247,12 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="vision_cone_detector.html">
+          <a class="next-page" href="delaunay.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Vision Cone Detector</div>
+                <div class="title">Delaunay Detector Node</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
@@ -281,27 +291,8 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer">
+    <aside class="toc-drawer no-toc">
       
-      
-      <div class="toc-sticky toc-scroll">
-        <div class="toc-title-container">
-          <span class="toc-title">
-            On this page
-          </span>
-        </div>
-        <div class="toc-tree-container">
-          <div class="toc-tree">
-            <ul>
-<li><a class="reference internal" href="#">Planning Node</a><ul>
-<li><a class="reference internal" href="#delaunay-triangulation">Delaunay triangulation</a></li>
-</ul>
-</li>
-</ul>
-
-          </div>
-        </div>
-      </div>
       
       
     </aside>
@@ -310,6 +301,5 @@
     <script src="_static/doctools.js"></script>
     <script src="_static/sphinx_highlight.js"></script>
     <script src="_static/scripts/furo.js"></script>
-    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     </body>
 </html>

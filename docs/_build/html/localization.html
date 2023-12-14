@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Camera Perception Node" href="camera_perception.html" /><link rel="prev" title="FSSim_Interface Node" href="fssim_interface.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="SBG Transforms Node" href="sbg_transforms.html" /><link rel="prev" title="FSSim_Interface Node" href="fssim_interface.html" />
 
     <link rel="shortcut icon" href="https://images.squarespace-cdn.com/content/v1/5e45d3a8e509f61738454469/4d7d9627-f1a6-4210-bc4d-6e90076418d1/favicon.ico?format=100w"/><!-- Generated with Sphinx 6.2.1 and Furo 2022.12.07 -->
-        <title>Localization Node - ARUS DRIVERLESS</title>
+        <title>Localization Package - ARUS DRIVERLESS</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
@@ -134,7 +134,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -158,25 +158,41 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Index</span></p>
 <ul class="current">
-<li class="toctree-l1 current has-children"><a class="reference internal" href="nodes.html">Nodes</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="common.html">Common Node</a></li>
-<li class="toctree-l2"><a class="reference internal" href="control.html">Control Node</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="nodes.html">Packages and Nodes</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="common.html">Common Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="control.html">Control Package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fssim_interface.html">FSSim_Interface Node</a></li>
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Localization Node</a></li>
-<li class="toctree-l2"><a class="reference internal" href="camera_perception.html">Camera Perception Node</a></li>
-<li class="toctree-l2"><a class="reference internal" href="lidar_perception.html">LiDAR Perception Node</a></li>
-<li class="toctree-l2"><a class="reference internal" href="planning.html">Planning Node</a></li>
+<li class="toctree-l2 current has-children current-page"><a class="current reference internal" href="#">Localization Package</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="sbg_transforms.html">SBG Transforms Node</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fastslam2.html">FastSLAM2 Node</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="perception.html">Perception Package</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="camera_perception.html">Camera Perception Node</a></li>
+<li class="toctree-l3"><a class="reference internal" href="lidar_perception.html">LiDAR Perception Node</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="planning.html">Planning Package</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="delaunay.html">Delaunay Detector Node</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="car_interface.html">Car Interface Package</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="can.html">Can Node</a></li>
+<li class="toctree-l3"><a class="reference internal" href="steering.html">Steering Node</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="vision_cone_detector.html">Vision Cone Detector</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="fsSim.html">FSSim</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="fsSim.html">FSSim</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="fssimConfig.html">FSSim Configuration</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="instalarEntorno.html">Environment setup</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+<li class="toctree-l1 has-children"><a class="reference internal" href="instalarEntorno.html">Environment setup</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="can_connection.html">Can Connection</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="lidar.html">LiDARs</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="lidar.html">LiDARs</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="RS-LiDAR-16.html">RS-LiDAR-16</a></li>
 </ul>
 </li>
@@ -209,59 +225,22 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main">
-          <section id="localization-node">
-<h1>Localization Node<a class="headerlink" href="#localization-node" title="Permalink to this heading">#</a></h1>
-<section id="objective">
-<h2>Objective<a class="headerlink" href="#objective" title="Permalink to this heading">#</a></h2>
-<p>The objective of the Localization node is to allow the car to know its position and any object perceived by it, being able to apply transformations in the space easily. It also allows us to know other important aspects, such as speed and acceleration. In addition, all this in function of time.</p>
-</section>
-<section id="structure">
-<h2>Structure<a class="headerlink" href="#structure" title="Permalink to this heading">#</a></h2>
-<p>The Localization node is composed of two parts:</p>
-<ul class="simple">
-<li><p>The first part is in charge of the communication with the IMU. It selectively chooses the messages that interest us from this, and sends them through different topics so that we can make use of them later.</p></li>
-<li><p>The second part of the node reads the messages that were previously sent through the topics, to implement the TF2 system.</p></li>
+          <section id="localization-package">
+<h1>Localization Package<a class="headerlink" href="#localization-package" title="Permalink to this heading">#</a></h1>
+<p>This is the <strong>Localization Package documentation</strong> of ARUSfs.</p>
+<p>This package contains the following nodes:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="sbg_transforms.html">SBG Transforms Node</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fastslam2.html">FastSLAM2 Node</a></li>
 </ul>
-<section id="imu-communication">
-<h3>IMU communication<a class="headerlink" href="#imu-communication" title="Permalink to this heading">#</a></h3>
-<p>To communicate with the IMU, the SBG drivers for ROS are used. With them, we have access to a wide range of parameters.
-At the moment, the values collected by Localization are:</p>
-<ul class="simple">
-<li><p>Speed.</p></li>
-<li><p>Speed (GPS).</p></li>
-<li><p>Position (GPS).</p></li>
-<li><p>Acceleration.
-All of them are sent through new topics, with a Vector3 type message (a vector with three parameters).</p></li>
-</ul>
-<p>The implementation consists of several parts:</p>
-<ul class="simple">
-<li><p>Subscription to topics: Communicates the node with the outputs of the data emitted by the IMU. It is implemented through the subscribe_topics() function.</p></li>
-<li><p>“Send” functions: They are functions that are in charge of reading the messages sent by the IMU and transforming them into Vector3 type with the relevant data from the message.</p></li>
-<li><p>Publication to topics: Creates new topics through which it sends the messages created by the “send” functions. It is implemented through the publish_topics() function.</p></li>
-</ul>
-</section>
-<section id="tf2-system">
-<h3>TF2 system<a class="headerlink" href="#tf2-system" title="Permalink to this heading">#</a></h3>
-<p>The TF2 library is the second version of the Transform library of ROS. It allows the tracking of frames over time, being able to apply transformations in the different reference systems easily. TF2 allows you to create as many frames as you need. In localization there are the following:</p>
-<figure class="align-default">
-<a class="reference internal image-reference" href="https://i.ibb.co/hDDrnyx/imagen.png"><img alt="TF2 tree" src="https://i.ibb.co/hDDrnyx/imagen.png" style="width: 250px;" /></a>
-</figure>
-<p>The world frame is the main one, by default in TF2. It is from it that start, in charge of registering the position of the IMU at the moment the node is started. After this, imu is deployed, which collects in real time the position of the IMU itself. To be more precise, there is a fourth frame that comes from imu, called camera. This last one defines the position in which the camera will be with respect to the IMU, since the camera will be the one that perceives the cones, not the IMU.</p>
-<p>*Currently the distance between the camera and the IMU is not defined.</p>
-<p>The implementation of TF2 is carried out by creating a new function for each new frame. These functions are composed as follows:</p>
-<ul class="simple">
-<li><p>Call to the broadcaster, which will be in charge of sending the transformation later. In this call, we define whether our frame will be static or not, depending on the type of broadcaster that we define. A transformation is also created at the beginning.</p></li>
-<li><p>Call to the listener, which will be in charge of listening to the transformations that are sent. In this call, we define the frame that we want to listen to, and the frame that we want to transform.</p></li>
-<li><p>Call to the transform, which will be in charge of applying the transformation to the data that we want. In this call, we define the frame that we want to transform, the frame to which we want to transform it, and the data that we want to transform.</p></li>
-</ul>
-</section>
-</section>
+</div>
 </section>
 
         </article>
@@ -269,12 +248,12 @@ All of them are sent through new topics, with a Vector3 type message (a vector w
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="camera_perception.html">
+          <a class="next-page" href="sbg_transforms.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Camera Perception Node</div>
+                <div class="title">SBG Transforms Node</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
@@ -313,32 +292,8 @@ All of them are sent through new topics, with a Vector3 type message (a vector w
         
       </footer>
     </div>
-    <aside class="toc-drawer">
+    <aside class="toc-drawer no-toc">
       
-      
-      <div class="toc-sticky toc-scroll">
-        <div class="toc-title-container">
-          <span class="toc-title">
-            On this page
-          </span>
-        </div>
-        <div class="toc-tree-container">
-          <div class="toc-tree">
-            <ul>
-<li><a class="reference internal" href="#">Localization Node</a><ul>
-<li><a class="reference internal" href="#objective">Objective</a></li>
-<li><a class="reference internal" href="#structure">Structure</a><ul>
-<li><a class="reference internal" href="#imu-communication">IMU communication</a></li>
-<li><a class="reference internal" href="#tf2-system">TF2 system</a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-
-          </div>
-        </div>
-      </div>
       
       
     </aside>

@@ -1,7 +1,7 @@
-# Control Node
+# Control Package
 
-This is the **Control Node documentation** of ARUSfs.
+This is the **Control Package documentation** of ARUSfs.
 
 ```{warning}
-Control Node documentation is not available yet.
+Control Node documentation is not written yet, maybe you can help us?
 ```

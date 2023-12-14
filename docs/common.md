@@ -1,7 +1,7 @@
-# Common Node
+# Common Package
 
-This is the **Common Node documentation** of ARUSfs.
+This is the **Common Package documentation** of ARUSfs.
 
 ```{warning}
-Common Node documentation is not available yet.
+Common Package documentation is not written yet, maybe you can help us? 
 ```
