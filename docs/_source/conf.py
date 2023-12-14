@@ -46,7 +46,7 @@ html_title = 'ARUS DRIVERLESS'
 html_logo = 'https://images.squarespace-cdn.com/content/v1/5e45d3a8e509f61738454469/81e0d83b-0fa6-48d0-801b-1f0c1515d786/logo+arus+cuadrado+web.png'
 html_favicon = 'https://images.squarespace-cdn.com/content/v1/5e45d3a8e509f61738454469/4d7d9627-f1a6-4210-bc4d-6e90076418d1/favicon.ico?format=100w'
 html_show_sphinx = False
-master_doc = 'content/index'
+#master_doc = 'content/index'
 source_suffix = {'.rst': 'restructuredtext', '.md': 'markdown'}
 
 
@@ -84,17 +84,4 @@ def setup(app):
     }, True)
     app.add_transform(AutoStructify)
 
-# Configuración adicional para mejorar la construcción de URIs
-html_context = {
-    'display_github': True,
-    'github_user': 'arusfs',
-    'github_repo': 'driverless',
-    'github_version': 'develop',
-    'conf_py_path': '/docs/source/',
-    'build_dir': '/content/',  # Añade esta línea
-}
-
-html_extra_path = [
-    'docs/_build/html/content',
-]
 
