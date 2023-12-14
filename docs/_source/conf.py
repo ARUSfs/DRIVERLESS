@@ -1,5 +1,7 @@
 import os
 import sys
+import recommonmark
+from recommonmark.transform import AutoStructify
 
 # Configuration file for the Sphinx documentation builder.
 #
@@ -45,6 +47,8 @@ html_logo = 'https://images.squarespace-cdn.com/content/v1/5e45d3a8e509f61738454
 html_favicon = 'https://images.squarespace-cdn.com/content/v1/5e45d3a8e509f61738454469/4d7d9627-f1a6-4210-bc4d-6e90076418d1/favicon.ico?format=100w'
 html_show_sphinx = False
 master_doc = 'content/index'
+source_suffix = {'.rst': 'restructuredtext', '.md': 'markdown'}
+
 
 html_theme_options = {
     "sidebar_hide_name": True,
@@ -63,4 +67,34 @@ html_theme_options = {
 }
 
 
+source_parsers = {
+    '.md': 'recommonmark.parser.CommonMarkParser',
+}
+
+html_use_smartypants = False
+html_show_sphinx = False
+html_scaled_image_link = False
+
+def setup(app):
+    app.add_config_value('recommonmark_config', {
+        'enable_auto_toc_tree': True,
+        'auto_toc_tree_section': 'Contents',
+        'enable_eval_rst': True,
+        'enable_auto_doc_ref': True,
+    }, True)
+    app.add_transform(AutoStructify)
+
+# Configuración adicional para mejorar la construcción de URIs
+html_context = {
+    'display_github': True,
+    'github_user': 'arusfs',
+    'github_repo': 'driverless',
+    'github_version': 'develop',
+    'conf_py_path': '/docs/source/',
+    'build_dir': '/content/',  # Añade esta línea
+}
+
+html_extra_path = [
+    'docs/source/content',
+]
 
