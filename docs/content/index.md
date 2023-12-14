@@ -7,11 +7,11 @@ This is the **driverless pipeline documentation** of ARUSfs.
 :caption: Index
 :hidden:
 
-nodes
+packages_and_nodes/pkg_and_nodes
 vision_cone_detector
-fsSim
-instalarEntorno
-lidar
+fssim/fsSim
+environment_setup/instalarEntorno
+lidars/lidar
 howToDoc
 
 ```

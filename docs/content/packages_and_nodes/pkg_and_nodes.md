@@ -10,9 +10,9 @@ Click on the node name to see the documentation for that node.
 common
 control
 fssim_interface
-localization
-perception
-planning
-car_interface
+localization/localization
+perception/perception
+planning/planning
+car_interface/car_interface
 
 ```
