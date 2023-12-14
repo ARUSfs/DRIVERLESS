@@ -95,6 +95,6 @@ html_context = {
 }
 
 html_extra_path = [
-    'docs/source/content',
+    'docs/_build/html/content',
 ]
 
