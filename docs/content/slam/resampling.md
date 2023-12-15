@@ -44,7 +44,7 @@ probability distribution.
 We do not resample at every theoretical time instant t, since for example
 you are not receiving new information from the sensor, it will not benefit you
 to do a resampling. To determine approximately when to resample,
-we use what is called \textit{effective} $N$, which approximately measures the number of
+we use what is called {math}`\textit{effective} N`, which approximately measures the number of
 particles that contribute significantly to the probability distribution.
 The formula is as follows:
 
