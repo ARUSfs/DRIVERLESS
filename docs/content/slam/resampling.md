@@ -8,108 +8,100 @@ Translated and posted by [Jorge Muñoz](https://www.linkedin.com/in/jorge-mun-ro
 
 Original PDF (in Spanish): [Resampling en filtros de partículas]()
 
-## Filtros de partículas
-En los algoritmos de filtros de partículas:
-1. Generamos aleatoriamente {math}`N` partículas. Nuestras partı́culas serán vectores con 3 coordenadas:
-(x, y, yaw). Cada una tiene un peso, {math}`w_i` , que indica cómo de probable es que coincida la partı́cula con
-el estado real del coche.
-2. Predecimos el siguiente estado de las partı́culas. Movemos las partı́culas basándonos en cómo
-predecimos que el sistema real se mueve.
-3. Actualizamos el peso de las partı́culas basándonos en una medición real del sensor. Las partı́culas
-que están más cerca de coincidir con la medición tienen mayor peso que las que no coinciden tanto con
-el dato dado por el sensor.
-4. Resampling. Consiste en descartar las partículas improbables y remplazarlas
-por copias de las partículas más probables.  
-5. Calcular estimaciones. Opcionalmente podemos computar una media ponderada y
-la covarianza del set de partículas para obtener una estimación del estado.  
+## Particles Filters
+In particle filters algorithms:
+1. We randomly generate {math}`N` particles. Our particles are vectors with 3 coordinates:
+(x, y, yaw). Each one has a weight, {math}`w_i` , that indicates how likely it is that the particle
+matches the real state of the car.
+2. We predict the next state of the particles. We move the particles based on how
+we predict the real system moves.
+3. We update the weight of the particles based on a real sensor measurement. The particles
+that are closer to matching the measurement have greater weight than those that do not match
+so much with the data given by the sensor.
+4. Resampling. It consists of discarding the improbable particles and replacing them
+by copies of the most probable particles.
+5. Calculate estimates. We can optionally compute a weighted average and
+the covariance of the set of particles to obtain an estimate of the state.
 
-Al principio, comenzamos con un conjunto de partículas con la misma probabilidad,
-{math}`\frac{1}{N}` (para un conjunto de {math}`N` partículas), pues no tenemos evidencias 
-para darle más peso a ninguna en especial. Puede que solo haya unas pocas 
-partículas cerca de la posición real del coche. A medida que se va ejecutando 
-el algoritmo, las partículas que no coinciden con las mediciones irán teniendo 
-cada vez un peso menor y tan solo las partículas que estén cerca del coche 
-tendrán pesos apreciables. Podríamos tener 5000 partículas y que solo 3 tengan 
-pesos no despreciables. Esto ocurre porque el algoritmo se degenera. Esto se 
-resuelve resampleando las partículas.  
+At the beginning, we start with a set of particles with the same probability,
+{math}`\frac{1}{N}` (for a set of {math}`N` particles), since we have no evidence
+to give more weight to any in particular. There may only be a few
+particles near the real position of the car. As the algorithm is executed,
+the particles that do not match the measurements will have
+less and less weight and only the particles that are close to the car
+will have appreciable weights. We could have 5000 particles and only 3 have
+non-negligible weights. This happens because the algorithm degenerates. This is
+solved by resampling the particles.
 
-Para explicarlo de forma intuitiva, los algoritmos de resampleo de partículas 
-buscan descartar las partículas con menos pesos (probabilidades bajas) y reemplazarlas
-por nuevas partículas con probabilidades altas. Podemos conseguirlo duplicando las 
-partículas con mayor peso y dispersándolas ligeramente con el ruido añadido en 
-el paso de predicción del estado de partículas. Esto nos da un conjunto de 
-partículas en el que la gran mayoría representa de forma precisa la distribución
-de probabilidad. 
+To explain it intuitively, particle resampling algorithms
+seek to discard particles with less weight (low probabilities) and replace them
+by new particles with high probabilities. We can achieve this by duplicating the
+particles with the highest weight and slightly dispersing them with the noise added in
+the step of predicting the state of particles. This gives us a set of
+particles in which the vast majority accurately represents the
+probability distribution.
 
-No hacemos resampleo en cada instante de tiempo teórico t, ya que si por ejemplo
-no estás recibiendo información nueva del sensor, no va a beneficiarte en nada 
-hacer un resampling. Para determinar aproximadamente cuándo hacer un resampleo,
-usamos lo que se llama \textit{effective} $N$, que mide aproximadamente el número de 
-partículas que contribuyen significativamente a la distribución de probabilidad.
-La fórmula es la siguiente:  
+We do not resample at every theoretical time instant t, since for example
+you are not receiving new information from the sensor, it will not benefit you
+to do a resampling. To determine approximately when to resample,
+we use what is called \textit{effective} $N$, which approximately measures the number of
+particles that contribute significantly to the probability distribution.
+The formula is as follows:
 
 ```{math}
 :label: eq:effectiveN
 \hat{N}_{eff} = \frac{1}{\displaystyle\sum_{i=1}^{N} w_i^{2}} \hspace{1cm} \forall i \in \{1, \dots, N\}
 ```
 
-Si {math}`\hat{N}_{eff}` es menor a cierto umbral, hay que resamplear. Un buen punto
-de partida es {math}`N/2`, pero esto puede variar según el problema. Es posible también
-que {math}`\hat{N}_{eff} = N`, que significaría que el conjunto de partículas ha
-covergido a un solo punto (que está {math}`N` veces en el conjunto con peso igual a {math}`1/N`). 
-Si esto ocurre muy a menudo, habría que incrementar el número de partículas o ajustar
-el filtro de alguna manera. 
+If {math}`\hat{N}_{eff}` is less than a certain threshold, you have to resample. A good starting point is {math}`N/2`, but this may vary depending on the problem. It is also possible that {math}`\hat{N}_{eff} = N`, which would mean that the set of particles has converged to a single point (which is {math}`N` times in the set with weight equal to {math}`1/N`). If this happens very often, you would have to increase the number of particles or adjust the filter in some way.
 
 ### Multinomial resampling
-Hace un muestreo del conjunto actual de partículas {math}`N` veces (donde la probabilidad
-de seleccionar cualquier partícula debería ser proporcional a su peso), creando un nuevo
-conjunto de partículas a partir de la muestra.
+It samples the current set of particles {math}`N` times (where the probability
+to select any particle should be proportional to its weight), creating a new
+set of particles from the sample.
 
-La idea es sencilla. Primero, calculamos la suma acumulada de los pesos: 
-el elemento 1 de la suma acumulada sería la suma de los elementos 0 y 1 de los pesos,
-el elemento 2 de la suma acumulada sería la suma de los elementos 0, 1 y 2 de los pesos, etc.
-Esto nos da una lista creciente de probabilidades de 0 a 1. Podemos pensarlo como si el 
-intervalo {math}`[0,1]` estuviera dividido en subintervalos, donde las partículas con mayor
-peso tienen subintervalos más grandes y por tanto, mayor probabilidad de ser escogidas.
+The idea is simple. First, we calculate the cumulative sum of the weights:
+element 1 of the cumulative sum would be the sum of elements 0 and 1 of the weights,
+element 2 of the cumulative sum would be the sum of elements 0, 1 and 2 of the weights, etc.
+This gives us a growing list of probabilities from 0 to 1. We can think of it as if the
+interval {math}`[0,1]` was divided into subintervals, where the particles with the highest
+weight have larger subintervals and therefore a greater probability of being chosen.
 
 ```{image} ../../_static/images/multinomial_resampling.png
 :alt: Multinomial resampling
 :align: center
 ```
 
-Para seleccionar un peso generamos un número aleatorio uniformemente seleccionado
-entre 0 y 1 y usamos la búsqueda binaria para encontrar su posición en el array
-de la suma acumulada.  
-En NumPy el comando {math}`\texttt{searchsorted}` aplica directamente
-el algoritmo de búsqueda binaria. 
+To select a weight we generate a random number uniformly selected
+between 0 and 1 and we use binary search to find its position in the array
+of the cumulative sum.
+In NumPy the command {math}`\texttt{searchsorted}` directly applies
+the binary search algorithm.
 
 ```{image} ../../_static/images/multinomial_resampling_2.png
 :alt: Multinomial resampling
 :align: center
 ```
 
-Este algoritmo tiene una complejidad temporal de {math}`O(n \text{log}(n))`. Hay algoritmos
-con {math}`O(n)`, pero es esencial conocer el {math}`\textit{multinomial resampling}`, ya que 
-los siguientes algoritmos pueden entenderse como variaciones de este. 
+This algorithm has a time complexity of {math}`O(n \text{log}(n))`. There are algorithms
+with {math}`O(n)`, but it is essential to know the {math}`\textit{multinomial resampling}`, since
+the following algorithms can be understood as variations of this one.
 
 ### Residual Resampling
-El {math}`\textit{residual resampling}` nos asegura un muestreo uniforme sobre el conjunto
-de partículas. Se toman los pesos normalizados y se multiplican por $N$, y luego 
-se usa la parte entera de cada peso para definir cuántas muestras de esa partícula
-se toman. Por ejemplo, si el peso de una partícula es {math}`0.0026` y tenemos {math}`N=1000`
-partículas, su nuevo peso sería {math}`2.6`, por lo que se tomarían {math}`2` muestras de esa 
-partícula. Esto nos asegura que las partículas con probabilidades altas
-se toman al menos una vez.  
+The {math}`\textit{residual resampling}` ensures us a uniform sampling on the set
+of particles. We take the normalized weights and multiply them by $N$, and then
+we use the integer part of each weight to define how many samples of that particle
+are taken. For example, if the weight of a particle is {math}`0.0026` and we have {math}`N=1000`
+particles, its new weight would be {math}`2.6`, so {math}`2` samples of that particle would be taken. This ensures us that the particles with high probabilities are taken at least once.
 
-Sin embargo, esto no nos genera {math}`N` partículas. Por tanto, tenemos que tener en
-cuenta los {math}`\textbf{residuos}`, los nuevos pesos menos su parte entera (la parte
-decimal de los pesos nuevos) ya que las habíamos obviado. Después, usamos 
-un sampling más sencillo como el {math}`\textit{multinomial}` para seleccionar el resto debería
-partículas basadas en el residuo. Si continuamos el ejemplo, la parte residual
-de nuestra partícula era {math}`2.6- \texttt{int}(2) = 0.6`. El residuo es grande, por
-lo que la partícula tiene mucha probabilidad de ser seleccionada de nuevo. 
+However, this does not generate {math}`N` particles. Therefore, we have to take into
+account the {math}`\textbf{residues}`, the new weights minus their integer part (the
+decimal part of the new weights) since we had ignored them. Then, we use
+a simpler sampling like the {math}`\textit{multinomial}` to select the rest should
+particles based on the residue. If we continue the example, the residual part
+of our particle was {math}`2.6- \texttt{int}(2) = 0.6`. The residue is large, so the particle has a lot of probability of being selected again.
 
-En el ejemplo siguiente, hemos utilizado {math}`N=15`:
+In the following example, we have used {math}`N=15`:
 
 ```{image} ../../_static/images/residual_resampling.png
 :alt: Residual resampling
@@ -117,27 +109,28 @@ En el ejemplo siguiente, hemos utilizado {math}`N=15`:
 ```
 
 ### Stratified Resampling
-Este método busca hacer selecciones relativamente uniformes en el conjunto de 
-partículas. Funciona de la siguiente manera: dividimos la suma 
-acumulada en {math}`N` secciones iguales (estratos) y luego, dentro de cada
-sección, escogemos una partícula al azar. Esto nos garantiza que la 
-distancia entre dos muestras tomadas {math}`\in [0,\frac{2}{N}]`.   
+This method seeks to make relatively uniform selections in the set of
+particles. It works as follows: we divide the cumulative sum
+in {math}`N` equal sections (strata) and then, within each
+section, we choose a particle at random. This guarantees us that the
+distance between two samples taken {math}`\in [0,\frac{2}{N}]`.
 
-En la gráfica, vemos los estratos separados por líneas verticales azules, y 
-en cada uno de ellos se ha escogido una muestra aleatoria. 
+In the graph, we see the strata separated by blue vertical lines, and
+in each one of them a random sample has been chosen.
 
 ````{image} ../../_static/images/stratified_resampling.png
 :alt: Stratified resampling
 :align: center
 ````
-
 ### Systematic Resampling
-En este algoritmo, como en el estratificado, se divide la suma acumulada en 
-{math}`N` secciones (que están a distancia {math}`\frac{1}{N}`). Luego, la idea es escoger 
-una partícula aleatoria e ir tomando de las demás secciones las que estén 
-a una distancia proporcional a {math}`\frac{1}{N}` de ella. 
+In this algorithm, as in the stratified one, the cumulative sum is divided into
+{math}`N` sections (which are at a distance {math}`\frac{1}{N}`). Then, the idea is to choose
+a random particle and take from the others
+by a distance proportional to {math}`\frac{1}{N}` from it.
 
 ```{image} ../../_static/images/systematic_resampling.png
 :alt: Systematic resampling
 :align: center
 ```
+
+
