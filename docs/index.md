@@ -8,6 +8,7 @@ This is the **driverless pipeline documentation** of ARUSfs. It is divided in th
 :hidden:
 
 content/packages_and_nodes/pkg_and_nodes
+content/slam/slam
 content/vision_cone_detector
 content/fssim/fsSim
 content/environment_setup/instalarEntorno
