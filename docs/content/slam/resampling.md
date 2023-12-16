@@ -6,7 +6,7 @@ Date: 15-12-2023
 
 Translated and posted by [Jorge Muñoz](https://www.linkedin.com/in/jorge-mun-rod)
 
-Original PDF (in Spanish): [Resampling en filtros de partículas]()
+Original PDF (in Spanish): [Resampling en filtros de partículas](https://drive.google.com/file/d/1BeSw0TFBOTqozmyl_YfpbumdSd13tWDG/view?usp=sharing)
 
 ## Particles Filters
 In particle filters algorithms:
