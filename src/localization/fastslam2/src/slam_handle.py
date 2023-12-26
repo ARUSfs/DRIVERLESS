@@ -47,7 +47,7 @@ class FastSLAM2:
 
         self.landmarks = np.zeros((N_PARTICLES, N_LANDMARKS, 2), dtype=np.float32)  # \Theta^t in [1]
         self.landmarks_cov = np.zeros((N_PARTICLES, N_LANDMARKS, 2, 2), dtype=np.float32)  # \Sigma_\Theta in [1]
-        self.populated_landmarks = np.zeros(N_LANDMARKS, dtype=np.bool)
+        self.populated_landmarks = np.zeros(N_LANDMARKS, dtype=np.bool_)
         self.weighted_landmarks = np.zeros((N_LANDMARKS, 2), dtype=np.float32)
 
         self.motion = np.zeros(2, dtype=np.float32)  # Equivalent to u^t in [1]
@@ -263,6 +263,47 @@ class FastSLAM2:
                                     rospy.Time.now(),
                                     'coche',
                                     'map')
+        
+    def resample_particles(self):
+        # Calcular el número de partículas a resamplear
+        n_keep = int(N_PARTICLES * 0.8) # 80% de las partículas se mantienen
+
+        # Seleccionar los índices de las partículas a resamplear
+        indices_keep = np.random.choice(N_PARTICLES, n_keep, replace=False, p=self.particle_weights)
+
+        # Actualizar las partículas y sus pesos
+        self.position = self.position[indices_keep]
+        self.landmarks = self.landmarks[indices_keep]
+        self.landmarks_cov = self.landmarks_cov[indices_keep]
+        self.particle_weights = self.particle_weights[indices_keep]
+        self.particle_weights /= self.particle_weights.sum() # Normalizar los pesos
+        
+        # Generar nuevas partículas
+        n_new = N_PARTICLES - n_keep
+        new_particles = np.zeros((n_new, 3), dtype=np.float32)
+        new_particles[:, 0] = np.random.normal(self.weighted_position[0], 0.1, n_new)
+        new_particles[:, 1] = np.random.normal(self.weighted_position[1], 0.1, n_new)
+        new_particles[:, 2] = np.random.normal(self.weighted_position[2], 0.1, n_new)
+        self.position = np.concatenate((self.position, new_particles), axis=0)
+        self.particle_weights = np.concatenate((self.particle_weights, np.ones(n_new)/n_new), axis=0)
+
+        # Actualizar el estado estimado
+        self.weighted_position = np.sum(self.position * self.particle_weights.reshape(-1, 1), axis=0)
+        self.weighted_position[2] = bound_angle(self.weighted_position[2])
+
+        # Actualizar los landmarks estimados
+        self.weighted_landmarks = np.sum(self.landmarks * self.particle_weights.reshape(-1, 1, 1), axis=0)
+
+    def update(self):
+        resampling_time = 1 # segundos
+        if rospy.get_rostime().secs - self.last_rostime > resampling_time:
+            self.resample_particles()
+            self.last_rostime = rospy.get_rostime().secs
+            self.update_frame()
+            self.pub_markers()
+
+
+
 
 @jit(float32(float32), nopython=True, nogil=True, cache=True)
 def bound_angle(angle: float):
