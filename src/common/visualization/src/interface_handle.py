@@ -17,15 +17,14 @@ import rospy
 class InterfaceHandle():
 
     def __init__(self):
-
         self.subscribe_topics()
         self.pub = None
         self.pub2 = None
         self.pub3 = None
         self.publish_topics()
+        self.cones = []
 
     def subscribe_topics(self):
-
         map_topic = rospy.get_param("/interface/topic_map")
         rospy.Subscriber(map_topic, Map, self.read_map)
 
@@ -40,9 +39,11 @@ class InterfaceHandle():
 
     def publish_topics(self):
         self.pub = rospy.Publisher("visualization_cones", MarkerArray, queue_size=1)
-        self.pub2 = rospy.Publisher("visualization_path", Path, queue_size=1)
+        self.pub2 = rospy.Publisher("visualization_path", Marker, queue_size=1)
         self.pub3 = rospy.Publisher("visualization_pursuit", Marker, queue_size=1)
         self.delaunay_pub = rospy.Publisher("visualization_delaunay", Marker, queue_size=1)
+
+
 
     def read_map(self, msg):
         data = msg.cones  # List of cones
@@ -51,6 +52,7 @@ class InterfaceHandle():
             cone = (c.position.x, c.position.y, c.color, c.confidence)
             cones.append(cone)
 
+        self.cones = cones
         self.draw(cones)
 
     def draw(self, cones):
@@ -65,69 +67,9 @@ class InterfaceHandle():
 
         self.pub.publish(markerarray)
 
-    def read_route(self, msg):
-        data = msg.trajectory  # List of points
-        points = [[p.x, p.y] for p in data]
-        self.send_route(points)
-
-    def send_route(self, points):
-        path = Path()
-        path.header.frame_id = "local_map"
-        for px, py in points:
-            point = self.create_point(px, py)
-            path.poses.append(point)
-
-        self.pub2.publish(path)
-
-    def read_pursuit_point(self, msg):
-
-        marker = Marker()
-        marker.header.frame_id = "local_map"
-        marker.header.stamp = rospy.Time().now()
-
-        marker.ns = "pursuit"
-        marker.id = 0
-        marker.type = Marker.SPHERE
-        marker.action = Marker.MODIFY
-
-        marker.pose.position.x = msg.x
-        marker.pose.position.y = msg.y
-        marker.pose.position.z = 0
-        marker.pose.orientation.x = 0.0
-        marker.pose.orientation.y = 0.0
-        marker.pose.orientation.z = 0.0
-        marker.pose.orientation.w = 1.0
-        marker.scale.x = 0.3
-        marker.scale.y = 0.3
-        marker.scale.z = 0.3
-
-        marker.color.r = 255
-        marker.color.g = 0.0
-        marker.color.b = 0.0
-        marker.color.a = 1.0
-
-        marker.lifetime = rospy.Duration()
-        self.pub3.publish(marker)
-
-    def create_point(self, px, py):
-        point = PoseStamped()
-        point.header.frame_id = "local_map"
-        point.header.stamp = rospy.Time.now()
-
-        point.pose.position.x = px
-        point.pose.position.y = py
-        point.pose.position.z = 0.0
-        point.pose.orientation.x = 0.0
-        point.pose.orientation.y = 0.0
-        point.pose.orientation.z = 0.0
-        point.pose.orientation.w = 1.0
-
-        return point
-
     def create_marker(self, px, py, c, i):
-
         marker = Marker()
-        marker.header.frame_id = "local_map"
+        marker.header.frame_id = "fssim/vehicle/cog"
         marker.header.stamp = rospy.Time().now()
 
         marker.ns = "cone"
@@ -165,24 +107,88 @@ class InterfaceHandle():
         marker.lifetime = rospy.Duration()
         return marker
 
-    def delaunay_callback(self, simplices):
-        marker = Marker()
-        marker.header.frame_id = "local_map"
-        marker.header.stamp = rospy.Time.now()
 
-        marker.ns = "delaunay"
+
+    def read_route(self, msg):
+        data = msg.trajectory  # List of points
+        points = [[p.x, p.y] for p in data]
+        self.send_route(points)
+
+    def send_route(self, points):
+        path_marker = Marker()
+        path_marker.header.frame_id = "fssim/vehicle/cog"
+        path_marker.ns = 'delaunay'
+        path_marker.header.stamp = rospy.Time.now()
+   
+        path_marker.id = 1
+        path_marker.type = Marker.LINE_STRIP
+        path_marker.action = Marker.MODIFY
+        path_marker.scale.x = 0.1
+        path_marker.color.a = 1.0
+        path_marker.color.r = 1.0
+
+        path_marker.points = list()
+        for p in points:
+            point = Point()
+            point.x = p[0]
+            point.y = p[1]
+            path_marker.points.append(point)
+
+        self.pub2.publish(path_marker)
+
+
+
+    def read_pursuit_point(self, msg):
+        marker = Marker()
+        marker.header.frame_id = "fssim/vehicle/cog"
+        marker.header.stamp = rospy.Time().now()
+
+        marker.ns = "pursuit"
+        marker.id = 0
+        marker.type = Marker.SPHERE
+        marker.action = Marker.MODIFY
+
+        marker.pose.position.x = msg.x
+        marker.pose.position.y = msg.y
+        marker.pose.position.z = 0
+        marker.pose.orientation.x = 0.0
+        marker.pose.orientation.y = 0.0
+        marker.pose.orientation.z = 0.0
+        marker.pose.orientation.w = 1.0
+        marker.scale.x = 0.3
+        marker.scale.y = 0.3
+        marker.scale.z = 0.3
+
+        marker.color.r = 255
+        marker.color.g = 0.0
+        marker.color.b = 0.0
+        marker.color.a = 1.0
+
+        marker.lifetime = rospy.Duration()
+        self.pub3.publish(marker)
+
+
+
+    def delaunay_callback(self, triang):
+        marker = Marker()
+        marker.header.frame_id = "fssim/vehicle/cog"
+        marker.header.stamp = rospy.Time.now()
+        marker.ns = 'delaunay'
         marker.id = 0
         marker.type = Marker.LINE_LIST
         marker.action = Marker.MODIFY
         marker.scale.x = 0.1
         marker.color.a = 1.0
+        marker.color.g = 1.0
         marker.pose.orientation.x = 0.0
         marker.pose.orientation.y = 0.0
         marker.pose.orientation.z = 0.0
         marker.pose.orientation.w = 1.0
 
         marker.points = list()
-        for s in simplices.simplices:
-            marker.points.extend(p for c in combinations(s.simplex, 2) for p in c)
+        for s in triang.simplices:
+            for p, q in combinations(s.simplex, 2):
+                marker.points.append(p)
+                marker.points.append(q)
 
         self.delaunay_pub.publish(marker)

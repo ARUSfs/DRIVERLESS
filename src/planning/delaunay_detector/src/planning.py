@@ -35,10 +35,6 @@ class PlanningSystem():
         self.path = None
         self.distances = None
 
-        self.delaunay_publisher = rospy.Publisher('/delaunay_detector/simplices',
-                                                  Triangulation,
-                                                  queue_size=1)
-
     def update_tracklimits(self, cones: list):
         self.colours = list()
         cone_points = list()
@@ -64,7 +60,7 @@ class PlanningSystem():
                     if not self.colours[p1] == self.colours[p2]:
                         midpoints.append((self.cones[p1] + self.cones[p2])/2)
                         preproc_simplices.append(simplex)
-                        break
+                        # break
 
 
         last_element = np.array([0, 0])
@@ -95,7 +91,18 @@ class PlanningSystem():
 
         route = np.array(path)
 
-        return route, preproc_simplices
+        triang = Triangulation()
+        for simplex in preproc_simplices:
+            s = Simplex()
+            for ind in simplex:
+                p = Point()
+                p.x = self.cones[ind][0]
+                p.y = self.cones[ind][1]
+                p.z = 0
+                s.simplex.append(p)
+            triang.simplices.append(s)  
+
+        return route, triang
 
     def get_distance(self, p1, p2):
         p1b = p1.tobytes()

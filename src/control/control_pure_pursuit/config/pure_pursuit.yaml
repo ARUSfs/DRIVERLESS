@@ -6,6 +6,7 @@ controls_topic: 'controls'
 # Parameters of pure pursuit controller
 K: 0 #0.3                  # look forward gain
 LFC: 6 #8.55               # [m] look-ahead distance
+DT: 5                      # [º] direction threshold
 WB: 1.5                 # [m] Wheel base of vehicle
 
 

@@ -1,7 +1,7 @@
 # Topics names of planning node
 topic_map: 'perception_map'
 topic_route: 'route'
-topic_simplices: 'simplices'
+topic_simplices: '/delaunay_detector/simplices'
 send_simplices_marker: true
 
 # Hiperparameters of delaunay detector

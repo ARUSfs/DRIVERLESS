@@ -31,6 +31,9 @@ class TargetCourse:
 
     def search_target_index(self, state: State):
 
+        if len(self.cx)==0:
+            return -1, self.Lf
+
         # To speed up nearest point search, doing it at only first time.
         if self.old_nearest_point_index is None:
             # search nearest point index
@@ -43,7 +46,7 @@ class TargetCourse:
             ind = self.old_nearest_point_index
             dist_this_index = state.calc_distance(self.cx[ind],
                                                   self.cy[ind])
-            while True:
+            while (ind+1<len(self.cx)):
                 dist_next_index = state.calc_distance(self.cx[ind + 1],
                                                       self.cy[ind + 1])
 
@@ -66,7 +69,7 @@ class TargetCourse:
         return ind, self.Lf
 
 
-def pure_pursuit_control(state: State, trajectory: list, pind: int, WB: float):
+def pure_pursuit_control(state: State, trajectory: list, pind: int, WB: float, DT: float):
 
     ind, Lf = trajectory.search_target_index(state)
 
@@ -84,8 +87,14 @@ def pure_pursuit_control(state: State, trajectory: list, pind: int, WB: float):
             ty = trajectory.cy[-1]
             ind = len(trajectory.cx) - 1
 
-        alpha = math.atan2(ty - state.rear_y, tx - state.rear_x)# - state.yaw
+        alpha = math.atan2(ty - state.rear_y, tx - state.rear_x)
 
         delta = math.atan2(2.0 * WB * math.sin(alpha) / Lf, 1.0)
+
+        delta = max(-19.9,min(math.degrees(delta),19.9))
+
+        delta = max(state.prev_delta-DT,min(delta,state.prev_delta+DT))
+
+        state.prev_delta = delta
 
     return delta, ind
