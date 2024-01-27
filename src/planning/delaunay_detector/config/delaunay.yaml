@@ -14,3 +14,6 @@ MAX_DISTANCE: 8
 # Parameters of spline aproximation of path
 NUM_POINTS: 30
 DEGREE: 3
+
+# Color detection enabled
+color_enabled: true

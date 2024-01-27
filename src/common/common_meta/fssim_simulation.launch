@@ -4,6 +4,7 @@
     <rosparam command="load" file="$(find delaunay_detector)/config/delaunay.yaml"/>
     <rosparam>
       topic_map: 'perception_map'
+      color_enabled: true
     </rosparam>
   </node>
 
