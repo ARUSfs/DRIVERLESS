@@ -13,6 +13,7 @@ import rospy
 # Constants
 K = rospy.get_param('/control_pure_pursuit/K')  # look forward gain
 LFC = rospy.get_param('/control_pure_pursuit/LFC')  # [m] look-ahead distance
+DT = rospy.get_param('/control_pure_pursuit/DT')  # [º] direction threshold
 KP = rospy.get_param('/control_pure_pursuit/KP')  # speed proportional gain
 KI = rospy.get_param('/control_pure_pursuit/KI')    # speed integrative gain
 KD = rospy.get_param('/control_pure_pursuit/KD')    # speed derivative gain
@@ -27,10 +28,9 @@ class ControlCar():
 
     def __init__(self, time):
 
-        origin = [0.0, 0.0]
-        yaw = 0
         v = 0
-        self.state = State(origin[0], origin[1], yaw, v, time, WB)
+        prev_delta = 0 # previous direction command
+        self.state = State(v, prev_delta, time, WB)
         self.previous_states = States()
         self.previous_states.append(self.state)
 
@@ -46,9 +46,9 @@ class ControlCar():
         self.target_ind, _ = self.target_course.search_target_index(self.state)
         self.existPath = True
 
-    def update_state(self, time, x: float, y: float, yaw: float, v: float):
+    def update_state(self, time, v: float):
 
-        self.state.update(x, y, yaw, v, time)
+        self.state.update(v, time)
         self.previous_states.append(self.state)
 
     def get_cmd(self):
@@ -56,7 +56,7 @@ class ControlCar():
         ai = self.pid.accelerator_control(self.state.v, TARGET_SPEED)
         # ai = 0.2
         di, ind = pure_pursuit_control(self.state, self.target_course,
-                                       self.target_ind, WB)
+                                       self.target_ind, WB, DT)
         self.target_ind = ind
 
         return ai, di

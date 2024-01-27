@@ -13,6 +13,7 @@ from fssim_common.msg import State, Cmd
 
 import rospy
 import numpy as np
+import math
 
 
 class transformerFssim():
@@ -44,7 +45,6 @@ class transformerFssim():
         rospy.Subscriber('fssim/base_pose_ground_truth', State,
                          self.send_state)
         rospy.Subscriber('controls', Controls, self.send_controllers)
-        rospy.Subscriber('route', Trajectory, self.create_markers)
 
     def send_cones(self, msg):
 
@@ -101,24 +101,8 @@ class transformerFssim():
 
         cmd = Cmd()
         cmd.dc = msg.accelerator
-        cmd.delta = msg.steering
+        cmd.delta = math.radians(msg.steering)
 
         rospy.loginfo(cmd)
         self.pub_cmd.publish(cmd)
 
-    def create_markers(self, msg):
-        """
-        Function to transform trajectory in message to draw
-        in Fssim simulator and to send it.
-        """
-
-        data = msg.trajectory
-        data = [Point(p.x, p.y, 0.0) for p in data]
-        pol = Polygon(data)
-
-        msg = PolygonStamped()
-        msg.polygon = pol
-        msg.header.frame_id = 'fssim/vehicle/cog'
-
-        rospy.loginfo(msg)
-        self.pub_marker.publish(msg)
