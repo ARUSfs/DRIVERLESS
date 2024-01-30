@@ -17,26 +17,25 @@ class Cone_detect():
         self.pub2 = rospy.Publisher("/cam_marker",MarkerArray,queue_size=1) #Publisher de los markers
         self.pub3 = rospy.Publisher("/cam/detections", Point, queue_size=1) #Publisher de las detecciones de conos
         self.pub = rospy.Publisher("/cam/cones", Cone, queue_size=15)       #Publisher de los conos detectados
-        mat_hom = rospy.get_param('/cam_detect/mat_hom')               #Ruta de la matriz de homografía
-        mat_int = rospy.get_param('/cam_detect/mat_int')               #Ruta de la matriz intrínseca
-        dist_path = rospy.get_param('/cam_detect/dist_path')           #Ruta del archivo de distorsión
-        self.hom = np.loadtxt(mat_hom)                                 #Matriz de homografía
-        self.int = np.loadtxt(mat_int)                                 #Matriz intrínseca
-        self.dist = np.loadtxt(dist_path)                              #Matriz de distorsión
+        mat_hom = rospy.get_param("/cam_detect/mat_hom")                    #Ruta de la matriz de homografía
+        mat_int = rospy.get_param("/cam_detect/mat_int")                    #Ruta de la matriz intrínseca
+        dist_path = rospy.get_param("/cam_detect/dist_path")                #Ruta del archivo de distorsión
+        self.hom = np.loadtxt(mat_hom)                                      #Matriz de homografía
+        self.int = np.loadtxt(mat_int)                                      #Matriz intrínseca
+        self.dist = np.loadtxt(dist_path)                                   #Matriz de distorsión
         
         #YOLO
-        self.cfg = rospy.get_param('/cam_detect/cfg')            
-        self.data = rospy.get_param('/cam_detect/data')
-        self.weights = rospy.get_param('/cam_detect/weights')
+        self.cfg = rospy.get_param("/cam_detect/cfg")            
+        self.data = rospy.get_param("/cam_detect/data")
+        self.weights = rospy.get_param("/cam_detect/weights")
         self.net, self.names, self.colors = darknet.load_network(self.cfg, self.data, self.weights)
         self.w_net, self.h_net = darknet.network_width(self.net), darknet.network_height(self.net)
 
         #Cámara
-        self.cam = rospy.get_param('/cam_detect/cam')                      #Número (ruta) de la cámara 
+        self.cam = rospy.get_param("/cam_detect/cam")                      #Número (ruta) de la cámara 
         
     def yolo_detect(self, img: np.ndarray):
         frame = cv2.resize(img, (self.w_net, self.h_net))
-        img_und = cv2.undistort(frame, self.int, self.dist)
         d_img = darknet.make_image(self.w_net, self.h_net, 3) 
         darknet.copy_image_from_bytes(d_img,frame.tobytes())
         detections = darknet.detect_image(self.net, self.names, d_img)
@@ -66,9 +65,8 @@ class Cone_detect():
         while vid.isOpened():
             _, frame = vid.read()
             if i % 20 == 0:
-                frame = cv2.resize(frame, (1920, 1088))
-                img_und = cv2.undistort(frame, self.int, self.dist) # Probar los colores de la imagen !!! 
-                img = cv2.cvtColor(img_und, cv2.COLOR_BGR2RGB) # Quitar y renombrar si no es necesario !!!
+                img_und = cv2.undistort(frame, self.int, self.dist) # Probar los colores de la imagen!!! 
+                img = cv2.cvtColor(img_und, cv2.COLOR_BGR2RGB)      # Quitar y renombrar si no es necesario!!!
                 detections = self.yolo_detect(img)
                 cones_detected_info = self.cones_perception(detections)
                 
@@ -81,8 +79,12 @@ class Cone_detect():
                 ind=0
                 for (tipo, segur, box) in cones_detected_info:
                     if float(segur)>80:
+
+                        #Publica las detecciones de conos
                         array = np.array(box)
                         self.pub3.publish(Point(array[0], array[1], 0))
+
+                        #Publica los conos homografiados  
                         coord = self.hom @ array
                         coord /= coord[2]
                         cone = Cone()
@@ -125,9 +127,4 @@ class Cone_detect():
                 break
         vid.release()
         cv2.destroyAllWindows()
-
-#if __name__ == '__main__':
-#    node_name = "cam_detect"
-#    rospy.init_node(node_name)
-#    Cone_detect()
-#    rospy.spin()
+        
