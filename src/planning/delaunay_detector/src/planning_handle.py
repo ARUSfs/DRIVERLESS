@@ -44,6 +44,7 @@ class PlanningHandle():
 
     def publish_msg(self):
         route, triang = self.planning_system.calculate_path()
+
         self.delaunay_publisher.publish(triang)
 
         msg = Trajectory()

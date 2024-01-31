@@ -1,0 +1,6 @@
+<launch>
+  <node pkg="data_association" name="data_association" type="main.py">
+  <rosparam command="load" file="$(find data_association)/config/data_association.yaml"/>
+  </node>
+
+</launch>
