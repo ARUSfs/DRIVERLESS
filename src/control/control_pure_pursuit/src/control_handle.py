@@ -20,7 +20,6 @@ import math
 # Constants
 sim_mode = rospy.get_param('/control_pure_pursuit/simulation') # look for simulation mode
 
-
 class ControlHandle():
     """Listen route and state and generate command controls of steering and
     accelerator.
