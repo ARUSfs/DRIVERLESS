@@ -13,26 +13,27 @@ from cv_bridge import CvBridge
 class Cone_detect():
     
     def __init__(self):
-        self.pub4 = rospy.Publisher("/cam/image_raw",Image,queue_size=1)    #Publisher de la imagen
-        self.pub2 = rospy.Publisher("/cam_marker",MarkerArray,queue_size=1) #Publisher de los markers
-        self.pub3 = rospy.Publisher("/cam/detections", Point, queue_size=1) #Publisher de las detecciones de conos
-        self.pub = rospy.Publisher("/cam/cones", Cone, queue_size=15)       #Publisher de los conos detectados
-        mat_hom = rospy.get_param("/cam_detect/mat_hom")                    #Ruta de la matriz de homografía
-        mat_int = rospy.get_param("/cam_detect/mat_int")                    #Ruta de la matriz intrínseca
-        dist_path = rospy.get_param("/cam_detect/dist_path")                #Ruta del archivo de distorsión
-        self.hom = np.loadtxt(mat_hom)                                      #Matriz de homografía
-        self.int = np.loadtxt(mat_int)                                      #Matriz intrínseca
-        self.dist = np.loadtxt(dist_path)                                   #Matriz de distorsión
+        self.pub = rospy.Publisher("/cam/cones", Cone, queue_size=15)                   #Publisher de los conos detectados
+        self.pub2 = rospy.Publisher("/cam_marker",MarkerArray,queue_size=1)             #Publisher de los markers
+        self.pub3 = rospy.Publisher("/cam/detections", Point, queue_size=1)             #Publisher de las detecciones de conos
+        self.pub4 = rospy.Publisher("/cam/image_raw",Image,queue_size=1)                #Publisher de la imagen
+        path = rospy.get_param("/cam_detect/path")                                      #Ruta del equipo
+        mat_hom = path + '/DRIVERLESS/src/perception/cam_perception/data/matrizhom.txt' #Ruta de la matriz de homografía
+        mat_int = path + '/DRIVERLESS/src/perception/cam_perception/data/matriz.txt'    #Ruta de la matriz intrínseca
+        dist_path = path + '/DRIVERLESS/src/perception/cam_perception/data/dist.txt'    #Ruta del archivo de distorsión
+        self.hom = np.loadtxt(mat_hom)                                                  #Matriz de homografía
+        self.int = np.loadtxt(mat_int)                                                  #Matriz intrínseca
+        self.dist = np.loadtxt(dist_path)                                               #Matriz de distorsión
         
         #YOLO
-        self.cfg = rospy.get_param("/cam_detect/cfg")            
-        self.data = rospy.get_param("/cam_detect/data")
-        self.weights = rospy.get_param("/cam_detect/weights")
+        self.cfg = path + '/DRIVERLESS/src/perception/cam_perception/weights/cones-customanchors.cfg'
+        self.data = path + '/DRIVERLESS/src/perception/cam_perception/weights/cones.data'
+        self.weights = path + '/DRIVERLESS/src/perception/cam_perception/weights/cones5.weights'
         self.net, self.names, self.colors = darknet.load_network(self.cfg, self.data, self.weights)
         self.w_net, self.h_net = darknet.network_width(self.net), darknet.network_height(self.net)
 
         #Cámara
-        self.cam = rospy.get_param("/cam_detect/cam")                      #Número (ruta) de la cámara 
+        self.cam = rospy.get_param("/cam_detect/cam")                                   #Número (ruta) de la cámara 
         
     def yolo_detect(self, img: np.ndarray):
         frame = cv2.resize(img, (self.w_net, self.h_net))

@@ -1,14 +1,7 @@
 #Se puede intentar probar con rutas relativas
 
-# YOLO
-cfg : '/home/igsais/Escritorio/git/src/DRIVERLESS/src/perception/cam_perception/weights/cones-customanchors.cfg' 
-data : '/home/igsais/Escritorio/git/src/DRIVERLESS/src/perception/cam_perception/weights/cones.data'
-weights : '/home/igsais/Escritorio/git/src/DRIVERLESS/src/perception/cam_perception/weights/cones5.weights'
-
-# Homography matrix
-mat_hom : '/home/igsais/Escritorio/ARUS/Camara_calib/Ignacio/matrizhom_IPPE.txt'
-mat_int : '/home/igsais/Escritorio/ARUS/Camara_calib/Ignacio/matrizint_IPPE.txt'
-dist_path : '/home/igsais/Escritorio/ARUS/Camara_calib/Ignacio/dist_IPPE.txt'
+# Path to /DRIVERLESS
+path : "/home/igsais/Escritorio/git/src"
 
 #Camera or video
 cam : 2 #'/home/igsais/Escritorio/ARUS/Camara_detect/datos/vuelta-circuito-prueba.mp4'
