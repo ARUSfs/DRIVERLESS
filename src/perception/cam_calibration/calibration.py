@@ -136,12 +136,14 @@ def homo_mat(video, img, txt, cfg, weights, data):
         numpy.array: mtx, dist, rvec, tvec
     """
     mtx, dist, _, _ = intrinsecas(video)
+    id = np.array(([1,0,0],[0,1,0],[0,0,1]))
+    zeros = np.zeros(5)
     img0 = cv2.imread(img)
     img_und = cv2.undistort((cv2.cvtColor(img0, cv2.COLOR_BGR2RGB)),mtx,dist)
     detection = yolo_detect(img_und, cfg, weights, data)
     conos_pixeles = cones_perception(detection)
     conos_coords = real_coords_txt(txt)
-    _, rvec,tvec = cv2.solvePnP(conos_coords, conos_pixeles, mtx, dist, flags=cv2.SOLVEPNP_IPPE)
+    _, rvec,tvec = cv2.solvePnP(conos_coords, conos_pixeles, id, zeros, flags=cv2.SOLVEPNP_IPPE)
     return mtx, dist, rvec, tvec, conos_pixeles
 
 def escribe_txt(file,mat):
@@ -151,18 +153,19 @@ def escribe_txt(file,mat):
         file (str): directorio del archivo a escribir
         mat (numpy.array): matriz para escribir
     """
-    np.savetxt(file,mat, fmt='%-1g')
+    np.savetxt(file, mat, fmt='%-1g')
 
 
 #Parámetros propios
-cfg = '/home/igsais/ros_ws/src/WEIGHTS/cones-customanchors.cfg'
-data = '/home/igsais/ros_ws/src/WEIGHTS/cones.data'
-weights = '/home/igsais/ros_ws/src/WEIGHTS/cones5.weights'
+path = '/home/igsais/Escritorio/git/src'
+cfg = path + '/DRIVERLESS/src/perception/cam_perception/weights/cones-customanchors.cfg'
+data = path + '/DRIVERLESS/src/perception/cam_perception/weights/cones.data'
+weights = path + '/DRIVERLESS/src/perception/cam_perception/weights/cones5.weights'
 v = 'chessvid.mp4'
 i = 'conosimg.png'
 t = 'conos.txt'
 
-mtx, dist, rvec, tvec, conos_pix = homo_mat(v, i, t,cfg, weights, data)
+mtx, dist, rvec, tvec, conos_pix = homo_mat(v, i, t, cfg, weights, data)
 
 #Cálculos para hallar la matriz de homografía H
 rmat = cv2.Rodrigues(rvec)[0]
@@ -171,7 +174,7 @@ hmat[:, 2] = hmat[:, 2] * 0.32 + tvec.T
 H = np.linalg.inv(mtx @ hmat)
 
 #Guardado de datos
-escribe_txt('../matint.txt',mtx)
+escribe_txt('../cam_perception/data/matint.txt',mtx)
 escribe_txt('./detecciones.txt', conos_pix)
-escribe_txt('../mathom.txt', H)
-escribe_txt('./dist.txt', dist)
+escribe_txt('../cam_perception/data/mathom.txt', H)
+escribe_txt('../cam_perception/data/dist.txt', dist)

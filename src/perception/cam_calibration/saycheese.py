@@ -4,10 +4,10 @@ import cv2
 import time
 
 def foto():
-    cam = cv2.VideoCapture(-1)
+    cam = cv2.VideoCapture(0)
     ret, img = cam.read()
     if ret:
-        cv2.imwrite('conosimg.png',img)
+        cv2.imwrite('data/conosimg.png',img)
     cam.release()
     
 def video(dur):
@@ -16,7 +16,7 @@ def video(dur):
     w = 1920
     h = 1088
     fps = cam.get(cv2.CAP_PROP_FPS)
-    out = cv2.VideoWriter('chessvid.mp4', fourcc, fps, (w,h))
+    out = cv2.VideoWriter('data/chessvid.mp4', fourcc, fps, (w,h))
     t0=time.time()
 
     while ((time.time() - t0) <= dur):
@@ -39,5 +39,5 @@ def video(dur):
 input('Presiona enter para hacer una foto.')
 foto()
 input('Presiona enter para hacer un vídeo.')
-video(30)
+video(45)
 print('Completado.')
