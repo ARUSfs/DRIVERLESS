@@ -4,13 +4,13 @@ import rospy
 from sensor_msgs.msg import PointCloud2
 from geometry_msgs.msg import Point
 from fssim_common.msg import State
-from common_msgs.msg import Map, Cone
+from common_msgs.msg import Map, Cone, MapState, SimpleCarState
 from visualization_msgs.msg import MarkerArray, Marker
 from ros_numpy.point_cloud2 import pointcloud2_to_xyz_array
 
-min_dist = 1.8 # Distancia máxima para asociar un landmark
-max_dist = 8 # Distancia máxima para añadir un landmark
-new_lap_counter = 30 # camara callbacks sin añadir landmarks para considerar que se ha completado una vuelta
+min_dist = 1.5 # Distancia máxima para asociar un landmark
+max_dist = 15 # Distancia máxima para añadir un landmark
+new_lap_counter = 70 # camara callbacks sin añadir landmarks para considerar que se ha completado una vuelta
 
 class Data_association2:
 
@@ -19,7 +19,7 @@ class Data_association2:
         # Definiendo suscribers y publishers
         rospy.Subscriber('/fssim/base_pose_ground_truth', State, self.state_callback, queue_size=20)
         rospy.Subscriber('/camera/cones', PointCloud2, self.camera_callback, queue_size=1)
-        self.pMap = rospy.Publisher('/map', Map, queue_size=1)
+        self.pMap = rospy.Publisher('/map', MapState, queue_size=1)
         self.pMapView = rospy.Publisher('/landmarks', MarkerArray, queue_size=1)
 
 
@@ -74,6 +74,11 @@ class Data_association2:
                 
             # Se publica el mapa y su vista
             map_msg = Map()
+            final_msg = MapState()
+            state_msg = SimpleCarState()
+            state_msg.x = self.state[0]
+            state_msg.y = self.state[1]
+            state_msg.yaw = self.state[2]
             for landmark in self.map:
                 cone = Cone()
                 p = Point()
@@ -84,7 +89,9 @@ class Data_association2:
                 cone.color = 'b'
                 cone.confidence = 1
                 map_msg.cones.append(cone)
-            self.pMap.publish(map_msg)
+            final_msg.state = state_msg
+            final_msg.map = map_msg
+            self.pMap.publish(final_msg)
             self.pub_markers()
         
         else:
