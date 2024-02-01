@@ -5,6 +5,8 @@ import numpy as np
 import darknet
 import time
 
+#Change this path to your own
+path = '/home/igsais/Escritorio/git/src'
 
 def frames(file: str):
     """Crea un array de algunos frames del vídeo 
@@ -157,7 +159,6 @@ def escribe_txt(file,mat):
 
 
 #Parámetros propios
-path = '/home/igsais/Escritorio/git/src'
 cfg = path + '/DRIVERLESS/src/perception/cam_perception/weights/cones-customanchors.cfg'
 data = path + '/DRIVERLESS/src/perception/cam_perception/weights/cones.data'
 weights = path + '/DRIVERLESS/src/perception/cam_perception/weights/cones5.weights'
