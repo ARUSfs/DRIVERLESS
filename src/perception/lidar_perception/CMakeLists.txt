@@ -15,7 +15,7 @@ include_directories(
 )
 
 catkin_package(
-  INCLUDE_DIRS include
+  # INCLUDE_DIRS include
 #  LIBRARIES lidar_cpp
   CATKIN_DEPENDS roscpp rospy sensor_msgs std_msgs
 )
