@@ -1,7 +1,5 @@
-#Se puede intentar probar con rutas relativas
-
 # Path to /DRIVERLESS
 path : "/home/igsais/Escritorio/git/src"
 
 #Camera or video
-cam : 2 #'/home/igsais/Escritorio/ARUS/Camara_detect/datos/vuelta-circuito-prueba.mp4'
+cam : '/home/igsais/Escritorio/recta.mp4' #2

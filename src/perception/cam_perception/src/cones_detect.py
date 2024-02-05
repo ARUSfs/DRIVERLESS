@@ -18,8 +18,8 @@ class Cone_detect():
         self.pub3 = rospy.Publisher("/cam/detections", Point, queue_size=1)             #Publisher de las detecciones de conos
         self.pub4 = rospy.Publisher("/cam/image_raw",Image,queue_size=1)                #Publisher de la imagen
         path = rospy.get_param("/cam_detect/path")                                      #Ruta del equipo
-        mat_hom = path + '/DRIVERLESS/src/perception/cam_perception/data/matrizhom.txt' #Ruta de la matriz de homografía
-        mat_int = path + '/DRIVERLESS/src/perception/cam_perception/data/matriz.txt'    #Ruta de la matriz intrínseca
+        mat_hom = path + '/DRIVERLESS/src/perception/cam_perception/data/mathom.txt'    #Ruta de la matriz de homografía
+        mat_int = path + '/DRIVERLESS/src/perception/cam_perception/data/matint.txt'    #Ruta de la matriz intrínseca
         dist_path = path + '/DRIVERLESS/src/perception/cam_perception/data/dist.txt'    #Ruta del archivo de distorsión
         self.hom = np.loadtxt(mat_hom)                                                  #Matriz de homografía
         self.int = np.loadtxt(mat_int)                                                  #Matriz intrínseca
@@ -36,9 +36,9 @@ class Cone_detect():
         self.cam = rospy.get_param("/cam_detect/cam")                                   #Número (ruta) de la cámara 
         
     def yolo_detect(self, img: np.ndarray):
-        frame = cv2.resize(img, (self.w_net, self.h_net))
+        #frame = cv2.resize(img, (self.w_net, self.h_net))
         d_img = darknet.make_image(self.w_net, self.h_net, 3) 
-        darknet.copy_image_from_bytes(d_img,frame.tobytes())
+        darknet.copy_image_from_bytes(d_img,img.tobytes())
         detections = darknet.detect_image(self.net, self.names, d_img)
         return detections
 
@@ -66,7 +66,8 @@ class Cone_detect():
         while vid.isOpened():
             _, frame = vid.read()
             if i % 20 == 0:
-                img_und = cv2.undistort(frame, self.int, self.dist) # Probar los colores de la imagen!!! 
+                img_res = cv2.resize(frame, (self.w_net, self.h_net))
+                img_und = cv2.undistort(img_res, self.int, self.dist) # Probar los colores de la imagen!!! 
                 img = cv2.cvtColor(img_und, cv2.COLOR_BGR2RGB)      # Quitar y renombrar si no es necesario!!!
                 detections = self.yolo_detect(img)
                 cones_detected_info = self.cones_perception(detections)
