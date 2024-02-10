@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 from darknet import darknet
 import time
+from tqdm import tqdm
 
 #Change this path to your own
 path = '/home/igsais/Escritorio/git/src'
@@ -20,7 +21,7 @@ def frames(file: str):
     lista = []
     i = 0
     while vid.grab():
-        ret, frame = vid.retrieve()
+        ret, frame = vid.read()
         if ret and (i%15==0):
             lista.append(frame)
         i += 1
@@ -38,7 +39,7 @@ def intrinsecas(video:str, chess_size=(9,6), square_size=0.00239):
     imgpoints = [] # 2d points in image plane.
     imgs = frames(video)
 
-    for img in imgs:
+    for img in tqdm(imgs):
         gris = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
         ret, corners = cv2.findChessboardCorners(gris, chess_size)
         if ret:
@@ -146,8 +147,7 @@ def homo_mat(video, img, txt, cfg, weights, data):
     detection = yolo_detect(img_und, cfg, weights, data)
     conos_pixeles = cones_perception(detection)
     conos_coords = real_coords_txt(txt)
-    print(conos_coords, detection)
-    _, rvec,tvec = cv2.solvePnP(conos_coords, conos_pixeles, id, zeros, flags=cv2.SOLVEPNP_IPPE)
+    _, rvec,tvec = cv2.solvePnP(conos_coords, conos_pixeles, id, zeros, flags=cv2.SOLVEPNP_IPPE_SQUARE)
     return mtx, dist, rvec, tvec, conos_pixeles
 
 def escribe_txt(file,mat):
@@ -165,7 +165,7 @@ cfg = path + '/DRIVERLESS/src/perception/cam_perception/weights/cones-customanch
 data = path + '/DRIVERLESS/src/perception/cam_perception/weights/cones.data'
 weights = path + '/DRIVERLESS/src/perception/cam_perception/weights/cones5.weights'
 v = './data/chessvid.mp4'
-i = './data/conosimg.jpg'
+i = './data/conos_22.jpg'
 t = './data/conos.txt'
 
 mtx, dist, rvec, tvec, conos_pix = homo_mat(v, i, t, cfg, weights, data)

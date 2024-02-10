@@ -5,7 +5,7 @@ from cones_detect import Cone_detect
 
 def main():
     rospy.init_node("cam_detect", anonymous=True)
-    Cone_detect().detecta()
+    Cone_detect()
     rospy.spin()
 
 
