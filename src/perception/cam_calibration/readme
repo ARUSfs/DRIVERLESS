@@ -1,6 +1,8 @@
 Pasos para conseguir la matriz de homografía de la cámara:
 1.- Ejecutar el script saycheese.py para hacer foto de los conos con la disposición que aparece en la imagen Disposicion.png y después grabar el vídeo del tablero de ajedrez.
-2.- Ejecutar el script calibration.py
-3.- La matriz de homografía se guardará en el archivo mathom.txt, la matriz de intrínsecas en matint.txt.
+2.- Cambiar el archivo conos.txt con las coordenadas de los conos con 0 en la variable z.
+3.- Ejecutar el script calibration.py
+4.- La matriz de homografía se guardará en el archivo mathom.txt, la matriz de intrínsecas en matint.txt.
 
-Al ejecutar en un nuevo equipo, cambiar la variable 'path' del archivo 'calibration.py' con la ruta hasta la carpeta /DRIVERLESS del repositorio.
+- Al ejecutar en un nuevo equipo, cambiar la variable 'path' del archivo calibration.py con la ruta hasta la carpeta /DRIVERLESS del repositorio.
+- Cambiar también la variable 'cam_index' el script saycheese.py para que coincida con el índice de la cámara conectada.

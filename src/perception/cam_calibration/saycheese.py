@@ -3,15 +3,18 @@
 import cv2
 import time
 
-def foto():
-    cam = cv2.VideoCapture(0)
+# Datos de la cámara
+cam_index = 0
+
+def foto(index=0):
+    cam = cv2.VideoCapture(index)
     ret, img = cam.read()
     if ret:
         cv2.imwrite('data/conosimg.png',img)
     cam.release()
     
-def video(dur):
-    cam = cv2.VideoCapture(0)
+def video(dur, index=0):
+    cam = cv2.VideoCapture(index)
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     w = 1920
     h = 1088
@@ -37,7 +40,7 @@ def video(dur):
 
 
 input('Presiona enter para hacer una foto.')
-foto()
+foto(index=cam_index)
 input('Presiona enter para hacer un vídeo.')
-video(45)
+video(45, index=cam_index)
 print('Completado.')
