@@ -22,7 +22,8 @@ def frames(file: str):
     i = 0
     while vid.grab():
         ret, frame = vid.read()
-        if ret and (i%15==0):
+        if ret and (i%10==0):
+            frame = cv2.resize(frame, (1920,1088))
             lista.append(frame)
         i += 1
     vid.release()
@@ -40,7 +41,7 @@ def intrinsecas(video:str, chess_size=(9,6), square_size=0.00239):
     imgs = frames(video)
 
     for img in tqdm(imgs):
-        gris = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+        gris = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         ret, corners = cv2.findChessboardCorners(gris, chess_size)
         if ret:
             objpoints.append(objp)
@@ -123,32 +124,39 @@ def real_coords_txt(file):
     conos.close()
     return conos_coords
 
-def homo_mat(video, img, txt, cfg, weights, data):
+def homo_mat(video, img_dist, txt, cfg, weights, data):
     """Obtiene los vectores de rotación y traslación
     
     Args:
-        img (numpy.ndarray): imagen de los conos
+        video (str): ruta al vídeo del tablero
+        img_dist (str): ruta a la imagen de los conos
         txt (str): ruta del txt con coords de los conos
         cfg (str): ruta archivo config
         weights (str): ruta archivo weights 
         data (str): ruta archivo data
-        folder (str='.'): ruta carpeta con fotos tablero
-        typ (str='png'): tipo de imagen a
         
     Return:
         numpy.array: mtx, dist, rvec, tvec
     """
+    # Calcula parámetros intrínsecos de la cámara
     mtx, dist, _, _ = intrinsecas(video)
-    id = np.array(([1,0,0],[0,1,0],[0,0,1]))
-    zeros = np.zeros(5)
-    img0 = cv2.imread(img)
+
+    # Procesa la imagen de los conos
+    img0 = cv2.imread(img_dist)
     img1 = cv2.resize(img0, (1920,1088))
-    img_und = cv2.undistort((cv2.cvtColor(img1, cv2.COLOR_BGR2RGB)), mtx, dist)
-    detection = yolo_detect(img_und, cfg, weights, data)
+    img_und = cv2.undistort(img1, mtx, dist),
+    img = cv2.cvtColor(img_und, cv2.COLOR_BGR2RGB)
+
+    # Detecta los píxeles de los conos 
+    detection = yolo_detect(img, cfg, weights, data)
     conos_pixeles = cones_perception(detection)
     conos_coords = real_coords_txt(txt)
-    _, rvec,tvec = cv2.solvePnP(conos_coords, conos_pixeles, id, zeros, flags=cv2.SOLVEPNP_IPPE_SQUARE)
-    return mtx, dist, rvec, tvec, conos_pixeles
+
+    # Calcula matriz de rotación y traslación
+    _, rvec,tvec = cv2.solvePnP(conos_coords, conos_pixeles, mtx, dist, flags=cv2.SOLVEPNP_IPPE)
+    _, rvec1, tvec1 = cv2.solvePnP(conos_coords, conos_pixeles, mtx, dist, rvec=rvec, tvec=tvec, useExtrinsicGuess=True)
+
+    return mtx, dist, rvec1, tvec1, conos_pixeles
 
 def escribe_txt(file,mat):
     """Crea un archivo txt (o escribe en él si existe) y escribe en él la matriz
@@ -165,7 +173,7 @@ cfg = path + '/DRIVERLESS/src/perception/cam_perception/weights/cones-customanch
 data = path + '/DRIVERLESS/src/perception/cam_perception/weights/cones.data'
 weights = path + '/DRIVERLESS/src/perception/cam_perception/weights/cones5.weights'
 v = './data/chessvid.mp4'
-i = './data/conos_22.jpg'
+i = './data/conos.png'
 t = './data/conos.txt'
 
 mtx, dist, rvec, tvec, conos_pix = homo_mat(v, i, t, cfg, weights, data)
@@ -173,7 +181,7 @@ mtx, dist, rvec, tvec, conos_pix = homo_mat(v, i, t, cfg, weights, data)
 #Cálculos para hallar la matriz de homografía H
 rmat = cv2.Rodrigues(rvec)[0]
 hmat = rmat.copy()
-hmat[:, 2] = hmat[:, 2] * 0.32 + tvec.T
+hmat[:, 2] = tvec.T
 H = np.linalg.inv(mtx @ hmat)
 
 #Guardado de datos
