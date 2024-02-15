@@ -1,16 +1,23 @@
+'''
+@Author: Carlos Pérez Cantalapiedra
+@Description: Data association for mapping using ICP.
+@Date: 2023-12-27
+@LastUpdate: 2024-02-15
+'''
+
 import numpy as np
 import open3d as o3d
 import rospy
 from sensor_msgs.msg import PointCloud2
-from geometry_msgs.msg import Point
 from fssim_common.msg import State
-from common_msgs.msg import Map, Cone, MapState, SimpleCarState
+from common_msgs.msg import Map, Cone
 from visualization_msgs.msg import MarkerArray, Marker
 from ros_numpy.point_cloud2 import pointcloud2_to_xyz_array
+from scipy.interpolate import splprep, splev
 
 min_dist = 1.5 # Distancia máxima para asociar un landmark
-max_dist = 15 # Distancia máxima para añadir un landmark
-new_lap_counter = 70 # camara callbacks sin añadir landmarks para considerar que se ha completado una vuelta
+max_dist = 10 # Distancia máxima para añadir un landmark
+new_lap_counter = 40 # camara callbacks sin añadir landmarks para considerar que se ha completado una vuelta
 
 class Data_association2:
 
@@ -19,12 +26,13 @@ class Data_association2:
         # Definiendo suscribers y publishers
         rospy.Subscriber('/fssim/base_pose_ground_truth', State, self.state_callback, queue_size=20)
         rospy.Subscriber('/camera/cones', PointCloud2, self.camera_callback, queue_size=1)
-        self.pMap = rospy.Publisher('/map', MapState, queue_size=1)
+        self.pMap = rospy.Publisher('/map', Map, queue_size=1)
         self.pMapView = rospy.Publisher('/landmarks', MarkerArray, queue_size=1)
 
 
         # Inicializando variables
-        self.map = np.empty((0,2)) # Mapa de landmarks
+        # self.map = np.empty((0,2)) # Mapa de landmarks
+        self.map = Map()
         self.state = np.zeros(3) # Estado del coche [x, y, yaw]
         self.measurements = np.empty((0,2)) # Mediciones del sensor
         self.u = np.zeros(2) # Inputs de control [v, yaw]
@@ -33,6 +41,8 @@ class Data_association2:
         self.enable_mapping = True
         self.measurement_points_ICP= np.empty((0,2)) # Mediciones usadas para el ICP
         self.map_points_ICP = np.empty((0,2)) # Puntos del mapa usados para el ICP
+        self.path = np.array([[0.,0.]])
+        self.last_pos = np.array([0.,0.])
     
     
     def state_callback(self, msg: State):
@@ -48,6 +58,10 @@ class Data_association2:
 
 
     def camera_callback(self, msg: PointCloud2):
+
+        if (np.linalg.norm(self.state[:2]-self.last_pos) > 2):
+            self.last_pos = np.array([[self.state[0], self.state[1]]])
+            self.path = np.vstack((self.path, [self.state[0], self.state[1]]))
         
         if self.enable_mapping:
             # Se obtienen las mediciones del sensor
@@ -57,7 +71,15 @@ class Data_association2:
 
             # Si el mapa está vacío se añaden las mediciones
             if self.empty_map == True:
-                self.map = self.measurements.copy()
+                m = self.measurements.copy()
+                yaw = self.state[2]
+                rot = np.array([[np.cos(yaw), -np.sin(yaw)],
+                        [np.sin(yaw), np.cos(yaw)]])
+                x = self.state[0]
+                y = self.state[1]
+                for i in m:
+                    corrected_position = rot @ i + np.array([x, y])
+                    self.map.cones.append(self.new_cone(corrected_position[0], corrected_position[1], 'o'))
                 self.empty_map = False 
                 
             # Si el mapa no está vacío se pasan los landmarks al marco global y se realiza la asociación de datos
@@ -66,33 +88,21 @@ class Data_association2:
             
             # Se comprueba si se ha completado una vuelta
             if self.count > new_lap_counter and self.u[0] > 0.2:
+                rospy.loginfo("%s", self.path)
+                self.coloring()
+                self.pMap.publish(self.map)
+                self.pub_markers()
+                self.map = Map()
                 self.count = 0
-                self.enable_mapping = False
+                self.path = np.array([[0.,0.]])
+                self.empty_map= True
                 rospy.loginfo('Lap completed')
-                rospy.loginfo('Number of landmarks: ' + str(self.map.shape[0]))
+                rospy.loginfo('Number of landmarks: ' + str(len(self.map.cones)))
                 rospy.loginfo('Map: ' + str(self.map))
                 
             # Se publica el mapa y su vista
-            map_msg = Map()
-            final_msg = MapState()
-            state_msg = SimpleCarState()
-            state_msg.x = self.state[0]
-            state_msg.y = self.state[1]
-            state_msg.yaw = self.state[2]
-            for landmark in self.map:
-                cone = Cone()
-                p = Point()
-                p.x = landmark[0]
-                p.y = landmark[1]
-                p.z = 0
-                cone.position = p
-                cone.color = 'b'
-                cone.confidence = 1
-                map_msg.cones.append(cone)
-            final_msg.state = state_msg
-            final_msg.map = map_msg
-            self.pMap.publish(final_msg)
-            self.pub_markers()
+            if len(self.map.cones) > 0:
+                self.pub_markers()
         
         else:
             pass
@@ -115,7 +125,9 @@ class Data_association2:
             new_landmark = True
             gM = rot @ measurement + np.array([x, y])
 
-            for landmark in self.map:
+            for l in self.map.cones:
+
+                landmark = np.array([l.position.x, l.position.y])
                 
                 if np.linalg.norm(gM - landmark) < min_dist :
                     measurement_points_ICP = np.vstack((self.measurement_points_ICP, gM))
@@ -127,9 +139,11 @@ class Data_association2:
                 new_landmarks_without_correction = np.vstack((new_landmarks_without_correction, gM))
                 c += 1
         
+
+        # Se añaden los landmarks que no se han podido asociar aplicandoles el ICP
         transformation_matrix = self.icp(measurement_points_ICP,map_points_ICP)
         self.landmarks_correction(new_landmarks_without_correction, transformation_matrix)
-        
+
         if c == 0 and self.u[0] > 0.2:
             self.count += 1
 
@@ -159,24 +173,61 @@ class Data_association2:
         #Se aplica la matriz de transformacion a los landmarks antes de añadirlos al mapa
         r = transformation_matrix[:2,:2]
         t = transformation_matrix[:2,2]
-        self.map = np.vstack((self.map, new_landmarks_without_correction @ r.T + t))
+        lc = new_landmarks_without_correction @ r.T + t
+        for i in lc:
+            self.map.cones.append(self.new_cone(i[0], i[1], 'o'))
 
+    
+    def new_cone(self, x, y, color):
+        c = Cone()
+        c.position.x = x
+        c.position.y = y
+        c.position.z = 0
+        c.color = color
+        return c
+    
 
+    def coloring(self):
+        
+        tck, u = splprep(self.path.T, s=0, per=True)
+        u_new = np.linspace(u.min(), u.max(), 1000)
+        puntos_curva = np.array(splev(u_new, tck))
+        
+        for c in self.map.cones:
+            n_cortes = 0
+            x0 = c.position.x
+            y0 = c.position.y
+            
+            for i in range(len(puntos_curva[0]) - 1):
+                punto1 = puntos_curva[:, i]
+                punto2 = puntos_curva[:, i + 1]
+                
+                if ((punto1[0] < x0 and punto2[0] > x0) or (punto1[0] > x0 and punto2[0] < x0)) and punto1[1]>y0 :
+                    n_cortes += 1
+            
+            if n_cortes % 2 == 0:
+                c.color = 'b'
+            
+            else:
+                c.color = 'y'
+            
+    
     def pub_markers(self):
         marray = MarkerArray()
         m1 = Marker()
+        m1.id = 100000
         m1.action = Marker.DELETEALL
         marray.markers.append(m1)
-        for i, lm in enumerate(self.map):
+        for i, lm in enumerate(self.map.cones):
             marker = Marker()
             marker.id = i
             marker.header.frame_id = 'map'
             marker.header.stamp = rospy.Time().now()
             marker.type = Marker.CYLINDER
             marker.action = Marker.MODIFY
-            marker.pose.position.x = lm[0]
-            marker.pose.position.y = lm[1]
-            marker.pose.position.z = 0
+            marker.pose.position.x = lm.position.x
+            marker.pose.position.y = lm.position.y
+            marker.pose.position.z = lm.position.z
             marker.pose.orientation.x = 0.0
             marker.pose.orientation.y = 0.0
             marker.pose.orientation.z = 0.0
@@ -184,10 +235,21 @@ class Data_association2:
             marker.scale.x = 0.3
             marker.scale.y = 0.3
             marker.scale.z = 0.3
-            marker.color.r = 0
-            marker.color.g = 0
-            marker.color.b = 0
-            marker.color.a = 1.0
+            if lm.color == 'b':
+                marker.color.r = 0
+                marker.color.g = 0
+                marker.color.b = 1
+                marker.color.a = 1.0
+            elif lm.color == 'y':
+                marker.color.r = 1
+                marker.color.g = 1
+                marker.color.b = 0
+                marker.color.a = 1.0
+            else:
+                marker.color.r = 0
+                marker.color.g = 0
+                marker.color.b = 0
+                marker.color.a = 1.0
 
             marker.lifetime = rospy.Duration()
 

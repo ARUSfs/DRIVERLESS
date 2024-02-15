@@ -26,5 +26,8 @@
     </rosparam>
   </node>
 
+  <node name = "saved_map" pkg = "saved_maps" type = "main.py" output="screen">
+  </node>
+
 
 </launch>
