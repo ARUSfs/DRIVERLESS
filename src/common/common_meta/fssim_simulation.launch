@@ -4,6 +4,7 @@
     <rosparam command="load" file="$(find delaunay_detector)/config/delaunay.yaml"/>
     <rosparam>
       topic_map: 'perception_map'
+      color_enabled: true
     </rosparam>
   </node>
 
@@ -20,13 +21,21 @@
     <rosparam command="load" file="$(find control_pure_pursuit)/config/pure_pursuit.yaml"/>
     <rosparam>
       LFC: 6
-      TARGET_SPEED: 6
+      TARGET_SPEED: 4
       simulation: true
       max_cmd: 0.2
     </rosparam>
   </node>
 
-  <node name = "saved_map" pkg = "saved_maps" type = "main.py" output="screen">
+  <node pkg="data_association" name="data_association" type="main.py" output="screen">
+    <rosparam command="load" file="$(find data_association)/config/data_association.yaml"/>
+    <rosparam>
+      min_dist: 1.5 
+      max_dist: 10 
+      new_lap_counter: 40 
+      path_gap: 4
+      state_topic: '/fssim/base_pose_ground_truth'
+    </rosparam>
   </node>
 
 

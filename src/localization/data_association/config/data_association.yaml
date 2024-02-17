@@ -7,3 +7,14 @@ max_dist: 10
 
 # Número de callbacks sin añadir un landmark al mapa para considerar fin de vuelta:
 new_lap_counter: 40 
+
+# Distancia ente puntos de la ruta del coche
+path_gap: 4
+
+# Tópicos
+state_topic: '/fssim/base_pose_ground_truth'
+perception_topic: '/perception_map'
+map_topic: '/data_association/map'
+map_marker_topic: '/data_association/landmarks'
+map_list_topic: '/data_association/map_list'
+map_list_marker_topic: '/data_association/final_map'

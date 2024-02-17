@@ -96,8 +96,9 @@ class ControlHandle():
 
         p = Point()
         ind = self.control.target_ind
-        p.x = self.control.target_course.cx[ind]
-        p.y = self.control.target_course.cy[ind]
-        self.pub2.publish(p)
+        if(len(self.control.target_course.cx)>0):
+            p.x = self.control.target_course.cx[ind]
+            p.y = self.control.target_course.cy[ind]
+            self.pub2.publish(p)
 
         self.pub.publish(msg)

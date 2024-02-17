@@ -8,13 +8,18 @@ import rospy
 from common_msgs.msg import Map, MapList
 from visualization_msgs.msg import MarkerArray, Marker
 
+#Topics
+map_topic = rospy.get_param('/data_association/map_topic')
+map_list_topic = rospy.get_param('/data_association/map_list_topic')
+map_list_marker_topic = rospy.get_param('/data_association/map_list_marker_topic')
+
 class SavedMap:
     def __init__(self):
         self.map = Map()
         self.mapList = MapList()
-        self.map_sub = rospy.Subscriber('/map', Map, self.map_callback, queue_size=1)
-        self.pub = rospy.Publisher('/map_list', MapList, queue_size=1)
-        self.pmarkers = rospy.Publisher('/final_map', MarkerArray, queue_size=1)
+        self.map_sub = rospy.Subscriber(map_topic, Map, self.map_callback, queue_size=1)
+        self.pub = rospy.Publisher(map_list_topic, MapList, queue_size=1)
+        self.pmarkers = rospy.Publisher(map_list_marker_topic, MarkerArray, queue_size=1)
 
     
     def map_callback(self, msg):

@@ -17,16 +17,23 @@ from scipy.interpolate import splprep, splev
 min_dist = rospy.get_param('/data_association/min_dist')
 max_dist = rospy.get_param('/data_association/max_dist')
 new_lap_counter = rospy.get_param('/data_association/new_lap_counter')
+path_gap = rospy.get_param('/data_association/path_gap')
+
+#Topics
+state_topic = rospy.get_param('/data_association/state_topic')
+perception_topic = rospy.get_param('/data_association/perception_topic')
+map_topic = rospy.get_param('/data_association/map_topic')
+map_marker_topic = rospy.get_param('/data_association/map_marker_topic')
 
 class Data_association2:
 
     def __init__(self):
 
         # Definiendo suscribers y publishers
-        rospy.Subscriber('/fssim/base_pose_ground_truth', State, self.state_callback, queue_size=20)
-        rospy.Subscriber('/perception_map', Map, self.camera_callback, queue_size=1)
-        self.pMap = rospy.Publisher('/map', Map, queue_size=1)
-        self.pMapView = rospy.Publisher('/landmarks', MarkerArray, queue_size=1)
+        rospy.Subscriber(state_topic, State, self.state_callback, queue_size=20)
+        rospy.Subscriber(perception_topic, Map, self.perception_callback, queue_size=1)
+        self.pMap = rospy.Publisher(map_topic, Map, queue_size=1)
+        self.pMapView = rospy.Publisher(map_marker_topic, MarkerArray, queue_size=1)
 
 
         # Inicializando variables
@@ -55,9 +62,9 @@ class Data_association2:
         self.state[2] = msg.yaw
 
 
-    def camera_callback(self, msg: Map):
+    def perception_callback(self, msg: Map):
 
-        if (np.linalg.norm(self.state[:2]-self.last_pos) > 2):
+        if (np.linalg.norm(self.state[:2]-self.last_pos)>path_gap and np.all([np.linalg.norm(self.state[:2]-pos)>path_gap for pos in self.path])):
             self.last_pos = np.array([[self.state[0], self.state[1]]])
             self.path = np.vstack((self.path, [self.state[0], self.state[1]]))
         
@@ -177,6 +184,7 @@ class Data_association2:
         c.position.x = x
         c.position.y = y
         c.position.z = 0
+        c.confidence = 1
         c.color = color
         return c
     
@@ -209,7 +217,8 @@ class Data_association2:
     def map_to_xyz_array(self, m : Map):
         points = np.empty((0,2))
         for c in m.cones:
-            points = np.vstack((points, np.array([[c.position.x, c.position.y]])))
+            if c.confidence > 0.7:
+                points = np.vstack((points, np.array([[c.position.x, c.position.y]])))
         return points
 
 

@@ -5,8 +5,9 @@ Class to get middle route from estimated circuit
 @author: Jacobo Pindado
 @date: 20221130
 """
-from itertools import combinations
+from itertools import combinations, permutations
 
+import rospy
 import numpy as np
 from scipy.spatial import Delaunay
 from scipy.interpolate import BSpline
@@ -17,7 +18,7 @@ from geometry_msgs.msg import Point
 
 MAX_DISTANCE = 8
 W_DISTANCE = 0.5
-W_ANGLE = 0.5
+W_ANGLE = 2 #0.5
 W_THRESH = 7
 
 
@@ -38,7 +39,7 @@ class PlanningSystem():
         self.colours = list()
         cone_points = list()
         for c in cones:
-            if c.color != 'o':
+            if c.confidence > 0.5 and c.color != 'o':
                 cone_points.append((c.position.x, c.position.y))
                 self.colours.append(c.color)
         self.cones = np.array(cone_points)
@@ -51,15 +52,63 @@ class PlanningSystem():
 
         preproc_simplices = list()
         midpoints = list()
+        midpoints_x = list()
+        midpoints_index = list()
 
-        for simplex in triangles.simplices:
-            if all(self.get_distance(self.cones[p1], self.cones[p2]) < MAX_DISTANCE
-                   for p1, p2 in combinations(simplex, 2)):
-                for p1, p2 in combinations(simplex, 2):  # TODO Could be optimized.
-                    if not self.colours[p1] == self.colours[p2]:
-                        midpoints.append((self.cones[p1] + self.cones[p2])/2)
-                        preproc_simplices.append(simplex)
-                        # break
+        if(rospy.get_param('~color_enabled')):
+
+            for simplex in triangles.simplices:
+                if all(self.get_distance(self.cones[p1], self.cones[p2]) < MAX_DISTANCE
+                        for p1, p2 in combinations(simplex, 2)):
+                    for p1, p2 in combinations(simplex, 2):  # TODO Could be optimized.
+                        if not self.colours[p1] == self.colours[p2]:
+                            m = (self.cones[p1] + self.cones[p2])/2
+                            if m[0] not in midpoints_x and m[0]>0:
+                                midpoints.append(m)
+                                midpoints_x.append(m[0])
+                            preproc_simplices.append(simplex)
+                            # si quito el break hay el doble de midpoints
+                            # break
+
+        
+        else:
+            valid_simplices = [True for _ in range(len(triangles.simplices))]
+            for i in range(len(triangles.simplices)):
+                simplex = triangles.simplices[i]
+                for a,b,c in permutations(simplex, 3):
+                    vectA = self.cones[b] - self.cones[a]
+                    vectB = self.cones[c] - self.cones[a]
+                    
+                    angle = np.degrees(np.arccos(np.dot(vectA, vectB) / (np.linalg.norm(vectA) * np.linalg.norm(vectB))))
+
+                    if angle>=130 or angle<=15:
+                        valid_simplices[i]=False
+                        break
+
+            dict = {}
+            for i in range(len(triangles.simplices)):
+                simplex = triangles.simplices[i]
+                if all(self.get_distance(self.cones[i], self.cones[j]) < MAX_DISTANCE
+                        for i,j in combinations(simplex, 2)) and valid_simplices[i]:
+                    for (i,j) in combinations(simplex,2):
+                        if (i,j) in dict.keys():
+                            dict[(i,j)]+=1
+                        elif (j,i) in dict.keys():
+                            dict[(j,i)]+=1
+                        else:
+                            dict[(i,j)]=1
+
+                    preproc_simplices.append(simplex)
+
+            
+            for (i,j) in dict.keys():
+                if dict[(i,j)]>=2:
+                    m = (self.cones[i] + self.cones[j])/2
+                    if m[0] not in midpoints_x and m[0]>0:
+                        midpoints.append(m)
+                        midpoints_x.append(m[0])
+                        midpoints_index.append((i,j))
+
 
 
         last_element = np.array([0, 0])
@@ -67,7 +116,7 @@ class PlanningSystem():
         non_used_midpoints = np.full(midpoints.shape[0], True, dtype=np.bool_)
         path = [last_element]
 
-        while len(path) < len(midpoints):
+        while len(path) < len(midpoints)+1:
             vectors = np.full(midpoints.shape, np.Inf)
             distances = np.full(midpoints.shape[0], np.Inf)
             angles = np.full(midpoints.shape[0], np.Inf)
@@ -88,7 +137,12 @@ class PlanningSystem():
             else:
                 break
 
-        route = np.array(path)
+        # route = np.array(path)
+        
+        route=[]
+        for i in range(len(path)-1):
+            route.extend([[(1-a)*path[i][0] + a*path[i+1][0],(1-a)*path[i][1] + a*path[i+1][1]] for a in np.linspace(0,1, num=5)])
+        route = np.array(route)
 
         triang = Triangulation()
         for simplex in preproc_simplices:
