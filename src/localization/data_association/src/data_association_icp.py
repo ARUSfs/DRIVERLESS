@@ -8,16 +8,15 @@
 import numpy as np
 import open3d as o3d
 import rospy
-from sensor_msgs.msg import PointCloud2
 from fssim_common.msg import State
 from common_msgs.msg import Map, Cone
 from visualization_msgs.msg import MarkerArray, Marker
-from ros_numpy.point_cloud2 import pointcloud2_to_xyz_array
 from scipy.interpolate import splprep, splev
 
-min_dist = 1.5 # Distancia máxima para asociar un landmark
-max_dist = 10 # Distancia máxima para añadir un landmark
-new_lap_counter = 40 # camara callbacks sin añadir landmarks para considerar que se ha completado una vuelta
+# Constants
+min_dist = rospy.get_param('/data_association/min_dist')
+max_dist = rospy.get_param('/data_association/max_dist')
+new_lap_counter = rospy.get_param('/data_association/new_lap_counter')
 
 class Data_association2:
 
@@ -25,20 +24,19 @@ class Data_association2:
 
         # Definiendo suscribers y publishers
         rospy.Subscriber('/fssim/base_pose_ground_truth', State, self.state_callback, queue_size=20)
-        rospy.Subscriber('/camera/cones', PointCloud2, self.camera_callback, queue_size=1)
+        rospy.Subscriber('/perception_map', Map, self.camera_callback, queue_size=1)
         self.pMap = rospy.Publisher('/map', Map, queue_size=1)
         self.pMapView = rospy.Publisher('/landmarks', MarkerArray, queue_size=1)
 
 
         # Inicializando variables
-        # self.map = np.empty((0,2)) # Mapa de landmarks
-        self.map = Map()
+        self.map = Map() #Mapa
         self.state = np.zeros(3) # Estado del coche [x, y, yaw]
         self.measurements = np.empty((0,2)) # Mediciones del sensor
         self.u = np.zeros(2) # Inputs de control [v, yaw]
         self.empty_map = True # Indica si el mapa está vacío
         self.count = 0
-        self.enable_mapping = True
+        self.enable_mapping = True #Habilita el mapeado
         self.measurement_points_ICP= np.empty((0,2)) # Mediciones usadas para el ICP
         self.map_points_ICP = np.empty((0,2)) # Puntos del mapa usados para el ICP
         self.path = np.array([[0.,0.]])
@@ -57,7 +55,7 @@ class Data_association2:
         self.state[2] = msg.yaw
 
 
-    def camera_callback(self, msg: PointCloud2):
+    def camera_callback(self, msg: Map):
 
         if (np.linalg.norm(self.state[:2]-self.last_pos) > 2):
             self.last_pos = np.array([[self.state[0], self.state[1]]])
@@ -65,9 +63,8 @@ class Data_association2:
         
         if self.enable_mapping:
             # Se obtienen las mediciones del sensor
-            points = pointcloud2_to_xyz_array(msg)
-            points[:, 2] = 1
-            self.measurements = np.copy(points[:, :2])
+            points = self.map_to_xyz_array(msg)
+            self.measurements = np.copy(points)
 
             # Si el mapa está vacío se añaden las mediciones
             if self.empty_map == True:
@@ -96,9 +93,6 @@ class Data_association2:
                 self.count = 0
                 self.path = np.array([[0.,0.]])
                 self.empty_map= True
-                rospy.loginfo('Lap completed')
-                rospy.loginfo('Number of landmarks: ' + str(len(self.map.cones)))
-                rospy.loginfo('Map: ' + str(self.map))
                 
             # Se publica el mapa y su vista
             if len(self.map.cones) > 0:
@@ -152,7 +146,7 @@ class Data_association2:
     
     
     def icp(self,s,t):
-        #Aplica ICMP y devuelve la matriz de transformación
+        #Aplica ICP y devuelve la matriz de transformación
         num_map_points = t.shape[0]
         num_lidar_points = s.shape[0]
         map_cloud = o3d.geometry.PointCloud()
@@ -188,7 +182,7 @@ class Data_association2:
     
 
     def coloring(self):
-        
+        #Colorea los conos según si están dentro o fuera de la curva generada por el recorrido del coche.
         tck, u = splprep(self.path.T, s=0, per=True)
         u_new = np.linspace(u.min(), u.max(), 1000)
         puntos_curva = np.array(splev(u_new, tck))
@@ -212,6 +206,13 @@ class Data_association2:
                 c.color = 'y'
             
     
+    def map_to_xyz_array(self, m : Map):
+        points = np.empty((0,2))
+        for c in m.cones:
+            points = np.vstack((points, np.array([[c.position.x, c.position.y]])))
+        return points
+
+
     def pub_markers(self):
         marray = MarkerArray()
         m1 = Marker()

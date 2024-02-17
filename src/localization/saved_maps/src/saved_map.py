@@ -1,3 +1,8 @@
+'''
+@Author: Carlos Pérez Cantalapiedra
+@Description: Make a list of maps and publish them.
+@Date: 2024-02-15
+'''
 
 import rospy
 from common_msgs.msg import Map, MapList
@@ -6,7 +11,6 @@ from visualization_msgs.msg import MarkerArray, Marker
 class SavedMap:
     def __init__(self):
         self.map = Map()
-        self.first = True
         self.mapList = MapList()
         self.map_sub = rospy.Subscriber('/map', Map, self.map_callback, queue_size=1)
         self.pub = rospy.Publisher('/map_list', MapList, queue_size=1)
@@ -60,9 +64,6 @@ class SavedMap:
                 marker.color.a = 1.0
 
             marker.lifetime = rospy.Duration()
-
             marray.markers.append(marker)
-            marker.lifetime = rospy.Duration()
-            marray.markers.append(marker)
-
+            
         self.pmarkers.publish(marray)

@@ -1,0 +1,9 @@
+# Distancia máxima para asociar un landmark:
+min_dist: 1.5 
+
+# Distancia máxima para añadir un landmark:
+max_dist: 10 
+
+
+# Número de callbacks sin añadir un landmark al mapa para considerar fin de vuelta:
+new_lap_counter: 40 

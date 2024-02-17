@@ -7,7 +7,6 @@ Class to get middle route from estimated circuit
 """
 from itertools import combinations
 
-import rospy
 import numpy as np
 from scipy.spatial import Delaunay
 from scipy.interpolate import BSpline
@@ -39,7 +38,7 @@ class PlanningSystem():
         self.colours = list()
         cone_points = list()
         for c in cones:
-            if c.confidence > 0.5 and c.color != 'o':
+            if c.color != 'o':
                 cone_points.append((c.position.x, c.position.y))
                 self.colours.append(c.color)
         self.cones = np.array(cone_points)
