@@ -27,5 +27,16 @@
     </rosparam>
   </node>
 
+  <node pkg="data_association" name="data_association" type="main.py" output="screen">
+    <rosparam command="load" file="$(find data_association)/config/data_association.yaml"/>
+    <rosparam>
+      min_dist: 1.5 
+      max_dist: 10 
+      new_lap_counter: 40 
+      path_gap: 4
+      state_topic: '/fssim/base_pose_ground_truth'
+    </rosparam>
+  </node>
+
 
 </launch>

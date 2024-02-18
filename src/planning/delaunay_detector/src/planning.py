@@ -100,7 +100,7 @@ class PlanningSystem():
 
                     preproc_simplices.append(simplex)
 
-            # rospy.loginfo(dict)
+            
             for (i,j) in dict.keys():
                 if dict[(i,j)]>=2:
                     m = (self.cones[i] + self.cones[j])/2
@@ -137,12 +137,12 @@ class PlanningSystem():
             else:
                 break
 
-        route = np.array(path)
+        # route = np.array(path)
         
-        # route=[]
-        # for i in range(len(path)-1):
-        #     route.extend([[(1-a)*path[i][0] + a*path[i+1][0],(1-a)*path[i][1] + a*path[i+1][1]] for a in np.linspace(0,1, num=5)])
-        # route = np.array(route)
+        route=[]
+        for i in range(len(path)-1):
+            route.extend([[(1-a)*path[i][0] + a*path[i+1][0],(1-a)*path[i][1] + a*path[i+1][1]] for a in np.linspace(0,1, num=5)])
+        route = np.array(route)
 
         triang = Triangulation()
         for simplex in preproc_simplices:
