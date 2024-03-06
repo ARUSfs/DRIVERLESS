@@ -29,20 +29,27 @@ using namespace std;
 #include "lidar_handle.hpp"
 
 LidarHandle::LidarHandle(){
-    MAX_X_FOV = 20;
-    MAX_Y_FOV = 10;
-    MAX_Z_FOV = 0.6;
-    H_FOV = 200*(M_PI/180);
-    N_SEGMENTS = 8;
 
-    lidar_topic = "/velodyne_points";
-    frame_id = "velodyne";
-    inverted = false;
+    nh.getParam("/lidar_perception/lidar_topic",lidar_topic);
+    nh.getParam("/lidar_perception/frame_id",frame_id);
+    nh.getParam("/lidar_perception/map_topic",map_topic);
+    nh.getParam("/lidar_perception/filtered_cloud_topic",filtered_cloud_topic);
+    nh.getParam("/lidar_perception/cones_marker_topic",cones_marker_topic);
+
+    nh.getParam("/lidar_perception/MAX_X_FOV",MAX_X_FOV);
+    nh.getParam("/lidar_perception/MAX_Y_FOV",MAX_Y_FOV);
+    nh.getParam("/lidar_perception/MAX_Z_FOV",MAX_Z_FOV);
+    nh.getParam("/lidar_perception/H_FOV",H_FOV);
+    H_FOV = H_FOV*(M_PI/180);
+
+    nh.getParam("/lidar_perception/inverted",inverted);
     
-    pub = nh.advertise<sensor_msgs::PointCloud2>("/pcl_points", 1000);
-    pub2 = nh.advertise<visualization_msgs::MarkerArray>("/markers", 1000);
-    pub3 = nh.advertise<common_msgs::Map>("/lidar_map", 1000);
+
     sub = nh.subscribe<sensor_msgs::PointCloud2>(lidar_topic, 1000, &LidarHandle::callback, this);
+
+    map_pub = nh.advertise<common_msgs::Map>(map_topic, 1000);
+    filtered_cloud_pub = nh.advertise<sensor_msgs::PointCloud2>(filtered_cloud_topic, 1000);
+    markers_pub = nh.advertise<visualization_msgs::MarkerArray>(cones_marker_topic, 1000);
     
 };
 
@@ -173,7 +180,7 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg){
     sensor_msgs::PointCloud2 msg2;
     pcl::toROSMsg(*cloud,msg2);
         msg2.header.frame_id=frame_id;
-        pub.publish(msg2);
+        filtered_cloud_pub.publish(msg2);
 
     visualization_msgs::MarkerArray marker_array;
 
@@ -199,10 +206,10 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg){
         marker_array.markers.push_back(cylinder_marker);
     }
 
-    pub2.publish(marker_array);
+    markers_pub.publish(marker_array);
 
 
-    pub3.publish(map);
+    map_pub.publish(map);
 
     ros::Time fin = ros::Time::now();
     std::cout << (fin-ini) << endl;

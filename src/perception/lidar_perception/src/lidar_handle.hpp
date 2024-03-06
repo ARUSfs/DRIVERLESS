@@ -6,21 +6,25 @@ using namespace std;
 
 class LidarHandle {
     public:
+        string lidar_topic;
+        string frame_id;
+        string map_topic;
+        string filtered_cloud_topic;
+        string cones_marker_topic;
+
         float MAX_X_FOV;
         float MAX_Y_FOV;
         float MAX_Z_FOV;
         float H_FOV;
-        int N_SEGMENTS;
 
-        string lidar_topic;
-        string frame_id;
+
         bool inverted;
 
         ros::NodeHandle nh;
-        ros::Publisher pub;
-        ros::Publisher pub2;
-        ros::Publisher pub3;
         ros::Subscriber sub;
+        ros::Publisher map_pub;
+        ros::Publisher filtered_cloud_pub;
+        ros::Publisher markers_pub;
 
     public:
         LidarHandle();
