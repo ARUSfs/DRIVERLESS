@@ -46,7 +46,21 @@ To install Ros Noetic on `Ubuntu 20.04` you may follow their [official tutorial]
 
 CUDA is a parallel computing platform and API which allows programming for Nvidia GPUs parallelization capabilities. Some other packages exist which include predesigned functions for some aplications like cuBLAS (Basic Linear Algebra Sobprograms) or cuDNN (Deep Neural Networks). While the first one is usually packaged along CUDA, cuDNN isn't so it must be installed separately.
 
-Even though the *theory* of installing these packages is simple, everyone's experience differs. During installation, various problems will arise. These issues will differ from OS to OS, hardware to hardware, and version to version. My intention for this wiki is to be autocontained, but if for any reason you have to install these and are completely unable to fix the problems, feel free to contact me ([Jacobo Pindado Perea](pindado.jacobo@gmail.com)).
+Even though the *theory* of installing these packages is simple, everyone's experience differs. During installation, various problems will arise. These issues will differ from OS to OS, hardware to hardware, and version to version. My intention for this wiki is to be autocontained, but if for any reason you have to install these and are completely unable to fix the problems, feel free to contact me ([Jacobo Pindado Perea](pindado.jacobo@gmail.com)). Anyway, you can always follow the official [tutorial](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html).
+
+Before the installation of all the packages and files verify your system has a CUDA-capable GPU (`lspci | grep -i nvidia`), a supported version of Linux (`uname -m && cat /etc/*release`) and gcc installed (`gcc --version`).
+
+### Step by step installation:
+1. Download [CUDA toolkit](https://developer.nvidia.com/cuda-downloads) selecting your system configuration. My recommendation is selecting the _runfile (local)_ installer type. After downloading the package run `md5sum`.
+2. Check the installation running `md5sum <file>` (change \<file> with the name of the downloaded _.run_ file) and compare the result with the official NVIDIA checksums.
+3. Finally, add at the end of the _bash.rc_ file the following lines changing \<version> with the installed CUDA version:
+    ```# NVIDIA CUDA TOOLKIT
+    export PATH=/usr/local/cuda-<version>/bin${PATH:+:${PATH}}
+    export LD_LIBRARY_PATH=/usr/local/cuda-<version>/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+    ```
+4. Run `source ~/.bashrc`
+5. Reboot the system `sudo reboot`
+6. Confirm the installation by running `nvcc -V` and `nvidia-smi`
 
 ## Compilation of OpenCV
 
