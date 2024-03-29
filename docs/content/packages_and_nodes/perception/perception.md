@@ -8,5 +8,6 @@ This package contains the following nodes:
 :maxdepth: 1
 
 camera_perception
+cuda_camera_perception
 lidar_perception
 ```
