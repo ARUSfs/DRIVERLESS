@@ -6,3 +6,4 @@ Pasos para conseguir la matriz de homografía de la cámara:
 
 - Al ejecutar en un nuevo equipo, cambiar la variable 'path' del archivo calibration.py con la ruta hasta la carpeta /DRIVERLESS del repositorio.
 - Cambiar también la variable 'cam_index' el script saycheese.py para que coincida con el índice de la cámara conectada.
+- Añadir el archivo libdarknet.so a la carpeta darknet.
