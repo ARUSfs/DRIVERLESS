@@ -18,8 +18,8 @@ class Cone_detect():
         self.pub2 = rospy.Publisher("/cam_marker",MarkerArray,queue_size=1)             #Publisher de los markers
         self.pub4 = rospy.Publisher("/cam/image_rviz",Image,queue_size=1)               #Publisher de la imagen
         path = rospy.get_param("/cam_detect/path")                                      #Ruta del equipo
-        mat_hom = path + '/DRIVERLESS/src/perception/cam_perception/data/mathom.txt'    #Ruta de la matriz de homografía
-        mat_int = path + '/DRIVERLESS/src/perception/cam_perception/data/matint.txt'    #Ruta de la matriz intrínseca
+        mat_hom = path + '/DRIVERLESS/src/perception/cam_perception/data/mat_hom.txt'    #Ruta de la matriz de homografía
+        mat_int = path + '/DRIVERLESS/src/perception/cam_perception/data/mat_int.txt'    #Ruta de la matriz intrínseca
         dist_path = path + '/DRIVERLESS/src/perception/cam_perception/data/dist.txt'    #Ruta del archivo de distorsión
         self.hom = np.loadtxt(mat_hom)                                                  #Matriz de homografía
         self.int = np.loadtxt(mat_int)                                                  #Matriz intrínseca
