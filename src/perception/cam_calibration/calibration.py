@@ -168,4 +168,4 @@ H = np.linalg.inv(m_int @ hmat)
 escribe_txt('../cam_perception/data/mat_int.txt', m_int) # Matriz intrínseca
 escribe_txt('../cam_perception/data/dist.txt', dist) # Coeficientes de distorsión
 escribe_txt('./detecciones.txt', sorted_cones) # Coordenadas de los conos detectados
-escribe_txt('../cam_perception/data/mat_hom_find.txt', H) # Matriz de homografía
+escribe_txt('../cam_perception/data/mat_hom.txt', H) # Matriz de homografía
