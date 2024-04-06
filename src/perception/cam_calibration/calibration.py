@@ -50,6 +50,23 @@ def intrinsecas(video:str, chess_size=(9,6), square_size=0.00239):
     ret,mtx,dist,rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gris.shape[::-1],None,None)
     return cv2.getOptimalNewCameraMatrix(mtx,dist,gris.shape[::-1],0)[0], dist, rvecs, tvecs
 
+def sort_detections_manual(cones_detected_info, pixel_error):
+    sorted_cones = []
+    y_sort = sorted(cones_detected_info, key=lambda cone: cone[3][1], reverse=True)
+    for tip in y_sort:
+        x_sort = []
+        level = list(filter(lambda cone: tip[3][1] - pixel_error < cone[3][1] < tip[3][1] + pixel_error, cones_detected_info))
+        if len(level) > 0:
+            x_sort = sorted(level, key=lambda cone: cone[3][0])
+            sorted_cones.extend(x_sort)
+            
+    sorted_cones_set = []
+    for i,cone in enumerate(sorted_cones):
+        if cone not in sorted_cones_set:
+            sorted_cones_set.append(cone)
+
+    return sorted_cones_set
+
 def cones_perception(detection):
     """Obtener las bounding box de los conos de la imagen dada.
     
@@ -71,23 +88,6 @@ def cones_perception(detection):
         
     return np.array([t for _,_,_, t in sorted_detections],np.float32)
     
-def sort_detections_manual(cones_detected_info, pixel_error):
-    sorted_cones = []
-    y_sort = sorted(cones_detected_info, key=lambda cone: cone[3][1], reverse=True)
-    for tip in y_sort:
-        x_sort = []
-        level = list(filter(lambda cone: tip[3][1] - pixel_error < cone[3][1] < tip[3][1] + pixel_error, cones_detected_info))
-        if len(level) > 0:
-            x_sort = sorted(level, key=lambda cone: cone[3][0])
-            sorted_cones.extend(x_sort)
-            
-    sorted_cones_set = []
-    for i,cone in enumerate(sorted_cones):
-        if cone not in sorted_cones_set:
-            sorted_cones_set.append(cone)
-
-    return sorted_cones_set
-
 def yolo_detect(img, cfg, weights, data):
     """Obtener los pixeles de la punta de los conos
     
@@ -108,55 +108,16 @@ def yolo_detect(img, cfg, weights, data):
     detections = darknet.detect_image(net, names, d_img)
     return detections
 
-def real_coords_txt(file):
-    """Obtener las posiciones reales de los conos desde un .txt.    
-    FORMATO: en cada línea 3 números separados por comas representando cada cono.
+def ordena_pixeles(cones_detected):
+    """Sort the cones detected in the image"""
     
-    Args:
-        file (str): path to txt
-    
-    Return
-        numpy.array: matriz con las coordenadas de los conos
-    """
-    conos = open(file,'r')
-    conos_c = [(x.replace('\n','')).split(',') for x in conos.readlines() if x!='\n']
-    conos_coords = np.array([(float(x),float(y),float(z)) for x,y,z in conos_c],np.float32)
-    conos.close()
-    return conos_coords
-
-def homo_mat(video, img_dist, txt, cfg, weights, data):
-    """Obtiene los vectores de rotación y traslación
-    
-    Args:
-        video (str): ruta al vídeo del tablero
-        img_dist (str): ruta a la imagen de los conos
-        txt (str): ruta del txt con coords de los conos
-        cfg (str): ruta archivo config
-        weights (str): ruta archivo weights 
-        data (str): ruta archivo data
-        
-    Return:
-        numpy.array: mtx, dist, rvec, tvec
-    """
-    # Calcula parámetros intrínsecos de la cámara
-    mtx, dist, _, _ = intrinsecas(video)
-
-    # Procesa la imagen de los conos
-    img0 = cv2.imread(img_dist)
-    img1 = cv2.resize(img0, (1920,1088))
-    img_und = cv2.undistort(img1, mtx, dist),
-    img = cv2.cvtColor(img_und, cv2.COLOR_BGR2RGB)
-
-    # Detecta los píxeles de los conos 
-    detection = yolo_detect(img, cfg, weights, data)
-    conos_pixeles = cones_perception(detection)
-    conos_coords = real_coords_txt(txt)
-
-    # Calcula matriz de rotación y traslación
-    _, rvec,tvec = cv2.solvePnP(conos_coords, conos_pixeles, mtx, dist, flags=cv2.SOLVEPNP_IPPE)
-    _, rvec1, tvec1 = cv2.solvePnP(conos_coords, conos_pixeles, mtx, dist, rvec=rvec, tvec=tvec, useExtrinsicGuess=True)
-
-    return mtx, dist, rvec1, tvec1, conos_pixeles
+    c1 = sorted(cones_detected, key=lambda x: x[1])[::-1][:2]
+    c2 = sorted(c1, key=lambda x: x[0])
+    c3 = sorted(cones_detected, key=lambda x: x[1])[:2]
+    c4 = sorted(c3, key=lambda x: x[0])
+    c = np.zeros((4,2))
+    c[0], c[1], c[2], c[3] = c2[0], c2[1], c4[0], c4[1]
+    return c
 
 def escribe_txt(file,mat):
     """Crea un archivo txt (o escribe en él si existe) y escribe en él la matriz
@@ -175,17 +136,36 @@ weights = path + '/DRIVERLESS/src/perception/cam_perception/weights/cones5.weigh
 v = './data/chessvid.mp4'
 i = './data/conos.png'
 t = './data/conos.txt'
+cones = np.loadtxt(t, dtype=np.float64)
 
-mtx, dist, rvec, tvec, conos_pix = homo_mat(v, i, t, cfg, weights, data)
+# Obtiene matriz intrínseca
+m_int, dist, _, _ = intrinsecas(video=v)
 
-#Cálculos para hallar la matriz de homografía H
-rmat = cv2.Rodrigues(rvec)[0]
+# Prepara la imagen para la detección
+img_dist = cv2.imread(i)
+img_res = cv2.resize(img_dist, (1920,1088))
+img_und = cv2.undistort(img_res, m_int, dist)
+img = cv2.cvtColor(img_und, cv2.COLOR_BGR2RGB)
+
+# Detecta los conos
+detections = yolo_detect(img, cfg, weights, data)
+cones_detected = cones_perception(detections)
+sorted_cones = ordena_pixeles(cones_detected)
+
+#Cálculos para hallar la matriz de homografía por rvec y tvec
+_, rvec1, tvec1 = cv2.solvePnP(cones, sorted_cones, m_int, dist, cv2.SOLVEPNP_IPPE)
+_, rvec2, tvec2 = cv2.solvePnP(cones, sorted_cones, m_int, dist, rvec1, tvec1, True)
+
+rmat = cv2.Rodrigues(rvec2)[0]
 hmat = rmat.copy()
-hmat[:, 2] = tvec.T
-H = np.linalg.inv(mtx @ hmat)
+hmat[:, 2] = tvec2.T
+H = np.linalg.inv(m_int @ hmat)
+
+# Calcula la matriz de la homografía por findHomografy. Otra opción posible
+#H = cv2.findHomography(sorted_cones, cones)[0]
 
 #Guardado de datos
-escribe_txt('../cam_perception/data/matint.txt',mtx)
-escribe_txt('./detecciones.txt', conos_pix)
-escribe_txt('../cam_perception/data/mathom.txt', H)
-escribe_txt('../cam_perception/data/dist.txt', dist)
+escribe_txt('../cam_perception/data/mat_int.txt', m_int) # Matriz intrínseca
+escribe_txt('../cam_perception/data/dist.txt', dist) # Coeficientes de distorsión
+escribe_txt('./detecciones.txt', sorted_cones) # Coordenadas de los conos detectados
+escribe_txt('../cam_perception/data/mat_hom_find.txt', H) # Matriz de homografía
