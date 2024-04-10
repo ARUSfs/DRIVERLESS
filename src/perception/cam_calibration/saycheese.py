@@ -2,15 +2,19 @@
 
 import cv2
 import time
+import rospkg
+rospack=rospkg.RosPack()
 
 # Datos de la cámara
 cam_index = 0
+T=45 # segundos de vídeo
+path_calib = rospack.get_path('cam_calibration')
 
 def foto(index=0):
     cam = cv2.VideoCapture(index)
     ret, img = cam.read()
     if ret:
-        cv2.imwrite('data/conosimg.png',img)
+        cv2.imwrite(path_calib + '/data/conosimg.png',img)
     cam.release()
     
 def video(dur, index=0):
@@ -19,7 +23,7 @@ def video(dur, index=0):
     w = 1920
     h = 1088
     fps = cam.get(cv2.CAP_PROP_FPS)
-    out = cv2.VideoWriter('data/chessvid.mp4', fourcc, fps, (w,h))
+    out = cv2.VideoWriter(path_calib + '/data/chessvid.mp4', fourcc, fps, (w,h))
     t0=time.time()
 
     while ((time.time() - t0) <= dur):
@@ -42,5 +46,5 @@ def video(dur, index=0):
 input('Presiona enter para hacer una foto.')
 foto(index=cam_index)
 input('Presiona enter para hacer un vídeo.')
-video(45, index=cam_index)
+video(T, index=cam_index)
 print('Completado.')

@@ -2,7 +2,7 @@
 import rospy
 import cv2
 import numpy as np
-from common_msgs.msg import Cone
+from common_msgs.msg import Cone, Map
 from darknet import darknet
 from geometry_msgs.msg import Point
 from visualization_msgs.msg import MarkerArray,Marker
@@ -14,7 +14,7 @@ class Cone_detect():
     
     def __init__(self):
         self.sub = rospy.Subscriber("/cam/image_raw", Image, self.detecta, queue_size=1)
-        self.pub = rospy.Publisher("/cam/cones", Cone, queue_size=15)                   #Publisher de los conos detectados
+        self.pub = rospy.Publisher("/cam/cones", Map, queue_size=15)                   #Publisher de los conos detectados
         self.pub2 = rospy.Publisher("/cam_marker",MarkerArray,queue_size=1)             #Publisher de los markers
         self.pub4 = rospy.Publisher("/cam/image_rviz",Image,queue_size=1)               #Publisher de la imagen
         path = rospy.get_param("/cam_detect/path")                                      #Ruta del equipo
@@ -71,6 +71,7 @@ class Cone_detect():
         self.pub4.publish(img_msg)
         MA = MarkerArray()
         ind=0
+        map = Map()
         for (tipo, segur, box) in cones_detected_info:
             if float(segur)>80:                  
                 array = np.array(box)    
@@ -81,6 +82,7 @@ class Cone_detect():
                 cone.position = Point(coord[0], coord[1], 0.32)
                 cone.color = self.colorea(tipo)
                 cone.confidence = np.float64(segur)
+                map.cones.append(cone)
                 self.pub.publish(cone)
                                             
                 #Mostrar conos en rviz
@@ -115,11 +117,12 @@ class Cone_detect():
 
 class Video_stream():
     def __init__(self):
+        self.freq = 30 #frecuencia de publicación de la cámara
         self.pub = rospy.Publisher("/cam/image_raw", Image, queue_size=1)
         self.cam = rospy.get_param("/cam_detect/cam")
         self.vid = cv2.VideoCapture(self.cam)
         self.bridge = CvBridge()
-        self.rate = rospy.Rate(30)
+        self.rate = rospy.Rate(self.freq)
 
     def stream(self):
         while not rospy.is_shutdown():

@@ -5,9 +5,11 @@ import numpy as np
 from darknet import darknet
 import time
 from tqdm import tqdm
+import rospkg
+rospack=rospkg.RosPack()
 
-#Change this path to your own
-path = '/home/igsais/Escritorio/git/src'
+# #Change this path to your own
+# path = '/home/alvaro/Videos/ws/src'
 
 def frames(file: str):
     """Crea un array de algunos frames del vídeo 
@@ -130,12 +132,15 @@ def escribe_txt(file,mat):
 
 
 #Parámetros propios
-cfg = path + '/DRIVERLESS/src/perception/cam_perception/weights/cones-customanchors.cfg'
-data = path + '/DRIVERLESS/src/perception/cam_perception/weights/cones.data'
-weights = path + '/DRIVERLESS/src/perception/cam_perception/weights/cones5.weights'
-v = './data/chessvid.mp4'
-i = './data/conos.png'
-t = './data/conos.txt'
+path_detect = rospack.get_path('cam_detect')
+path_calib = rospack.get_path('cam_calibration')
+
+cfg = path_detect + '/weights/cones-customanchors.cfg'
+data = path_detect + '/weights/cones.data'
+weights = path_detect + '/weights/cones5.weights'
+v = path_calib + '/data/chessvid.mp4'
+i = path_calib + '/data/conos.png'
+t = path_calib + '/data/conos.txt'
 cones = np.loadtxt(t, dtype=np.float64)
 
 # Obtiene matriz intrínseca
@@ -165,7 +170,7 @@ H = np.linalg.inv(m_int @ hmat)
 #H = cv2.findHomography(sorted_cones, cones)[0]
 
 #Guardado de datos
-escribe_txt('../cam_perception/data/mat_int.txt', m_int) # Matriz intrínseca
-escribe_txt('../cam_perception/data/dist.txt', dist) # Coeficientes de distorsión
-escribe_txt('./detecciones.txt', sorted_cones) # Coordenadas de los conos detectados
-escribe_txt('../cam_perception/data/mat_hom.txt', H) # Matriz de homografía
+escribe_txt(path_detect + '/data/mat_int.txt', m_int) # Matriz intrínseca
+escribe_txt(path_detect + '/data/dist.txt', dist) # Coeficientes de distorsión
+escribe_txt(path_calib + '/detecciones.txt', sorted_cones) # Coordenadas de los conos detectados
+escribe_txt(path_detect + '/data/mat_hom.txt', H) # Matriz de homografía

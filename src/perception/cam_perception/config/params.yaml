@@ -1,5 +1,5 @@
 # Path to /DRIVERLESS
-path : "/home/igsais/Escritorio/git/src"
+path : "/home/alvaro/Videos/ws/src"
 
 #Camera or video
 cam : '/home/igsais/Escritorio/ARUS/recta.mp4' #2
