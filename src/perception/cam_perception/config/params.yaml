@@ -1,5 +1,2 @@
-# Path to /DRIVERLESS
-path : "/home/alvaro/Videos/ws/src"
-
 #Camera or video
 cam : '/home/igsais/Escritorio/ARUS/recta.mp4' #2

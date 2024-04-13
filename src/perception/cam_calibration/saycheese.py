@@ -3,18 +3,27 @@
 import cv2
 import time
 import rospkg
+# Class to get the path of ROS packages
 rospack=rospkg.RosPack()
 
-# Datos de la cámara
+### Configuration parameters
+
+# Cam info
 cam_index = 0
-T=45 # segundos de vídeo
+
+# Video duration in seconds
+T=45
+
+# ROS pkg path
 path_calib = rospack.get_path('cam_calibration')
 
+
+### Functions
 def foto(index=0):
     cam = cv2.VideoCapture(index)
     ret, img = cam.read()
     if ret:
-        cv2.imwrite(path_calib + '/data/conosimg.png',img)
+        cv2.imwrite(path_calib + '/data/conos.png',img)
     cam.release()
     
 def video(dur, index=0):
@@ -29,11 +38,10 @@ def video(dur, index=0):
     while ((time.time() - t0) <= dur):
         ret, frame = cam.read()
         if not ret:
-            print('Error en la cámara')
-            break
+            raise Exception('Camera error.')
         if cv2.waitKey(1) == ord('q'):
             break
-        cv2.imshow('r', frame)
+        cv2.imshow('Recording...', frame)
         if (frame.shape[1] != w) or (frame.shape[0] != h):
             frame = cv2.resize(frame, (w,h))
         out.write(frame)
@@ -42,9 +50,10 @@ def video(dur, index=0):
     cv2.destroyAllWindows()
 
 
-
-input('Presiona enter para hacer una foto.')
-foto(index=cam_index)
-input('Presiona enter para hacer un vídeo.')
-video(T, index=cam_index)
-print('Completado.')
+### Main
+if __name__ == '__main__':
+    input('Presiona enter para hacer una foto.')
+    foto(index=cam_index)
+    input('Presiona enter para hacer un vídeo.')
+    video(T, index=cam_index)
+    print('Completado.')

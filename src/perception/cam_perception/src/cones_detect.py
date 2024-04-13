@@ -8,28 +8,29 @@ from geometry_msgs.msg import Point
 from visualization_msgs.msg import MarkerArray,Marker
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
-
+import rospkg
 
 class Cone_detect():
     
     def __init__(self):
         self.sub = rospy.Subscriber("/cam/image_raw", Image, self.detecta, queue_size=1)
-        self.pub = rospy.Publisher("/cam/cones", Map, queue_size=15)                   #Publisher de los conos detectados
+        self.pub = rospy.Publisher("/cam/cones", Map, queue_size=15)                    #Publisher de los conos detectados
         self.pub2 = rospy.Publisher("/cam_marker",MarkerArray,queue_size=1)             #Publisher de los markers
         self.pub4 = rospy.Publisher("/cam/image_rviz",Image,queue_size=1)               #Publisher de la imagen
-        path = rospy.get_param("/cam_detect/path")                                      #Ruta del equipo
-        mat_hom = path + '/DRIVERLESS/src/perception/cam_perception/data/mat_hom.txt'    #Ruta de la matriz de homografía
-        mat_int = path + '/DRIVERLESS/src/perception/cam_perception/data/mat_int.txt'    #Ruta de la matriz intrínseca
-        dist_path = path + '/DRIVERLESS/src/perception/cam_perception/data/dist.txt'    #Ruta del archivo de distorsión
+        rospack = rospkg.RosPack()
+        self.path = rospack.get_path('cam_detect')                                      #Ruta del equipo
+        mat_hom = self.path + '/data/mat_hom.txt'                                       #Ruta de la matriz de homografía
+        mat_int = self.path + '/data/mat_int.txt'                                       #Ruta de la matriz intrínseca
+        dist_path = self.path + '/data/dist.txt'                                        #Ruta del archivo de distorsión
         self.hom = np.loadtxt(mat_hom)                                                  #Matriz de homografía
         self.int = np.loadtxt(mat_int)                                                  #Matriz intrínseca
         self.dist = np.loadtxt(dist_path)                                               #Matriz de distorsión
         self.bridge = CvBridge()
         
         #YOLO
-        self.cfg = path + '/DRIVERLESS/src/perception/cam_perception/weights/cones-customanchors.cfg'
-        self.data = path + '/DRIVERLESS/src/perception/cam_perception/weights/cones.data'
-        self.weights = path + '/DRIVERLESS/src/perception/cam_perception/weights/cones5.weights'
+        self.cfg = self.path + '/weights/cones-customanchors.cfg'
+        self.data = self.path + '/weights/cones.data'
+        self.weights = self.path + '/weights/cones5.weights'
         self.net, self.names, self.colors = darknet.load_network(self.cfg, self.data, self.weights)
         self.w_net, self.h_net = darknet.network_width(self.net), darknet.network_height(self.net)
 
@@ -83,7 +84,7 @@ class Cone_detect():
                 cone.color = self.colorea(tipo)
                 cone.confidence = np.float64(segur)
                 map.cones.append(cone)
-                self.pub.publish(cone)
+                
                                             
                 #Mostrar conos en rviz
                 M = Marker()
@@ -112,7 +113,9 @@ class Cone_detect():
                 M.pose.position.z = 0
                 MA.markers.append(M)
                 ind +=1
+        self.pub.publish(map)
         self.pub2.publish(MA)
+
 
 
 class Video_stream():

@@ -4,6 +4,6 @@ Pasos para conseguir la matriz de homografía de la cámara:
 3.- Ejecutar el script calibration.py
 4.- La matriz de homografía se guardará en el archivo mathom.txt, la matriz de intrínsecas en matint.txt.
 
-- Al ejecutar en un nuevo equipo, cambiar la variable 'path' del archivo calibration.py con la ruta hasta la carpeta /DRIVERLESS del repositorio.
-- Cambiar también la variable 'cam_index' el script saycheese.py para que coincida con el índice de la cámara conectada.
+- Cambiar también la variable 'cam_index' el script saycheese.py para que coincida con el índice de la cámara conectada y, si es necesario, cambiar el tiempo que dura la grabación.
+- Cambiar la ruta en el archivo _cones.data_ de la carpeta _weights_ para que coincida con el del equipo.
 - Añadir el archivo libdarknet.so a la carpeta darknet.

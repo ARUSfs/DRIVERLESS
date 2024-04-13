@@ -6,10 +6,9 @@ from darknet import darknet
 import time
 from tqdm import tqdm
 import rospkg
-rospack=rospkg.RosPack()
 
-# #Change this path to your own
-# path = '/home/alvaro/Videos/ws/src'
+# Class to get the path of ROS packages
+rospack=rospkg.RosPack()
 
 def frames(file: str):
     """Crea un array de algunos frames del vídeo 
@@ -131,33 +130,36 @@ def escribe_txt(file,mat):
     np.savetxt(file, mat, fmt='%-1g')
 
 
-#Parámetros propios
+# Paths
 path_detect = rospack.get_path('cam_detect')
 path_calib = rospack.get_path('cam_calibration')
 
 cfg = path_detect + '/weights/cones-customanchors.cfg'
 data = path_detect + '/weights/cones.data'
 weights = path_detect + '/weights/cones5.weights'
-v = path_calib + '/data/chessvid.mp4'
-i = path_calib + '/data/conos.png'
-t = path_calib + '/data/conos.txt'
-cones = np.loadtxt(t, dtype=np.float64)
 
-# Obtiene matriz intrínseca
-m_int, dist, _, _ = intrinsecas(video=v)
+vid = path_calib + '/data/chessvid.mp4' # Chessboard video
+image = path_calib + '/data/conos.png' # Cones image
+text = path_calib + '/data/conos.txt' # File with the cones real coordinates
 
-# Prepara la imagen para la detección
-img_dist = cv2.imread(i)
+# Get real cones coordinates from file
+cones = np.loadtxt(text, dtype=np.float64)
+
+# Get intrinsic matrix and distortion coefficients
+m_int, dist, _, _ = intrinsecas(video=vid)
+
+# Set up the image for detection
+img_dist = cv2.imread(image)
 img_res = cv2.resize(img_dist, (1920,1088))
 img_und = cv2.undistort(img_res, m_int, dist)
 img = cv2.cvtColor(img_und, cv2.COLOR_BGR2RGB)
 
-# Detecta los conos
+# Detection
 detections = yolo_detect(img, cfg, weights, data)
 cones_detected = cones_perception(detections)
 sorted_cones = ordena_pixeles(cones_detected)
 
-#Cálculos para hallar la matriz de homografía por rvec y tvec
+# Get the rotation and translation vectors
 _, rvec1, tvec1 = cv2.solvePnP(cones, sorted_cones, m_int, dist, cv2.SOLVEPNP_IPPE)
 _, rvec2, tvec2 = cv2.solvePnP(cones, sorted_cones, m_int, dist, rvec1, tvec1, True)
 
