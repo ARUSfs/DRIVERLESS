@@ -28,6 +28,7 @@
   </node>
 
   <node name="telemetries" pkg="telemetries" type="main.py">
+  <rosparam command="load" file="$(find control_pure_pursuit)/config/pure_pursuit.yaml"/>
 	</node>
 
   <node pkg="data_association" name="data_association" type="main.py" output="screen">
