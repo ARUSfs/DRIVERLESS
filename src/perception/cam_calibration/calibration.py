@@ -130,9 +130,18 @@ def escribe_txt(file,mat):
     np.savetxt(file, mat, fmt='%-1g')
 
 
+
+
 # Paths
 path_detect = rospack.get_path('cam_detect')
 path_calib = rospack.get_path('cam_calibration')
+
+# Correct path in cones.data automatically
+with open(path_detect + '/weights/cones.data', 'r') as data_file:
+        lines = data_file.readlines()
+lines[3] = 'names = ' + path_detect + '/weights/cones.names' + '\n'  
+with open(path_detect + '/weights/cones.data', 'w') as archivo:
+    archivo.writelines(lines)
 
 cfg = path_detect + '/weights/cones-customanchors.cfg'
 data = path_detect + '/weights/cones.data'
@@ -141,6 +150,12 @@ weights = path_detect + '/weights/cones5.weights'
 vid = path_calib + '/data/chessvid.mp4' # Chessboard video
 image = path_calib + '/data/conos.png' # Cones image
 text = path_calib + '/data/conos.txt' # File with the cones real coordinates
+
+
+
+
+
+
 
 # Get real cones coordinates from file
 cones = np.loadtxt(text, dtype=np.float64)

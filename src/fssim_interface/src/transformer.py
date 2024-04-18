@@ -41,7 +41,7 @@ class transformerFssim():
 
     def subscribe_topics(self):
 
-        rospy.Subscriber('/camera/cones', PointCloud2, self.send_cones)
+        rospy.Subscriber('/lidar/cones', PointCloud2, self.send_cones)
         rospy.Subscriber('fssim/base_pose_ground_truth', State,
                          self.send_state)
         rospy.Subscriber('controls', Controls, self.send_controllers)

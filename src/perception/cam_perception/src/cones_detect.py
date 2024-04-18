@@ -122,7 +122,7 @@ class Video_stream():
     def __init__(self):
         self.freq = 30 #frecuencia de publicación de la cámara
         self.pub = rospy.Publisher("/cam/image_raw", Image, queue_size=1)
-        self.cam = rospy.get_param("/cam_detect/cam")
+        self.cam = rospy.get_param("/cam_stream/cam")
         self.vid = cv2.VideoCapture(self.cam)
         self.bridge = CvBridge()
         self.rate = rospy.Rate(self.freq)
