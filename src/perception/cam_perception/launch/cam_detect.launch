@@ -1,0 +1,6 @@
+<launch>
+  <node type="rviz" name="rviz" pkg="rviz"/>
+  <node pkg="cam_detect" name="cam_detect" type="main.py">
+    <rosparam command="load" file="$(find cam_detect)/config/params.yaml"/>
+  </node>
+</launch>
