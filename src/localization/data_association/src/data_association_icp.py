@@ -9,9 +9,10 @@ import numpy as np
 import open3d as o3d
 import rospy
 from fssim_common.msg import State
-from common_msgs.msg import Map, Cone
 from visualization_msgs.msg import MarkerArray, Marker
 from scipy.interpolate import splprep, splev
+from common_msgs.msg import Map, Cone, CarState
+
 
 # Constants
 min_dist = rospy.get_param('/data_association/min_dist')
@@ -30,7 +31,7 @@ class Data_association2:
     def __init__(self):
 
         # Definiendo suscribers y publishers
-        rospy.Subscriber(state_topic, State, self.state_callback, queue_size=20)
+        rospy.Subscriber(state_topic, CarState, self.state_callback, queue_size=20)
         rospy.Subscriber(perception_topic, Map, self.perception_callback, queue_size=1)
         self.pMap = rospy.Publisher(map_topic, Map, queue_size=1)
         self.pMapView = rospy.Publisher(map_marker_topic, MarkerArray, queue_size=1)
@@ -50,7 +51,7 @@ class Data_association2:
         self.last_pos = np.array([0.,0.])
     
     
-    def state_callback(self, msg: State):
+    def state_callback(self, msg: CarState):
 
         # Se actualizan los inputs de control
         self.u[0] = np.linalg.norm([msg.vx, msg.vy])-0.010

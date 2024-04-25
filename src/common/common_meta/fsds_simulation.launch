@@ -1,18 +1,29 @@
 <launch>
+  <node pkg="lidar_perception" name="lidar_perception" type="main" output="screen">
+    <rosparam command="load" file="$(find lidar_perception)/config/lidar_cpp.yaml"/>
+    <rosparam>
+      lidar_topic: '/fsds/lidar/Lidar1'    <!--FSDS: '/fsds/lidar/Lidar1' // Coche Real: '/velodyne_points' -->
+      frame_id: 'fsds/FSCar'               <!--FSDS: 'fsds/FSCar' // Coche Real: 'velodyne' -->
+    </rosparam>
+  </node>
+  <node name="fsds_rviz" pkg="rviz" type="rviz" args="-d $(find lidar_perception)/config/lidar_rviz.rviz"/>
 
   <node pkg="delaunay_detector" name="delaunay_detector" type="main.py" output="screen">
     <rosparam command="load" file="$(find delaunay_detector)/config/delaunay.yaml"/>
     <rosparam>
       topic_map: 'perception_map'
-      color_enabled: true
+      color_enabled: false
     </rosparam>
   </node>
-
-  <node pkg="fssim_interface" name="fssim_interface" type="main.py">
+   
+  <node pkg="fsds_interface" name="fsds_interface" type="main.py">
   </node>
 
   <node name="interface" pkg="visualization" type="main_interface.py">
 	  <rosparam command="load" file="$(find visualization)/config/interface.yaml"/>
+    <rosparam>
+      frame_id: "fsds/FSCar"
+    </rosparam>
 	</node>
 	<node name="car_broadcaster" pkg="visualization" type="car_broadcaster.py">
 	</node>
@@ -20,8 +31,11 @@
   <node pkg="control_pure_pursuit" name="control_pure_pursuit" type="main.py" output="screen">
     <rosparam command="load" file="$(find control_pure_pursuit)/config/pure_pursuit.yaml"/>
     <rosparam>
-      LFC: 6
-      TARGET_SPEED: 4
+      LFC: 10
+      KP: 0.1
+      KI: 0.0
+      KD: 0.0                 
+      TARGET_SPEED: 8
       simulation: true
       max_cmd: 0.2
     </rosparam>
