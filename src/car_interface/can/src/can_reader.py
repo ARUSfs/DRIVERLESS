@@ -1,7 +1,7 @@
 import rospy
 import can
 from sensor_msgs.msg import Imu, NavSatFix
-from std_msgs.msg import Float32
+from std_msgs.msg import Float32,Int16
 import numpy as np
 from geometry_msgs.msg import Vector3
 
@@ -27,6 +27,7 @@ class CanReader:
         self.buzzer = None
         self.steering_angle = None
         #--------------------------------------------------------
+        self.AS_status_pub = rospy.Publisher('/can/AS_status', Int16, queue_size=10)
         self.IMU_pub = rospy.Publisher('/IMU', Imu, queue_size=10)
         self.pGPS_loc = rospy.Publisher('GPS_location', NavSatFix, queue_size=10)
         self.pGPS_speed = rospy.Publisher('GPS_speed', Vector3, queue_size=10)
@@ -137,6 +138,9 @@ class CanReader:
 
     def parse_as_status(self, message):
         self.as_status = int.from_bytes(message.data[1:3], byteorder='little', signed=False)
+        msg = Int16()
+        msg.data = int(message.data[2])
+        self.AS_status_pub(msg)
         #rospy.loginfo("AS Status: %d", self.as_status)
     
     def parse_apps(self, message):
