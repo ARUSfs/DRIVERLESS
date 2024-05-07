@@ -6,7 +6,7 @@ import rospy
 
 
 class EPOSHandle:
-    EPOS_LIB_PATH = '../lib/libEposCmd.so.6.8.1.0'
+    EPOS_LIB_PATH = '/home/alvaro/Videos/test_ws/src/car_interface/steering/lib/libEposCmd.so.6.8.1.0'
     NodeID = 1
 
     def __init__(self, max_acc, max_dec, prof_vel):
@@ -96,7 +96,7 @@ class EPOSHandle:
     def move_to(self, wheel_angle):
         pErrorCode = c_uint()
 
-        motor_position = int(2*wheel_angle*2048*5*66/360)
+        motor_position = int(2*wheel_angle*(2048*5*66/360))#*(180/math.pi))
         if self._is_enabled:
             ret = self.epos.VCS_MoveToPosition(self.keyhandle, self.NodeID, motor_position, 1,
                                                1, byref(pErrorCode))
@@ -105,6 +105,58 @@ class EPOSHandle:
                 rospy.logwarn(f'MoveToPosition error with code {pErrorCode.value}\n\
                                 Disabling controller.')
                 self.disable()
+
+        else:
+            rospy.logerr('Cannot move to position with disabled controller :(')
+
+    def get_epos_info(self):
+        pErrorCode = c_uint()
+        pMovementState = c_uint()
+        pPosition = c_float()
+        pTargetPosition = c_float()
+        pVelocity = c_float()
+        pVelocityAvg = c_float()
+        pTargetVelocity = c_float()
+
+        if self._is_enabled:
+
+            ret = self.epos.VCS_GetMovementState(self.keyhandle, self.NodeID, byref(pMovementState), byref(pErrorCode))
+            if ret == 0:
+                rospy.logwarn(f'getMovementState error with code {pErrorCode.value}\n\
+                                Disabling controller.')
+                self.disable()
+
+            ret = self.epos.VCS_GetPositionIs(self.keyhandle, self.NodeID, byref(pPosition), byref(pErrorCode))
+            if ret == 0:
+                rospy.logwarn(f'getPosition error with code {pErrorCode.value}\n\
+                                Disabling controller.')
+                self.disable()
+            
+            ret = self.epos.VCS_GetTargetPosition(self.keyhandle, self.NodeID, byref(pTargetPosition), byref(pErrorCode))
+            if ret == 0:
+                rospy.logwarn(f'getTargetPosition error with code {pErrorCode.value}\n\
+                                Disabling controller.')
+                self.disable()
+            
+            ret = self.epos.VCS_GetVelocityIs(self.keyhandle, self.NodeID, byref(pVelocity), byref(pErrorCode))
+            if ret == 0:
+                rospy.logwarn(f'getVelocity error with code {pErrorCode.value}\n\
+                                Disabling controller.')
+                self.disable()
+            
+            ret = self.epos.VCS_GetVelocityIsAveraged(self.keyhandle, self.NodeID, byref(pVelocityAvg), byref(pErrorCode))
+            if ret == 0:
+                rospy.logwarn(f'getVelocityAvg error with code {pErrorCode.value}\n\
+                                Disabling controller.')
+                self.disable()
+
+            ret = self.epos.VCS_GetTargetVelocity(self.keyhandle, self.NodeID, byref(pTargetVelocity), byref(pErrorCode))
+            if ret == 0:
+                rospy.logwarn(f'getTargetVelocity error with code {pErrorCode.value}\n\
+                                Disabling controller.')
+                self.disable()
+
+            return [pMovementState.value,pPosition.value,pTargetPosition.value,pVelocity.value,pVelocityAvg.value,pTargetVelocity.value]
 
         else:
             rospy.logerr('Cannot move to position with disabled controller :(')

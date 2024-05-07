@@ -1,6 +1,7 @@
 import rospy
 from common_msgs.msg import Controls
 from eposhandle import EPOSHandle
+from std_msgs.msg import Float32MultiArray
 
 
 MAX_ACCELERATION = rospy.get_param('~MAX_ACCELERATION', 1000)
@@ -16,12 +17,21 @@ class SteeringHandle:
 
         rospy.Subscriber('/controls', Controls,
                          callback=self.command_callback, queue_size=1)
+        rospy.Timer(rospy.Duration(1/20), self.epos_info_callback)
+        self.info_pub = rospy.Publisher('/steering/epos_info', Float32MultiArray, queue_size=10)
 
 
     def command_callback(self, msg: Controls):
         assert msg.steering < 20 and msg.steering > -20
         if not self._is_shutdown:
             self.epos.move_to(msg.steering)
+
+    def epos_info_callback(self,event):
+        info = self.epos.get_epos_info()
+
+        msg = Float32MultiArray()
+        msg.data = info
+        self.info_pub.publish(msg)
 
     def clean_and_close(self):
         self._is_shutdown = True
