@@ -22,8 +22,8 @@ class CanReader:
         self.pGPS_speed = rospy.Publisher('GPS_speed', Vector3, queue_size=10)
         self.invSpeed_pub = rospy.Publisher('inv_speed', Float32, queue_size=10)
         
-        self.bus0 = can.interface.Bus(channel='vcan0', bustype='socketcan')
-        self.bus1 = can.interface.Bus(channel='vcan1', bustype='socketcan')
+        self.bus0 = can.interface.Bus(channel='can0', bustype='socketcan')
+        self.bus1 = can.interface.Bus(channel='can1', bustype='socketcan')
         #--------------------------------------------------------
 
         rospy.Timer(rospy.Duration(1/500), self.publish_IMU)
@@ -152,6 +152,7 @@ class CanReader:
         #rospy.loginfo("AS Status: %d", self.as_status)
         
         msg = Int16()
+        msg.data = self.as_status
         self.AS_status_pub.publish(msg)
 
     

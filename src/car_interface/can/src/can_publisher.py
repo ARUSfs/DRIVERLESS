@@ -10,8 +10,8 @@ class CanPublisher:
 
     def __init__(self):
 
-        self.bus0 = can.interface.Bus(channel='vcan0', bustype='socketcan')
-        self.bus1 = can.interface.Bus(channel='vcan1', bustype='socketcan')
+        self.bus0 = can.interface.Bus(channel='can0', bustype='socketcan')
+        self.bus1 = can.interface.Bus(channel='can1', bustype='socketcan')
 
         #--------------------------- PELIGRO COMANDAS DE PAR AL INVERSOR!!! --------------------------------------------------
         #rospy.Subscriber("/controls",Controls, self.cmd_callback)
