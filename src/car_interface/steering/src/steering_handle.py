@@ -13,6 +13,7 @@ class SteeringHandle:
         self.epos = EPOSHandle(MAX_ACCELERATION, MAX_DECELERATION, PROFILE_VELOCITY)
         self.epos.connect_to_device()
         self.epos.enable()
+        #self.epos.set_position_offset()
         self._is_shutdown = False
 
         rospy.Subscriber('/controls', Controls,
@@ -27,10 +28,10 @@ class SteeringHandle:
             self.epos.move_to(msg.steering)
 
     def epos_info_callback(self,event):
-        info = self.epos.get_epos_info()
+        epos_info = self.epos.get_epos_info()
 
         msg = Float32MultiArray()
-        msg.data = info
+        msg.data = epos_info
         self.info_pub.publish(msg)
 
     def clean_and_close(self):

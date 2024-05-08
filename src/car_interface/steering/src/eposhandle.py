@@ -118,6 +118,13 @@ class EPOSHandle:
         pVelocityAvg = c_float()
         pTargetVelocity = c_float()
 
+        pTorque = c_float()
+        pTargetTorque = c_float()
+        pMotorRatedTorque = c_float()
+        pBytesRead = c_uint()
+
+        epos_info = []
+
         if self._is_enabled:
 
             ret = self.epos.VCS_GetMovementState(self.keyhandle, self.NodeID, byref(pMovementState), byref(pErrorCode))
@@ -125,38 +132,69 @@ class EPOSHandle:
                 rospy.logwarn(f'getMovementState error with code {pErrorCode.value}\n\
                                 Disabling controller.')
                 self.disable()
+            epos_info.append(pMovementState.value)
 
             ret = self.epos.VCS_GetPositionIs(self.keyhandle, self.NodeID, byref(pPosition), byref(pErrorCode))
             if ret == 0:
                 rospy.logwarn(f'getPosition error with code {pErrorCode.value}\n\
                                 Disabling controller.')
                 self.disable()
+            epos_info.append(pPosition.value)
             
             ret = self.epos.VCS_GetTargetPosition(self.keyhandle, self.NodeID, byref(pTargetPosition), byref(pErrorCode))
             if ret == 0:
                 rospy.logwarn(f'getTargetPosition error with code {pErrorCode.value}\n\
                                 Disabling controller.')
                 self.disable()
+            epos_info.append(pTargetPosition.value)
             
             ret = self.epos.VCS_GetVelocityIs(self.keyhandle, self.NodeID, byref(pVelocity), byref(pErrorCode))
             if ret == 0:
                 rospy.logwarn(f'getVelocity error with code {pErrorCode.value}\n\
                                 Disabling controller.')
                 self.disable()
+            epos_info.append(pVelocity.value)
             
             ret = self.epos.VCS_GetVelocityIsAveraged(self.keyhandle, self.NodeID, byref(pVelocityAvg), byref(pErrorCode))
             if ret == 0:
                 rospy.logwarn(f'getVelocityAvg error with code {pErrorCode.value}\n\
                                 Disabling controller.')
                 self.disable()
+            epos_info.append(pVelocityAvg.value)
 
             ret = self.epos.VCS_GetTargetVelocity(self.keyhandle, self.NodeID, byref(pTargetVelocity), byref(pErrorCode))
             if ret == 0:
                 rospy.logwarn(f'getTargetVelocity error with code {pErrorCode.value}\n\
                                 Disabling controller.')
                 self.disable()
+            epos_info.append(pTargetVelocity.value)
 
-            return [pMovementState.value,pPosition.value,pTargetPosition.value,pVelocity.value,pVelocityAvg.value,pTargetVelocity.value]
+            
+            ret = self.epos.VCS_GetObject(self.keyhandle, self.NodeID, 0x6076, 0x00, byref(pMotorRatedTorque), 4, byref(pBytesRead), byref(pErrorCode))
+            if ret == 0:
+                rospy.logwarn(f'getMotorRatedTorque error with code {pErrorCode.value}\n\
+                                Disabling controller.')
+                self.disable()
+
+            ret = self.epos.VCS_GetObject(self.keyhandle, self.NodeID, 0x6077, 0x00, byref(pTorque), 2, byref(pBytesRead), byref(pErrorCode))
+            if ret == 0:
+                rospy.logwarn(f'getTorque error with code {pErrorCode.value}\n\
+                                Disabling controller.')
+                self.disable()
+            #The value is given in per thousand of “Motor rated torque” (uNm)
+            epos_info.append((pTorque.value * pMotorRatedTorque.value)/1000)
+            
+            ret = self.epos.VCS_GetObject(self.keyhandle, self.NodeID, 0x6071, 0x00, byref(pTargetTorque), 2, byref(pBytesRead), byref(pErrorCode))
+            if ret == 0:
+                rospy.logwarn(f'getTargetTorque error with code {pErrorCode.value}\n\
+                                Disabling controller.')
+                self.disable()
+            #The value is given in per thousand of “Motor rated torque” (uNm)
+            epos_info.append((pTargetTorque.value * pMotorRatedTorque.value)/1000)
+            
+
+            
+            return epos_info
 
         else:
             rospy.logerr('Cannot move to position with disabled controller :(')
