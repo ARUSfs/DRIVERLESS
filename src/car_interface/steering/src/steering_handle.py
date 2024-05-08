@@ -1,7 +1,7 @@
 import rospy
 from common_msgs.msg import Controls
 from eposhandle import EPOSHandle
-from std_msgs.msg import Float32MultiArray
+from std_msgs.msg import Float32MultiArray,Float32
 
 
 MAX_ACCELERATION = rospy.get_param('~MAX_ACCELERATION', 1000)
@@ -13,7 +13,10 @@ class SteeringHandle:
         self.epos = EPOSHandle(MAX_ACCELERATION, MAX_DECELERATION, PROFILE_VELOCITY)
         self.epos.connect_to_device()
         self.epos.enable()
-        #self.epos.set_position_offset()
+
+        # self.initial_position = rospy.wait_for_message("/can/extensometer",Float32)
+        # self.epos.set_position_offset(self.initial_position.data)
+
         self._is_shutdown = False
 
         rospy.Subscriber('/controls', Controls,

@@ -197,9 +197,24 @@ class EPOSHandle:
             return epos_info
 
         else:
-            rospy.logerr('Cannot move to position with disabled controller :(')
+            rospy.logerr('Cannot get epos info with disabled controller :(')
 
+    def set_position_offset(self,initial_position):
+        pErrorCode = c_uint()
+        pPositionOffset = c_float()
+        pBytesWritten = c_uint()
+        pPositionOffset.value = int(2*initial_position*(2048*5*66/360))#*(180/math.pi))
+        
+        if self._is_enabled:
+            ret = self.epos.VCS_SetObject(self.keyhandle, self.NodeID, 0x60B0, 0x00, byref(pPositionOffset), 4, byref(pBytesWritten), byref(pErrorCode))
 
+            if ret == 0:
+                rospy.logwarn(f'SetPositionOffset error with code {pErrorCode.value}\n\
+                                Disabling controller.')
+                self.disable()
+
+        else:
+            rospy.logerr('Cannot set position offset with disabled controller :(')
 
     def zero_position_protocol(self):
         pass
