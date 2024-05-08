@@ -1,7 +1,7 @@
 import rospy
 import can
 from sensor_msgs.msg import Imu, NavSatFix
-from std_msgs.msg import Float32,Int16
+from std_msgs.msg import Float32, Int16
 import numpy as np
 from geometry_msgs.msg import Vector3
 
@@ -14,25 +14,16 @@ class CanReader:
 
         self.IMU_msg = Imu()
         self.GPS_pos = Vector3()
-        self.inv_speed = None
-        self.as_status = None
-        self.ebs_status = None
-        self.brake_pressure = None
-        self.pneumatic_pressure = None
-        self.apps = None
-        self.asms_status = None
-        self.salpi_status = None
-        self.mission = None
-        self.mode = None
-        self.buzzer = None
-        self.steering_angle = None
+ 
         #--------------------------------------------------------
         self.AS_status_pub = rospy.Publisher('/can/AS_status', Int16, queue_size=10)
         self.IMU_pub = rospy.Publisher('/IMU', Imu, queue_size=10)
         self.pGPS_loc = rospy.Publisher('GPS_location', NavSatFix, queue_size=10)
         self.pGPS_speed = rospy.Publisher('GPS_speed', Vector3, queue_size=10)
         self.invSpeed_pub = rospy.Publisher('inv_speed', Float32, queue_size=10)
-        self.bus = can.interface.Bus(channel='can0', bustype='socketcan')
+        
+        self.bus0 = can.interface.Bus(channel='vcan0', bustype='socketcan')
+        self.bus1 = can.interface.Bus(channel='vcan1', bustype='socketcan')
         #--------------------------------------------------------
 
         rospy.Timer(rospy.Duration(1/500), self.publish_IMU)
@@ -40,13 +31,10 @@ class CanReader:
         #self.read()
 
 
-    def read(self):
-        i=0
+    def read_can0(self):
         while not rospy.is_shutdown():
-            # rospy.loginfo("Reading CAN messages: %f", i)
-            i+=1
-            
-            message = self.bus.recv()
+
+            message = self.bus0.recv()
 
             if message.arbitration_id == 0x380:
                #IMU acc
@@ -63,10 +51,6 @@ class CanReader:
             elif message.arbitration_id == 0x384:
                 #Ángulos de Euler
                 self.parse_euler_angles(message)
-
-            elif message.arbitration_id == 0x181 and int(message.data[0]) == 0x30:
-                #Inv speed
-                self.parse_inv_speed(message)
             
             elif message.arbitration_id == 0x382:
                 self.parse_angular_velocity(message)
@@ -74,80 +58,112 @@ class CanReader:
             elif message.arbitration_id == 0x182:
                 sub_id = int(message.data[0])
                 if sub_id == 0x00:
-                    self.parse_as_status(message)
+                    self.parse_AS_HB(message)
                 elif sub_id == 0x01:
-                    self.parse_apps(message)
+                    self.parse_as_status(message)
                 elif sub_id == 0x02:
-                    self.parse_brake_pressure(message)
+                    self.parse_fault_code(message)
                 elif sub_id == 0x03:
-                    self.parse_pneumatic_pressure(message)
+                    self.parse_apps(message)
                 elif sub_id == 0x04:
-                    self.parse_asms_status(message)
+                    self.parse_brake_pressure(message)
                 elif sub_id == 0x05:
-                    self.parse_ebs_status(message)
+                    self.parse_pneumatic_pressure(message)
+                elif sub_id == 0x06:
+                    self.parse_valves_state(message)
             
             elif message.arbitration_id == 0x185:
                 sub_id = int(message.data[0])
                 if sub_id == 0x00:
-                    self.parse_salpi_status(message)
+                    self.parse_dashboard_HB(message)
                 elif sub_id == 0x01:
                     self.parse_mission(message)
                 elif sub_id == 0x02:
-                    self.parse_mode(message)
-                elif sub_id == 0x03:
                     self.parse_buzzer(message)
             
             elif message.arbitration_id == 0x187:
                 sub_id = int(message.data[0])
                 if sub_id == 0x01:
                     self.parse_steering_angle(message)
+                elif sub_id == 0x02:
+                    self.parse_front_extensometer(message)
+                elif sub_id == 0x03:
+                    self.parse_rear_extensometer(message)
+                elif sub_id == 0x04:
+                    self.parse_front_wheel_speed(message)
+                elif sub_id == 0x05:
+                    self.parse_rear_wheel_speed(message)
+            
                
+    def read_can1(self):
 
+        message = self.bus1.recv()
+        while not rospy.is_shutdown():
+            if message.arbitration_id == 0x181 and int(message.data[0]) == 0x30:
+                #Inv speed
+                self.parse_inv_speed(message)
+   
+   
     #Parsers --------------------------------------------------------
-    def parse_angular_velocity(self, message):
-        self.angular_velocity_x = int.from_bytes(message.data[0:2], byteorder='little', signed=True)*(10**-3)
-        self.angular_velocity_y = int.from_bytes(message.data[2:4], byteorder='little', signed=True)*(10**-3)
-        self.angular_velocity_z = int.from_bytes(message.data[4:6], byteorder='little', signed=True)*(10**-3)
-
-        # rospy.loginfo("X: %f, Y: %f, Z: %f", self.angular_velocity_x, self.angular_velocity_y, self.angular_velocity_z)
-
-        self.IMU_msg.angular_velocity.x = self.angular_velocity_x
-        self.IMU_msg.angular_velocity.y = self.angular_velocity_y
-        self.IMU_msg.angular_velocity.z = self.angular_velocity_z
-        self.IMU_msg.header.stamp = rospy.Time.now()
-
+    #################################################### ACQUISITION ########################################################
     def parse_steering_angle(self, message):
-        self.steering_angle = int.from_bytes(message.data[1:3], byteorder='little', signed=True)
+        self.steering_angle = int.from_bytes(message.data[1:3], byteorder='little', signed=True)*(10**-2)
         #rospy.loginfo("Steering Angle: %f", self.steering_angle)
+    
+    def parse_front_extensometer(self, message):
+        self.front_extensometer = int.from_bytes(message.data[1:3], byteorder='little', signed=True)*(10**-2)
+        #rospy.loginfo("Front Extensometer: %f", self.front_extensometer)
 
-    def parse_salpi_status(self, message):
-        self.salpi_status = int.from_bytes(message.data[1], byteorder='little', signed=False)
-        #rospy.loginfo("Salpi Status: %d", self.salpi_status)
+    def parse_rear_extensometer(self, message):
+        self.rear_extensometer = int.from_bytes(message.data[1:3], byteorder='little', signed=True)*(10**-2)
+        #rospy.loginfo("Rear Extensometer: %f", self.rear_extensometer)
+    
+    def parse_front_wheel_speed(self, message):
+        self.front_wheel_speed = int.from_bytes(message.data[1:3], byteorder='little', signed=True)*(10**-2)
+        #rospy.loginfo("Front Wheel Speed: %f", self.front_wheel_speed)
+    
+    def parse_rear_wheel_speed(self, message):
+        self.rear_wheel_speed = int.from_bytes(message.data[1:3], byteorder='little', signed=True)*(10**-2)
+        #rospy.loginfo("Rear Wheel Speed: %f", self.rear_wheel_speed)
+
+
+    ###################################################### DASHBOARD ########################################################
+    def parse_dashboard_HB(self, message):
+        self.dashboard_HB = int.from_bytes(message.data[1], byteorder='little', signed=False)
+        #rospy.loginfo("Dashboard HB: %d", self.dashboard_HB)
 
     def parse_mission(self, message):
         self.mission = int.from_bytes(message.data[1], byteorder='little', signed=False)
         #rospy.loginfo("Mission: %d", self.mission)
 
-    def parse_mode(self, message):
-        self.mode = int.from_bytes(message.data[1], byteorder='little', signed=False)
-        #rospy.loginfo("Mode: %d", self.mode)
 
     def parse_buzzer(self, message):
         self.buzzer = int.from_bytes(message.data[1], byteorder='little', signed=False)
         #rospy.loginfo("Buzzer: %d", self.buzzer)
 
+
+    ###################################################### AS ########################################################
+    def parse_AS_HB(self, message):
+        self.AS_HB = int.from_bytes(message.data[1], byteorder='little', signed=False)
+        #rospy.loginfo("AS HB: %d", self.AS_HB)
+
     def parse_as_status(self, message):
-        self.as_status = int.from_bytes(message.data[1:3], byteorder='little', signed=False)
-        msg = Int16()
-        msg.data = int(message.data[2])
-        self.AS_status_pub(msg)
+        self.as_status = int.from_bytes(message.data[2], byteorder='little', signed=False)
         #rospy.loginfo("AS Status: %d", self.as_status)
+        
+        msg = Int16()
+        self.AS_status_pub.publish(msg)
+
     
+    def parse_fault_code(self, message):
+        self.asms_status = int.from_bytes(message.data[1:3], byteorder='little', signed=False)
+        #rospy.loginfo("ASMS Status: %d", self.asms_status)
+
     def parse_apps(self, message):
         self.apps = int.from_bytes(message.data[1:3], byteorder='little', signed=False)
         #rospy.loginfo("APPS: %d", self.apps)
 
-    def parse_ebs_status(self, message):
+    def parse_valves_state(self, message):
         self.ebs_status = int.from_bytes(message.data[1:3], byteorder='little', signed=False)
         #rospy.loginfo("EBS Status: %d", self.ebs_status)
 
@@ -155,14 +171,12 @@ class CanReader:
         self.brake_pressure = int.from_bytes(message.data[1:3], byteorder='little', signed=False)
         #rospy.loginfo("Brake Pressure: %d", self.brake_pressure)
 
-    def parse_asms_status(self, message):
-        self.asms_status = int.from_bytes(message.data[1:3], byteorder='little', signed=False)
-        #rospy.loginfo("ASMS Status: %d", self.asms_status)
-
     def parse_pneumatic_pressure(self, message):
         self.pneumatic_pressure = int.from_bytes(message.data[1:3], byteorder='little', signed=False)
         #rospy.loginfo("Pneumatic Pressure: %d", self.pneumatic_pressure)
 
+  
+    ##################################################### IMU ##################################################
     def parse_acc(self, message):
         acc_x = int.from_bytes(message.data[0:2], byteorder='little', signed=True)*(10**-2)
         acc_y = int.from_bytes(message.data[2:4], byteorder='little', signed=True)*(10**-2)
@@ -204,6 +218,7 @@ class CanReader:
 
         self.pGPS_speed.publish(v)
     
+    
     def parse_euler_angles(self, message):
         roll = int.from_bytes(message.data[0:2], byteorder='little', signed=True)*(10**-4)
         pitch = int.from_bytes(message.data[2:4], byteorder='little', signed=True)*(10**-4)
@@ -222,7 +237,21 @@ class CanReader:
         self.IMU_msg.orientation.w = qw
         self.IMU_msg.header.stamp= rospy.Time.now()
 
-    
+   
+    def parse_angular_velocity(self, message):
+            self.angular_velocity_x = int.from_bytes(message.data[0:2], byteorder='little', signed=True)*(10**-3)
+            self.angular_velocity_y = int.from_bytes(message.data[2:4], byteorder='little', signed=True)*(10**-3)
+            self.angular_velocity_z = int.from_bytes(message.data[4:6], byteorder='little', signed=True)*(10**-3)
+
+            # rospy.loginfo("X: %f, Y: %f, Z: %f", self.angular_velocity_x, self.angular_velocity_y, self.angular_velocity_z)
+
+            self.IMU_msg.angular_velocity.x = self.angular_velocity_x
+            self.IMU_msg.angular_velocity.y = self.angular_velocity_y
+            self.IMU_msg.angular_velocity.z = self.angular_velocity_z
+            self.IMU_msg.header.stamp = rospy.Time.now()
+
+
+########################################################## INVERSOR ########################################################    
     def parse_inv_speed(self, message):
         int_val = int.from_bytes(message.data[1:3], byteorder='little', signed=True)
         angular_v = int_val / 2**15 * vel_max

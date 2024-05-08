@@ -4,8 +4,8 @@ from eposhandle import EPOSHandle
 from std_msgs.msg import Float32MultiArray,Float32
 
 
-MAX_ACCELERATION = rospy.get_param('~MAX_ACCELERATION', 1000)
-MAX_DECELERATION = rospy.get_param('~MAX_DECELERATION', 1000)
+MAX_ACCELERATION = rospy.get_param('~MAX_ACCELERATION', 6000)
+MAX_DECELERATION = rospy.get_param('~MAX_DECELERATION', 6000)
 PROFILE_VELOCITY = rospy.get_param('~PROFILE_VELOCITY', 1000)
 
 class SteeringHandle:
@@ -27,6 +27,7 @@ class SteeringHandle:
 
     def command_callback(self, msg: Controls):
         assert msg.steering < 20 and msg.steering > -20
+        # assert msg.steering < (20-self.initial_position.data) and msg.steering > (-20-self.initial_position.data) 
         if not self._is_shutdown:
             self.epos.move_to(msg.steering)
 
