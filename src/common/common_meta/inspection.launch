@@ -1,8 +1,5 @@
 <launch>
 
-  <node pkg="fssim_interface" name="fssim_interface" type="main.py">
-  </node>
-
   <node name="inspection_control" pkg="steering" type="inspection_control.py">
 	</node>
 
