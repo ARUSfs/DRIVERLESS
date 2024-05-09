@@ -1,0 +1,44 @@
+<launch>
+
+  <node pkg="lidar_perception" name="lidar_perception" type="main" output="screen">
+    <rosparam command="load" file="$(find lidar_perception)/config/lidar_cpp.yaml"/>
+  </node>
+
+  <!-- <node name="fssim_rviz" pkg="rviz" type="rviz" args="-d $(find lidar_perception)/config/lidar_rviz.rviz"/> -->
+
+
+  <node pkg="delaunay_detector" name="delaunay_detector" type="main.py" output="screen">
+    <rosparam command="load" file="$(find delaunay_detector)/config/delaunay.yaml"/>
+    <rosparam>
+      topic_map: 'perception_map'
+      color_enabled: false
+    </rosparam>
+  </node>
+
+  <node name="interface" pkg="visualization" type="main_interface.py">
+	  <rosparam command="load" file="$(find visualization)/config/interface.yaml"/>
+    <rosparam>
+      frame: 'velodyne'
+    </rosparam>
+	</node>
+
+
+  <node pkg="control_pure_pursuit" name="control_pure_pursuit" type="main.py" output="screen">
+    <rosparam command="load" file="$(find control_pure_pursuit)/config/pure_pursuit.yaml"/>
+    <rosparam>
+      LFC: 3
+      TARGET_SPEED: 2
+      simulation: false
+      max_cmd: 0.2
+      min_vel: 0.5
+    </rosparam>
+  </node>
+
+  <!-- <node name="steering" pkg="steering" type="main.py">
+	</node>
+
+  <node name="can" pkg="can" type="main.py">
+	</node> -->
+
+
+</launch>

@@ -5,7 +5,7 @@ from std_msgs.msg import Float32, Int16
 import math
 import time
 
-DURATION = 25
+DURATION = 25000
 AMPLITUDE = 20.0
 FREQUENCY = 0.09
 TARGET_SPEED = 0.5
@@ -21,26 +21,32 @@ Ci=0
 Cd=0
 
 current_time=0
+start_time=0
 prev_time = 0
 prev_error = 0
 
 
 def AS_status_callback(AS_status_msg: Int16):
+        global start_time, AS_status
         AS_status = AS_status_msg.data
+        if AS_status == 0x02:
+              start_time = rospy.get_time()
 
 
 def speed_callback(motor_speed_msg: Float32):
-        current_time = rospy.get_time()
+        global current_time, start_time, AS_status
+        current_time = time.time()
 
         # Create a Controls message and assign sinusoidal steering and calculated acceleration
         # Use PID controller to get the accelerator value
         control_msg = Controls()
-        control_msg.steering = generate_sinusoidal_steering(current_time)
+        control_msg.steering = generate_sinusoidal_steering(current_time-start_time)
         control_msg.accelerator = accelerator_control(motor_speed_msg.data, TARGET_SPEED)
         #control_msg.accelerator = 0
 
         # Publish the message
-        if current_time>DURATION and AS_status==0x02:
+        rospy.loginfo(AS_status)
+        if current_time-start_time<DURATION and AS_status==0x02:
                 control_publisher.publish(control_msg)
 
 def generate_sinusoidal_steering(time):
@@ -48,6 +54,7 @@ def generate_sinusoidal_steering(time):
     return steering_angle
 
 def accelerator_control(current: float, target: float):
+        global current_time, prev_time, prev_error, Cp, Ci, Cd
 
         error = target - current
 
@@ -76,9 +83,10 @@ if __name__ == '__main__':
 
     start_time = time.time()
 
+    rospy.Subscriber('/can/AS_status', Int16, AS_status_callback,queue_size=1)
+
     control_publisher = rospy.Publisher('/controls', Controls, queue_size=1)
     rospy.Subscriber('/motor_speed', Float32, speed_callback,queue_size=1)
-    rospy.Subscriber('/can/AS_status', Int16, AS_status_callback,queue_size=1)
 
     rospy.spin()
 

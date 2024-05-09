@@ -4,3 +4,4 @@ topic_map: "perception_map"
 topic_pursuit: "pursuit_point"
 topic_state: "state"
 topic_delaunay: "/delaunay_detector/simplices"
+frame: 'velodyne'

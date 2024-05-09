@@ -20,7 +20,7 @@ class CanReader:
         self.IMU_pub = rospy.Publisher('/IMU', Imu, queue_size=10)
         self.pGPS_loc = rospy.Publisher('GPS_location', NavSatFix, queue_size=10)
         self.pGPS_speed = rospy.Publisher('GPS_speed', Vector3, queue_size=10)
-        self.invSpeed_pub = rospy.Publisher('inv_speed', Float32, queue_size=10)
+        self.invSpeed_pub = rospy.Publisher('/motor_speed', Float32, queue_size=10)
         
         self.bus0 = can.interface.Bus(channel='can0', bustype='socketcan')
         self.bus1 = can.interface.Bus(channel='can1', bustype='socketcan')
