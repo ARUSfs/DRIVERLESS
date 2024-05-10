@@ -73,12 +73,11 @@ class CanPublisher:
         pTargetPosition = int(msg.data[2]*100).to_bytes(3, byteorder='little', signed=True)
         pVelocity = int(msg.data[3]*100).to_bytes(2, byteorder='little', signed=True)
         pVelocityAvg = int(msg.data[4]*100).to_bytes(2, byteorder='little', signed=True)
-        pTargetVelocity = int(msg.data[5]*100).to_bytes(2, byteorder='little', signed=True)
         pTorque = int(msg.data[6]*100).to_bytes(2, byteorder='little', signed=True)
         pTargetTorque = int(msg.data[7]*100).to_bytes(2, byteorder='little', signed=True)
 
         msgEposState = can.Message(arbitration_id=0x183, is_extended_id=False, data=[0x02, pMovementState, pPosition[0], pPosition[1], pPosition[2], pTargetPosition[0], pTargetPosition[1], pTargetPosition[2]])
-        msgEposVelocity = can.Message(arbitration_id=0x183, is_extended_id=False, data=[0x03, pVelocity[0], pVelocity[1], pVelocityAvg[0], pVelocityAvg[1], pTargetVelocity[0], pTargetVelocity[1]])
+        msgEposVelocity = can.Message(arbitration_id=0x183, is_extended_id=False, data=[0x03, pVelocity[0], pVelocity[1], pVelocityAvg[0], pVelocityAvg[1]])
         msgEposTorque = can.Message(arbitration_id=0x183, is_extended_id=False, data=[0x04, pTorque[0], pTorque[1], pTargetTorque[0], pTargetTorque[1]])
 
         self.bus0.send(msgEposState)

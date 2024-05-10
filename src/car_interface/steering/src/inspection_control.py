@@ -6,7 +6,7 @@ import math
 import time
 
 DURATION = 25000
-AMPLITUDE = 20.0
+AMPLITUDE = 15.0
 FREQUENCY = 0.09
 TARGET_SPEED = 0.5
 
@@ -45,9 +45,10 @@ def speed_callback(motor_speed_msg: Float32):
         #control_msg.accelerator = 0
 
         # Publish the message
-        rospy.loginfo(AS_status)
+        #rospy.loginfo(AS_status)
         if current_time-start_time<DURATION and AS_status==0x02:
                 control_publisher.publish(control_msg)
+                rospy.loginfo(control_msg)
 
 def generate_sinusoidal_steering(time):
     steering_angle = AMPLITUDE * math.sin(2 * math.pi * FREQUENCY * time)

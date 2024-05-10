@@ -96,9 +96,8 @@ class CanReader:
             
                
     def read_can1(self):
-
-        message = self.bus1.recv()
         while not rospy.is_shutdown():
+            message = self.bus1.recv()
             if message.arbitration_id == 0x181 and int(message.data[0]) == 0x30:
                 #Inv speed
                 self.parse_inv_speed(message)

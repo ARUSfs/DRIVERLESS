@@ -5,8 +5,8 @@ from ctypes import *
 import rospy
 
 
-class EPOSHandle:
-    EPOS_LIB_PATH = '/home/alvaro/Videos/test_ws/src/car_interface/steering/lib/libEposCmd.so.6.8.1.0'
+class EPOSHandle:    
+    EPOS_LIB_PATH = '/home/alvaro/Videos/test_ws/src/DRIVERLESS/src/car_interface/steering/lib/libEposCmd.so.6.8.1.0'
     NodeID = 1
 
     def __init__(self, max_acc, max_dec, prof_vel):
@@ -112,15 +112,14 @@ class EPOSHandle:
     def get_epos_info(self):
         pErrorCode = c_uint()
         pMovementState = c_uint()
-        pPosition = c_float()
-        pTargetPosition = c_float()
-        pVelocity = c_float()
-        pVelocityAvg = c_float()
-        pTargetVelocity = c_float()
+        pPosition = c_long()
+        pTargetPosition = c_long()
+        pVelocity = c_long()
+        pVelocityAvg = c_long()
 
-        pTorque = c_float()
-        pTargetTorque = c_float()
-        pMotorRatedTorque = c_float()
+        motorRatedTorque = 21
+        pTorque = c_int16()
+        pMotorRatedTorque = c_uint32()
         pBytesRead = c_uint()
 
         epos_info = []
@@ -139,14 +138,14 @@ class EPOSHandle:
                 rospy.logwarn(f'getPosition error with code {pErrorCode.value}\n\
                                 Disabling controller.')
                 self.disable()
-            epos_info.append(pPosition.value)
+            epos_info.append(pPosition.value*360/(2*2048*5*66))
             
             ret = self.epos.VCS_GetTargetPosition(self.keyhandle, self.NodeID, byref(pTargetPosition), byref(pErrorCode))
             if ret == 0:
                 rospy.logwarn(f'getTargetPosition error with code {pErrorCode.value}\n\
                                 Disabling controller.')
                 self.disable()
-            epos_info.append(pTargetPosition.value)
+            epos_info.append(pTargetPosition.value*360/(2*2048*5*66))
             
             ret = self.epos.VCS_GetVelocityIs(self.keyhandle, self.NodeID, byref(pVelocity), byref(pErrorCode))
             if ret == 0:
@@ -162,12 +161,6 @@ class EPOSHandle:
                 self.disable()
             epos_info.append(pVelocityAvg.value)
 
-            ret = self.epos.VCS_GetTargetVelocity(self.keyhandle, self.NodeID, byref(pTargetVelocity), byref(pErrorCode))
-            if ret == 0:
-                rospy.logwarn(f'getTargetVelocity error with code {pErrorCode.value}\n\
-                                Disabling controller.')
-                self.disable()
-            epos_info.append(pTargetVelocity.value)
 
             
             ret = self.epos.VCS_GetObject(self.keyhandle, self.NodeID, 0x6076, 0x00, byref(pMotorRatedTorque), 4, byref(pBytesRead), byref(pErrorCode))
@@ -175,22 +168,16 @@ class EPOSHandle:
                 rospy.logwarn(f'getMotorRatedTorque error with code {pErrorCode.value}\n\
                                 Disabling controller.')
                 self.disable()
+            rospy.logwarn(pMotorRatedTorque.value)
 
             ret = self.epos.VCS_GetObject(self.keyhandle, self.NodeID, 0x6077, 0x00, byref(pTorque), 2, byref(pBytesRead), byref(pErrorCode))
             if ret == 0:
                 rospy.logwarn(f'getTorque error with code {pErrorCode.value}\n\
                                 Disabling controller.')
                 self.disable()
-            #The value is given in per thousand of “Motor rated torque” (uNm)
+            rospy.logwarn(pTorque.value)
+            # #The value is given in per thousand of “Motor rated torque” (uNm)
             epos_info.append((pTorque.value * pMotorRatedTorque.value)/1000)
-            
-            ret = self.epos.VCS_GetObject(self.keyhandle, self.NodeID, 0x6071, 0x00, byref(pTargetTorque), 2, byref(pBytesRead), byref(pErrorCode))
-            if ret == 0:
-                rospy.logwarn(f'getTargetTorque error with code {pErrorCode.value}\n\
-                                Disabling controller.')
-                self.disable()
-            #The value is given in per thousand of “Motor rated torque” (uNm)
-            epos_info.append((pTargetTorque.value * pMotorRatedTorque.value)/1000)
             
 
             
