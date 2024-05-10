@@ -117,9 +117,8 @@ class EPOSHandle:
         pVelocity = c_long()
         pVelocityAvg = c_long()
 
-        motorRatedTorque = 21
+       
         pTorque = c_int16()
-        pMotorRatedTorque = c_uint32()
         pBytesRead = c_uint()
 
         epos_info = []
@@ -163,23 +162,15 @@ class EPOSHandle:
 
 
             
-            ret = self.epos.VCS_GetObject(self.keyhandle, self.NodeID, 0x6076, 0x00, byref(pMotorRatedTorque), 4, byref(pBytesRead), byref(pErrorCode))
-            if ret == 0:
-                rospy.logwarn(f'getMotorRatedTorque error with code {pErrorCode.value}\n\
-                                Disabling controller.')
-                self.disable()
-            rospy.logwarn(pMotorRatedTorque.value)
 
             ret = self.epos.VCS_GetObject(self.keyhandle, self.NodeID, 0x6077, 0x00, byref(pTorque), 2, byref(pBytesRead), byref(pErrorCode))
             if ret == 0:
                 rospy.logwarn(f'getTorque error with code {pErrorCode.value}\n\
                                 Disabling controller.')
                 self.disable()
-            rospy.logwarn(pTorque.value)
             # #The value is given in per thousand of “Motor rated torque” (uNm)
-            epos_info.append((pTorque.value * pMotorRatedTorque.value)/1000)
+            epos_info.append(pTorque.value)
             
-
             
             return epos_info
 
