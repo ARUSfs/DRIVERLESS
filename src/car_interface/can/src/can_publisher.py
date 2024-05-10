@@ -10,11 +10,11 @@ class CanPublisher:
 
     def __init__(self):
 
-        self.bus0 = can.interface.Bus(channel='can0', bustype='socketcan')
-        self.bus1 = can.interface.Bus(channel='can1', bustype='socketcan')
+        self.bus0 = can.interface.Bus(channel='can1', bustype='socketcan')
+        self.bus1 = can.interface.Bus(channel='can0', bustype='socketcan')
 
         #--------------------------- PELIGRO COMANDAS DE PAR AL INVERSOR!!! --------------------------------------------------
-        #rospy.Subscriber("/controls",Controls, self.cmd_callback)
+        rospy.Subscriber("/controls",Controls, self.cmd_callback)
         #---------------------------------------------------------------------------------------------------------------------
         rospy.Subscriber("/steering/epos_info", Float32MultiArray, self.epos_info_callback)
 
@@ -34,6 +34,7 @@ class CanPublisher:
         self.can_reader_thread1.start()
 
     def cmd_callback(self, msg: Controls):
+        rospy.loginfo("Peligro")
         acc =  msg.accelerator
         acc = min(acc,self.MAX_ACC)
         datos_comanda = list(int.to_bytes(int(acc*(2**15))-1, byteorder='little', length=2, signed=True))
@@ -54,7 +55,7 @@ class CanPublisher:
         
         bytes_temp = int(self.temp*10).to_bytes(2, byteorder='little')
         msg = can.Message(arbitration_id=0x183, is_extended_id=False, data=[0x01]+list(bytes_temp))
-        rospy.loginfo(msg)
+        #rospy.loginfo(msg)
         self.bus0.send(msg)
 
     
@@ -68,21 +69,21 @@ class CanPublisher:
 
 
     def epos_info_callback(self, msg: Float32MultiArray):
-        pMovementState = int(msg.data[0]).to_bytes(1, byteorder='little')
-        pPosition = int(msg.data[1]*100).to_bytes(3, byteorder='little', signed=True)
-        pTargetPosition = int(msg.data[2]*100).to_bytes(3, byteorder='little', signed=True)
-        pVelocity = int(msg.data[3]*100).to_bytes(2, byteorder='little', signed=True)
-        pVelocityAvg = int(msg.data[4]*100).to_bytes(2, byteorder='little', signed=True)
-        pTorque = int(msg.data[6]*100).to_bytes(2, byteorder='little', signed=True)
-        pTargetTorque = int(msg.data[7]*100).to_bytes(2, byteorder='little', signed=True)
+        pass
+        # pMovementState = int(msg.data[0]).to_bytes(1, byteorder='little')
+        # pPosition = int(msg.data[1]*100).to_bytes(3, byteorder='little', signed=True)
+        # pTargetPosition = int(msg.data[2]*100).to_bytes(3, byteorder='little', signed=True)
+        # pVelocity = int(msg.data[3]*100).to_bytes(2, byteorder='little', signed=True)
+        # pVelocityAvg = int(msg.data[4]*100).to_bytes(2, byteorder='little', signed=True)
+        # pTorque = int(msg.data[6]).to_bytes(2, byteorder='little', signed=True)
 
-        msgEposState = can.Message(arbitration_id=0x183, is_extended_id=False, data=[0x02, pMovementState, pPosition[0], pPosition[1], pPosition[2], pTargetPosition[0], pTargetPosition[1], pTargetPosition[2]])
-        msgEposVelocity = can.Message(arbitration_id=0x183, is_extended_id=False, data=[0x03, pVelocity[0], pVelocity[1], pVelocityAvg[0], pVelocityAvg[1]])
-        msgEposTorque = can.Message(arbitration_id=0x183, is_extended_id=False, data=[0x04, pTorque[0], pTorque[1], pTargetTorque[0], pTargetTorque[1]])
+        # msgEposState = can.Message(arbitration_id=0x183, is_extended_id=False, data=[0x02, pMovementState, pPosition[0], pPosition[1], pPosition[2], pTargetPosition[0], pTargetPosition[1], pTargetPosition[2]])
+        # msgEposVelocity = can.Message(arbitration_id=0x183, is_extended_id=False, data=[0x03, pVelocity[0], pVelocity[1], pVelocityAvg[0], pVelocityAvg[1]])
+        # msgEposTorque = can.Message(arbitration_id=0x183, is_extended_id=False, data=[0x04, pTorque[0], pTorque[1]])
 
-        self.bus0.send(msgEposState)
-        self.bus0.send(msgEposVelocity)
-        self.bus0.send(msgEposTorque)
+        # self.bus0.send(msgEposState)
+        # self.bus0.send(msgEposVelocity)
+        # self.bus0.send(msgEposTorque)
 
 
 

@@ -22,8 +22,8 @@ class CanReader:
         self.pGPS_speed = rospy.Publisher('GPS_speed', Vector3, queue_size=10)
         self.invSpeed_pub = rospy.Publisher('/motor_speed', Float32, queue_size=10)
         
-        self.bus0 = can.interface.Bus(channel='can0', bustype='socketcan')
-        self.bus1 = can.interface.Bus(channel='can1', bustype='socketcan')
+        self.bus0 = can.interface.Bus(channel='can1', bustype='socketcan')
+        self.bus1 = can.interface.Bus(channel='can0', bustype='socketcan')
         #--------------------------------------------------------
 
         rospy.Timer(rospy.Duration(1/500), self.publish_IMU)
@@ -78,9 +78,12 @@ class CanReader:
                     self.parse_dashboard_HB(message)
                 elif sub_id == 0x01:
                     self.parse_mission(message)
-                elif sub_id == 0x02:
+                
+            elif message.arbitration_id == 0x205:
+                sub_id = int(message.data[0])
+                if sub_id == 0x04:
                     self.parse_buzzer(message)
-            
+
             elif message.arbitration_id == 0x187:
                 sub_id = int(message.data[0])
                 if sub_id == 0x01:
@@ -134,11 +137,6 @@ class CanReader:
     def parse_mission(self, message):
         self.mission = int.from_bytes(message.data[1], byteorder='little', signed=False)
         #rospy.loginfo("Mission: %d", self.mission)
-
-
-    def parse_buzzer(self, message):
-        self.buzzer = int.from_bytes(message.data[1], byteorder='little', signed=False)
-        #rospy.loginfo("Buzzer: %d", self.buzzer)
 
 
     ###################################################### AS ########################################################
@@ -257,11 +255,18 @@ class CanReader:
         angular_v = int_val / 2**15 * vel_max
         self.inv_speed = -angular_v * 2*np.pi*wheel_radius*transmission_ratio/60
 
-        rospy.loginfo("Inv Speed: %f", self.inv_speed)
+        #rospy.loginfo("Inv Speed: %f", self.inv_speed)
 
         self.invSpeed_pub.publish(self.inv_speed)
 
 
+########################################################### BUZZER ########################################################
+    def parse_buzzer(self, message):
+            rospy.loginfo("Buzzer")
+            rospy.sleep(2)
+            msg = Int16()
+            msg.data = 2
+            self.AS_status_pub.publish(msg)
     #Publishers ------------------------------------------------------------------------------------------
 
     def publish_IMU(self, event):

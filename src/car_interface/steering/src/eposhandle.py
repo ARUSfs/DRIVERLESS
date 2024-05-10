@@ -6,7 +6,7 @@ import rospy
 
 
 class EPOSHandle:    
-    EPOS_LIB_PATH = '/home/alvaro/Videos/test_ws/src/DRIVERLESS/src/car_interface/steering/lib/libEposCmd.so.6.8.1.0'
+    EPOS_LIB_PATH = '/home/carlos/tests/src/DRIVERLESS/src/car_interface/steering/lib/libEposCmd.so.6.8.1.0'
     NodeID = 1
 
     def __init__(self, max_acc, max_dec, prof_vel):

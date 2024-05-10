@@ -8,11 +8,11 @@ import time
 DURATION = 25000
 AMPLITUDE = 15.0
 FREQUENCY = 0.09
-TARGET_SPEED = 0.5
+TARGET_SPEED = 3.5
 
 AS_status = 0
 
-kp=0.5
+kp=1
 ki=0
 kd=0
 
