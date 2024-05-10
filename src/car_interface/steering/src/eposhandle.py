@@ -137,6 +137,8 @@ class EPOSHandle:
                 rospy.logwarn(f'getPosition error with code {pErrorCode.value}\n\
                                 Disabling controller.')
                 self.disable()
+            if len(bin(pPosition.value))==34:
+                pPosition.value = pPosition.value - 2**32
             epos_info.append(pPosition.value*360/(2*2048*5*66))
             
             ret = self.epos.VCS_GetTargetPosition(self.keyhandle, self.NodeID, byref(pTargetPosition), byref(pErrorCode))
@@ -144,6 +146,8 @@ class EPOSHandle:
                 rospy.logwarn(f'getTargetPosition error with code {pErrorCode.value}\n\
                                 Disabling controller.')
                 self.disable()
+            if len(bin(pTargetPosition.value))==34:
+                pTargetPosition.value = pTargetPosition.value - 2**32
             epos_info.append(pTargetPosition.value*360/(2*2048*5*66))
             
             ret = self.epos.VCS_GetVelocityIs(self.keyhandle, self.NodeID, byref(pVelocity), byref(pErrorCode))
@@ -151,6 +155,8 @@ class EPOSHandle:
                 rospy.logwarn(f'getVelocity error with code {pErrorCode.value}\n\
                                 Disabling controller.')
                 self.disable()
+            if len(bin(pVelocity.value))==34:
+                pVelocity.value = pVelocity.value - 2**32
             epos_info.append(pVelocity.value)
             
             ret = self.epos.VCS_GetVelocityIsAveraged(self.keyhandle, self.NodeID, byref(pVelocityAvg), byref(pErrorCode))
@@ -158,6 +164,8 @@ class EPOSHandle:
                 rospy.logwarn(f'getVelocityAvg error with code {pErrorCode.value}\n\
                                 Disabling controller.')
                 self.disable()
+            if len(bin(pVelocityAvg.value))==34:
+                pVelocityAvg.value = pVelocityAvg.value - 2**32
             epos_info.append(pVelocityAvg.value)
 
 

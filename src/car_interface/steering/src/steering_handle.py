@@ -21,7 +21,7 @@ class SteeringHandle:
 
         rospy.Subscriber('/controls', Controls,
                          callback=self.command_callback, queue_size=1)
-        rospy.Timer(rospy.Duration(1/20), self.epos_info_callback)
+        rospy.Timer(rospy.Duration(1/10), self.epos_info_callback)
         self.info_pub = rospy.Publisher('/steering/epos_info', Float32MultiArray, queue_size=10)
 
 
