@@ -120,7 +120,7 @@ class PlanningSystem():
         midpoints = np.array(midpoints)
         non_used_midpoints = np.full(midpoints.shape[0], True, dtype=np.bool_)
         path = [last_element]
-        rospy.logerr('################################################')
+
         while len(path) < len(midpoints)+1:
             vectors = np.full(midpoints.shape, np.Inf)
             distances = np.full(midpoints.shape[0], np.Inf)
@@ -140,7 +140,7 @@ class PlanningSystem():
                 path.append(midpoints[next_midpoint])
                 last_element = midpoints[next_midpoint]
                 last_angle = np.arctan2(vectors[next_midpoint][1], vectors[next_midpoint][0])
-                rospy.logwarn([distances[next_midpoint],angles[next_midpoint],weights[next_midpoint]])
+                # rospy.logwarn([distances[next_midpoint],angles[next_midpoint],weights[next_midpoint]])
             else:
                 break
         PREV_ANGLE = np.arctan2(path[1][1], path[1][0])/2

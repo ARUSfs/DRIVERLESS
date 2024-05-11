@@ -14,7 +14,7 @@ class CanPublisher:
         self.bus1 = can.interface.Bus(channel='can0', bustype='socketcan')
 
         #--------------------------- PELIGRO COMANDAS DE PAR AL INVERSOR!!! --------------------------------------------------
-        rospy.Subscriber("/controls",Controls, self.cmd_callback)
+        #rospy.Subscriber("/controls",Controls, self.cmd_callback)
         #---------------------------------------------------------------------------------------------------------------------
         rospy.Subscriber("/steering/epos_info", Float32MultiArray, self.epos_info_callback)
 

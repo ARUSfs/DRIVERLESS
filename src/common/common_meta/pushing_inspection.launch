@@ -1,0 +1,13 @@
+<launch>
+
+  <node name="inspection_control" pkg="steering" type="pushing_inspection.py"  output="screen">
+	</node>
+
+	<node name="steering" pkg="steering" type="main.py" output="screen">
+	</node>
+
+  <node name="can" pkg="can" type="main.py" output="screen">
+	</node>
+
+
+</launch>

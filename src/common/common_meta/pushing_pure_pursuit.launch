@@ -26,19 +26,19 @@
   <node pkg="control_pure_pursuit" name="control_pure_pursuit" type="main.py" output="screen">
     <rosparam command="load" file="$(find control_pure_pursuit)/config/pure_pursuit.yaml"/>
     <rosparam>
-      LFC: 3
+      LFC: 2
       TARGET_SPEED: 4
       simulation: false
       max_cmd: 0
-      min_vel: -1
+      min_vel: 0.2
     </rosparam>
   </node>
 
-  <!-- <node name="steering" pkg="steering" type="main.py">
+  <node name="steering" pkg="steering" type="main.py">
 	</node>
 
   <node name="can" pkg="can" type="main.py">
-	</node> -->
+	</node>
 
 
 </launch>
