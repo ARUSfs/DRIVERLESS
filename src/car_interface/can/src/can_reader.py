@@ -118,7 +118,7 @@ class CanReader:
         msg = Float32()
         msg.data = self.steering_angle
         self.steering_extensometer.publish(msg)
-        rospy.loginfo("Steering Angle: %f", self.steering_angle)
+        #rospy.loginfo("Steering Angle: %f", self.steering_angle)
     
     def parse_front_extensometer(self, message):
         self.front_extensometer = int.from_bytes(message.data[1:3], byteorder='little', signed=True)*(10**-2)
@@ -275,7 +275,12 @@ class CanReader:
 
 ########################################################### BUZZER ########################################################
     def parse_buzzer(self, message):
-            pass
+        rospy.sleep(2)
+        self.as_status = 2
+        msg = Int16()
+        msg.data = self.as_status
+        self.AS_status_pub.publish(msg)
+
     #Publishers ------------------------------------------------------------------------------------------
 
     def publish_IMU(self, event):

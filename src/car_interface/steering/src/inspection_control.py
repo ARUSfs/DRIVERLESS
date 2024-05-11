@@ -6,13 +6,13 @@ import math
 import time
 
 DURATION = 25000
-AMPLITUDE = 15.0
-FREQUENCY = 0.2
-TARGET_SPEED = 1
+AMPLITUDE = 10.0
+FREQUENCY = 0.5
+TARGET_SPEED = 3
 
 AS_status = 0
 
-kp=1
+kp=0.5
 ki=0
 kd=0
 
@@ -41,7 +41,7 @@ def speed_callback(motor_speed_msg: Float32):
 
         # Create a Controls message and assign sinusoidal steering and calculated acceleration
         # Use PID controller to get the accelerator value
-        if(motor_speed_msg.data>0.75):
+        if(motor_speed_msg.data>-0.75):
             control_msg.steering = generate_sinusoidal_steering(current_time-start_time)
         else:
             control_msg.steering = 0
@@ -54,10 +54,11 @@ def speed_callback(motor_speed_msg: Float32):
         #rospy.loginfo(AS_status)
         if current_time-start_time<DURATION and AS_status==0x02:
             control_publisher.publish(control_msg)
-            rospy.loginfo(control_msg)
+            #rospy.loginfo(control_msg)
 
 def generate_sinusoidal_steering(time):
     steering_angle = AMPLITUDE * math.cos(2 * math.pi * FREQUENCY * time)
+
     return steering_angle
 
 def accelerator_control(current: float, target: float):
@@ -82,7 +83,6 @@ def accelerator_control(current: float, target: float):
         prev_error = error
 
         cmd = kp*Cp + ki*Ci + kd*Cd
-
         return min(cmd, 0.2) 
 
 if __name__ == '__main__':

@@ -21,7 +21,7 @@ class SteeringHandle:
 
         rospy.Subscriber('/controls', Controls,
                          callback=self.command_callback, queue_size=1)
-        rospy.Timer(rospy.Duration(1/10), self.epos_info_callback)
+        # rospy.Timer(rospy.Duration(1/10), self.epos_info_callback)
         self.info_pub = rospy.Publisher('/steering/epos_info', Float32MultiArray, queue_size=10)
 
 
@@ -29,6 +29,11 @@ class SteeringHandle:
         assert msg.steering < 20 and msg.steering > -20
         if not self._is_shutdown:
             self.epos.move_to(msg.steering)
+        epos_info = self.epos.get_epos_info()
+
+        msg = Float32MultiArray()
+        msg.data = epos_info
+        self.info_pub.publish(msg)
 
     def epos_info_callback(self,event):
         epos_info = self.epos.get_epos_info()
