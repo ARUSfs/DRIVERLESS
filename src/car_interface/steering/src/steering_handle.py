@@ -31,7 +31,7 @@ class SteeringHandle:
         epos_info = self.epos.get_epos_info()
         msg = Float32MultiArray()
         msg.data = epos_info
-        self.info_pub.publish(msg)Z
+        self.info_pub.publish(msg)
 
     def clean_and_close(self):
         self._is_shutdown = True
