@@ -106,5 +106,5 @@ class ControlHandle():
             p.y = self.control.target_course.cy[ind]
             self.pub2.publish(p)
 
-        #if self.AS_status == 0x02:
-        self.pub.publish(msg)
+        if self.AS_status == 0x02:
+            self.pub.publish(msg)

@@ -9,13 +9,13 @@ DURATION = 20000
 AMPLITUDE = 0
 FREQUENCY = 0.2
 #0.2, 0.3, 0.5, 0.1, 0.3
-TARGET_SPEED = 3.5
+TARGET_SPEED = 10
 #3.5, 4, 4, 1, 2
 
 
 AS_status = 0
 
-kp=0.5
+kp=0.8
 ki=0
 kd=0
 
@@ -85,7 +85,7 @@ def accelerator_control(current: float, target: float):
 
         cmd = kp*Cp + ki*Ci + kd*Cd
 
-        return min(cmd, 0.2) 
+        return min(cmd, 1) 
 
 if __name__ == '__main__':
     rospy.init_node('sinusoidal_control_node')

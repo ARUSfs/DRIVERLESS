@@ -14,7 +14,7 @@ class CanPublisher:
         self.bus1 = can.interface.Bus(channel='can0', bustype='socketcan')
 
         #--------------------------- PELIGRO COMANDAS DE PAR AL INVERSOR!!! --------------------------------------------------
-        #rospy.Subscriber("/controls",Controls, self.cmd_callback)
+        rospy.Subscriber("/controls",Controls, self.cmd_callback)
         #---------------------------------------------------------------------------------------------------------------------
         rospy.Subscriber("/steering/epos_info", Float32MultiArray, self.epos_info_callback)
 
@@ -23,7 +23,7 @@ class CanPublisher:
 
 
         self.temp = 0
-        self.MAX_ACC = 0.2
+        self.MAX_ACC = 1
         self.motor_speed_req()
         self.canReader = CanReader()
         self.can_reader_thread0 = threading.Thread(target=self.canReader.read_can0)
