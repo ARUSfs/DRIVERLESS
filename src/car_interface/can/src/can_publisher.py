@@ -22,7 +22,6 @@ class CanPublisher:
         rospy.Timer(rospy.Duration(0.001), self.heart_beat)
 
 
-        # self.acc=0
         self.temp = 0
         self.MAX_ACC = 0.2
         self.motor_speed_req()
