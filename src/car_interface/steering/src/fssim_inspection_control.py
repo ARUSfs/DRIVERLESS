@@ -6,7 +6,7 @@ from std_msgs.msg import Float32, Int16
 import math
 import time
 
-DURATION = 20
+DURATION = 200000
 AMPLITUDE = 19.0
 FREQUENCY = 0.2
 #0.2, 0.3, 0.5, 0.1, 0.3

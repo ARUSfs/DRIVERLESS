@@ -5,7 +5,7 @@ from std_msgs.msg import Float32, Int16
 import math
 import time
 
-DURATION = 20
+DURATION = 20000
 AMPLITUDE = 19.0
 FREQUENCY = 0.2
 #0.2, 0.3, 0.5, 0.1, 0.3
@@ -44,6 +44,7 @@ def speed_callback(motor_speed_msg: Float32):
         # Use PID controller to get the accelerator value
         control_msg = Controls()
         control_msg.steering = generate_sinusoidal_steering(current_time-start_time)
+        #control_msg.steering = 0
         control_msg.accelerator = accelerator_control(motor_speed_msg.data, TARGET_SPEED)
         #control_msg.accelerator = 0
 
