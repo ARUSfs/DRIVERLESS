@@ -31,10 +31,9 @@
   <node pkg="control_pure_pursuit" name="control_pure_pursuit" type="main.py" output="screen">
     <rosparam command="load" file="$(find control_pure_pursuit)/config/pure_pursuit.yaml"/>
     <rosparam>
-      LFC: 5
+      LFC: 4
       TARGET_SPEED: 3
       simulation: false
-      max_cmd: 1
       min_vel: 0.5
     </rosparam>
   </node>
