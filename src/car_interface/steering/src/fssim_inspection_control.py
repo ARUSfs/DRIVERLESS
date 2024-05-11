@@ -6,10 +6,12 @@ from std_msgs.msg import Float32, Int16
 import math
 import time
 
-DURATION = 25000
+DURATION = 20
 AMPLITUDE = 19.0
-FREQUENCY = 0.1
-TARGET_SPEED = 2
+FREQUENCY = 0.2
+#0.2, 0.3, 0.5, 0.1, 0.3
+TARGET_SPEED = 3.5
+#3.5, 4, 4, 1, 2
 
 AS_status = 0
 
@@ -45,7 +47,7 @@ def speed_callback(state_msg: State):
                 rospy.loginfo(control_msg)
 
 def generate_sinusoidal_steering(time):
-    steering_angle = AMPLITUDE * math.sin(2 * math.pi * FREQUENCY * time)
+    steering_angle = AMPLITUDE * math.cos(2 * math.pi * FREQUENCY * time)
     return steering_angle
 
 def accelerator_control(current: float, target: float):

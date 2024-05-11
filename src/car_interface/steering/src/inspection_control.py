@@ -5,10 +5,13 @@ from std_msgs.msg import Float32, Int16
 import math
 import time
 
-DURATION = 25000
-AMPLITUDE = 10.0
-FREQUENCY = 0.5
-TARGET_SPEED = 3
+DURATION = 20
+AMPLITUDE = 19.0
+FREQUENCY = 0.2
+#0.2, 0.3, 0.5, 0.1, 0.3
+TARGET_SPEED = 3.5
+#3.5, 4, 4, 1, 2
+
 
 AS_status = 0
 
@@ -28,37 +31,30 @@ prev_error = 0
 
 def AS_status_callback(AS_status_msg: Int16):
         global start_time, AS_status
-        if AS_status != 0x02  and AS_status_msg.data==0x02:
-            start_time = rospy.get_time()
         AS_status = AS_status_msg.data
+        if AS_status == 0x02:
+              start_time = rospy.get_time()
 
 
 def speed_callback(motor_speed_msg: Float32):
         global current_time, start_time, AS_status
         current_time = time.time()
-        control_msg = Controls()
-
 
         # Create a Controls message and assign sinusoidal steering and calculated acceleration
         # Use PID controller to get the accelerator value
-        if(motor_speed_msg.data>-0.75):
-            control_msg.steering = generate_sinusoidal_steering(current_time-start_time)
-        else:
-            control_msg.steering = 0
-
-   
+        control_msg = Controls()
+        control_msg.steering = generate_sinusoidal_steering(current_time-start_time)
         control_msg.accelerator = accelerator_control(motor_speed_msg.data, TARGET_SPEED)
         #control_msg.accelerator = 0
 
         # Publish the message
         #rospy.loginfo(AS_status)
         if current_time-start_time<DURATION and AS_status==0x02:
-            control_publisher.publish(control_msg)
-            #rospy.loginfo(control_msg)
+                control_publisher.publish(control_msg)
+                rospy.loginfo(control_msg)
 
 def generate_sinusoidal_steering(time):
     steering_angle = AMPLITUDE * math.cos(2 * math.pi * FREQUENCY * time)
-
     return steering_angle
 
 def accelerator_control(current: float, target: float):
@@ -83,6 +79,7 @@ def accelerator_control(current: float, target: float):
         prev_error = error
 
         cmd = kp*Cp + ki*Ci + kd*Cd
+
         return min(cmd, 0.2) 
 
 if __name__ == '__main__':

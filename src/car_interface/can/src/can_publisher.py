@@ -20,7 +20,6 @@ class CanPublisher:
 
         rospy.Timer(rospy.Duration(0.5), self.publish_temp)
         rospy.Timer(rospy.Duration(0.001), self.heart_beat)
-        # rospy.Timer(rospy.Duration(1/5), self.timer_cmd)
 
 
         # self.acc=0
@@ -35,11 +34,6 @@ class CanPublisher:
         self.can_reader_thread0.start()
         self.can_reader_thread1.start()
 
-    def timer_cmd(self, event):
-        datos_comanda = list(int.to_bytes(int(self.acc*(2**15)), byteorder='little', length=2, signed=True))
-        rospy.loginfo(datos_comanda)
-        msg = can.Message(arbitration_id=0x201, is_extended_id=False, data=[0x90]+datos_comanda)
-        #self.bus1.send(msg)
 
     def cmd_callback(self, msg: Controls):
         #rospy.loginfo("Peligro")
