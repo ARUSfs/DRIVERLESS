@@ -30,8 +30,7 @@ class CanReader:
 
         rospy.Timer(rospy.Duration(1/500), self.publish_IMU)
 
-        #self.read()
-
+       
 
     def read_can0(self):
         while not rospy.is_shutdown():
