@@ -1,5 +1,5 @@
 <launch>
-  <node name="steering" pkg="steering" type="main.py">
+  <node name="steering" pkg="steering" type="main.py" output="screen">
 	</node>
 
   <node name="can" pkg="can" type="main.py">
@@ -34,6 +34,7 @@
       LFC: 4
       TARGET_SPEED: 3
       simulation: false
+      max_cmd : 1
       min_vel: 0.5
     </rosparam>
   </node>

@@ -6,7 +6,7 @@ import math
 import time
 
 DURATION = 20000
-AMPLITUDE = 0
+AMPLITUDE = 19
 FREQUENCY = 0.2
 #0.2, 0.3, 0.5, 0.1, 0.3
 TARGET_SPEED = 10
@@ -43,10 +43,11 @@ def speed_callback(motor_speed_msg: Float32):
         # Create a Controls message and assign sinusoidal steering and calculated acceleration
         # Use PID controller to get the accelerator value
         control_msg = Controls()
-        # if motor_speed_msg.data < 0.5:
-        #     control_msg.steering = 0
-        #control_msg.steering = generate_sinusoidal_steering(current_time-start_time)
-        control_msg.steering = 0
+        if motor_speed_msg.data < 0.5:
+            control_msg.steering = 0
+        else:
+            control_msg.steering = generate_sinusoidal_steering(current_time-start_time)
+        # control_msg.steering = 0
 
 
         control_msg.accelerator = accelerator_control(motor_speed_msg.data, TARGET_SPEED)

@@ -6,7 +6,7 @@ import math
 import time
 
 DURATION = 20000
-AMPLITUDE = 20
+AMPLITUDE = 19
 FREQUENCY = 0.5
 #0.2, 0.3, 0.5, 0.1, 0.3
 TARGET_SPEED = 3.5

@@ -24,8 +24,8 @@ class CanReader:
         self.pGPS_speed = rospy.Publisher('GPS_speed', Vector3, queue_size=10)
         self.invSpeed_pub = rospy.Publisher('/motor_speed', Float32, queue_size=10)
         
-        self.bus0 = can.interface.Bus(channel='can1', bustype='socketcan')
-        self.bus1 = can.interface.Bus(channel='can0', bustype='socketcan')
+        self.bus0 = can.interface.Bus(channel='can0', bustype='socketcan')
+        self.bus1 = can.interface.Bus(channel='can1', bustype='socketcan')
         #--------------------------------------------------------
 
         rospy.Timer(rospy.Duration(1/500), self.publish_IMU)
@@ -35,7 +35,7 @@ class CanReader:
     def read_can0(self):
         while not rospy.is_shutdown():
 
-            message = self.bus0.recv()
+            message = self.bus1.recv()
 
             if message.arbitration_id == 0x380:
                #IMU acc
@@ -104,7 +104,7 @@ class CanReader:
                
     def read_can1(self):
         while not rospy.is_shutdown():
-            message = self.bus1.recv()
+            message = self.bus0.recv()
             if message.arbitration_id == 0x181 and int(message.data[0]) == 0x30:
                 #Inv speed
                 self.parse_inv_speed(message)

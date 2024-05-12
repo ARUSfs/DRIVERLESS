@@ -3,10 +3,12 @@ import time
 from ctypes import *
 
 import rospy
+import rospkg
 
 
 class EPOSHandle:    
-    EPOS_LIB_PATH = '/home/carlos/tests/src/DRIVERLESS/src/car_interface/steering/lib/libEposCmd.so.6.8.1.0'
+    rospack = rospkg.RosPack()
+    EPOS_LIB_PATH = rospack.get_path('steering')+"/lib/libEposCmd.so.6.8.1.0"
     NodeID = 1
 
     def __init__(self, max_acc, max_dec, prof_vel):

@@ -9,9 +9,9 @@ import threading
 class CanPublisher:
 
     def __init__(self):
-
-        self.bus0 = can.interface.Bus(channel='can1', bustype='socketcan')
-        self.bus1 = can.interface.Bus(channel='can0', bustype='socketcan')
+        
+        self.bus0 = can.interface.Bus(channel='can0', bustype='socketcan')
+        self.bus1 = can.interface.Bus(channel='can1', bustype='socketcan')
 
         #--------------------------- PELIGRO COMANDAS DE PAR AL INVERSOR!!! --------------------------------------------------
         rospy.Subscriber("/controls",Controls, self.cmd_callback)
@@ -40,7 +40,7 @@ class CanPublisher:
         acc = min(acc,self.MAX_ACC)
         datos_comanda = list(int.to_bytes(int(acc*(2**15))-1, byteorder='little', length=2, signed=True))
         msg = can.Message(arbitration_id=0x201, is_extended_id=False, data=[0x90]+datos_comanda)
-        self.bus1.send(msg)
+        self.bus0.send(msg)
 
     
     def publish_temp(self, event):
@@ -57,16 +57,16 @@ class CanPublisher:
         bytes_temp = int(self.temp*10).to_bytes(2, byteorder='little')
         msg = can.Message(arbitration_id=0x183, is_extended_id=False, data=[0x01]+list(bytes_temp))
         #rospy.loginfo(msg)
-        self.bus0.send(msg)
+        self.bus1.send(msg)
 
     
     def motor_speed_req(self):
         msg = can.Message(arbitration_id=0x201, is_extended_id=False, data=[0x3D, 0x30, 0x0A])
-        self.bus1.send(msg)
+        self.bus0.send(msg)
 
     def heart_beat(self, event):
         msg = can.Message(arbitration_id=0x183, is_extended_id=False, data=[0x00])
-        self.bus1.send(msg)
+        self.bus0.send(msg)
 
 
     def epos_info_callback(self, msg: Float32MultiArray):
@@ -82,9 +82,9 @@ class CanPublisher:
         msgEposVelocity = can.Message(arbitration_id=0x183, is_extended_id=False, data=[0x03, pVelocity[0], pVelocity[1],pVelocity[2], pVelocityAvg[0], pVelocityAvg[1], pVelocityAvg[2]])
         msgEposTorque = can.Message(arbitration_id=0x183, is_extended_id=False, data=[0x04, pTorque[0], pTorque[1]])
 
-        self.bus0.send(msgEposState)
-        self.bus0.send(msgEposVelocity)
-        self.bus0.send(msgEposTorque)
+        self.bus1.send(msgEposState)
+        self.bus1.send(msgEposVelocity)
+        self.bus1.send(msgEposTorque)
 
 
 
