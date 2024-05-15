@@ -1,8 +1,7 @@
 # Environment setup
 
 ```{toctree}
-:maxdepth: 2
-:hidden:
+:maxdepth: 1
 
 can_connection
 epos_connection
