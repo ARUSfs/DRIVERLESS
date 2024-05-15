@@ -31,7 +31,7 @@ This process is performed every time the CAN cable is connected to the computer.
 ## Automatic USB-CAN configuration
 To automatically configure the USB-CAN interface when it is connected to the computer, we can use `udev` rules. These rules are located in `/etc/udev/rules.d/`. We can create a new rule by creating a new file in this directory. For example, we can create a file called `99-usb-can.rules` with the following contents:
 ```bash
-action=="add", SUBSYSTEM=="net", KERNEL=="can*", RUN+="/sbin/ip link set $name type can bitrate 500000"
+action=="add", SUBSYSTEM=="net", KERNEL=="can*", RUN+="/sbin/ip link set $name up type can bitrate 500000"
 action=="remove", SUBSYSTEM=="net", KERNEL=="can*", RUN+="/sbin/ip link set $name down"
 ```
 This rule will automatically configure the `can0` interface when the USB-CAN cable is connected to the computer, and will automatically shut it down when the cable is disconnected.
