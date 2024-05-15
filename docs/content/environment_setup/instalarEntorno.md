@@ -5,7 +5,7 @@
 :hidden:
 
 can_connection
-epos4_libraries
+epos_connection
 
 ```
 
