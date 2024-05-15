@@ -1,4 +1,9 @@
 <launch>
+  <node name="steering" pkg="steering" type="main.py">
+	</node>
+
+  <node name="can" pkg="can" type="main.py">
+	</node>
 
   <node pkg="lidar_perception" name="lidar_perception" type="main" output="screen">
     <rosparam command="load" file="$(find lidar_perception)/config/lidar_cpp.yaml"/>
@@ -34,11 +39,10 @@
     </rosparam>
   </node>
 
-  <node name="steering" pkg="steering" type="main.py">
-	</node>
 
-  <node name="can" pkg="can" type="main.py">
-	</node>
+
+  <!-- Se guardan en $HOME/.ros/ -->
+  <node pkg="rosbag" type="record" name="rosbag_record" args="record -o pushing_pure_pursuit -a"/>
 
 
 </launch>
