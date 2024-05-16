@@ -1,3 +1,5 @@
+#define PCL_NO_PRECOMPILE
+
 #include "ros/ros.h"
 #include "sensor_msgs/PointCloud2.h"
 #include <sensor_msgs/PointCloud.h>
@@ -26,25 +28,26 @@ ICP_handle::ICP_handle(){
 
 	position = Eigen::Matrix4f::Identity(4, 4);
 
-	sub = nh.subscribe<common_msgs::Map>("/perception_map", 1000, &ICP_handle::map_callback, this);
+	sub = nh.subscribe<sensor_msgs::PointCloud2>("/perception_map", 1000, &ICP_handle::map_callback, this);
 
 	trans_pub = nh.advertise<common_msgs::Map>("/mapa_icp", 10);
 
 	pcl_pub = nh.advertise<sensor_msgs::PointCloud2>("/nube", 10);
 }
 
-void ICP_handle::map_callback(common_msgs::Map map) {
+void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 	i++;
 	score *= 1;
 
-	int n_cones = map.cones.size();
-	pcl::PointCloud<PointXYZColorScore>::Ptr new_map(new pcl::PointCloud<PointXYZColorScore>(n_cones, 1));
-
-	for(int i = 0; i < n_cones; i++){
-		new_map->points[i].x = map.cones[i].position.x;
-		new_map->points[i].y = map.cones[i].position.y;
-		new_map->points[i].score = score;
-	}
+	// int n_cones = map.cones.size();
+	pcl::PointCloud<PointXYZColorScore>::Ptr new_map(new pcl::PointCloud<PointXYZColorScore>);
+	pcl::fromROSMsg(map_msg, *new_map);
+	// for(int i = 0; i < n_cones; i++){
+	// 	new_map->points[i].x = map.cones[i].position.x;
+	// 	new_map->points[i].y = map.cones[i].position.y;
+	// 	new_map->points[i].score = score;
+	// }
+	int n_cones = new_map->size();
 
 	if(!has_map){
 		*allp_clustered = *new_map;

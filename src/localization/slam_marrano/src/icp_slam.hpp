@@ -40,7 +40,7 @@ class ICP_handle {
 
 	public:
 		ICP_handle();
-		void map_callback(common_msgs::Map);
+		void map_callback(sensor_msgs::PointCloud2);
 		void send_position();
 
 };
