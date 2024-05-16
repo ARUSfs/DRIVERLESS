@@ -30,6 +30,7 @@ find_package(catkin REQUIRED COMPONENTS
  add_service_files(
    FILES
    Spawn.srv
+   MPCCurrentState.srv
  )
 
 ## Generate added messages and services with any dependencies listed here

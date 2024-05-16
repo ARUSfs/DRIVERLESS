@@ -18,7 +18,7 @@ from geometry_msgs.msg import Point
 
 MAX_DISTANCE = 8
 W_DISTANCE = 0.5
-W_ANGLE = 2 #0.5
+W_ANGLE = 0.5
 W_THRESH = 7
 
 
@@ -39,7 +39,7 @@ class TrackPlanningSystem():
         self.colours = list()
         cone_points = list()
         for c in cones:
-            if c.confidence > 0.5 and c.color != 'o':
+            if c.color != 'o':
                 cone_points.append((c.position.x, c.position.y))
                 self.colours.append(c.color)
         self.cones = np.array(cone_points)
@@ -61,7 +61,7 @@ class TrackPlanningSystem():
                 for p1, p2 in combinations(simplex, 2):  # TODO Could be optimized.
                     if not self.colours[p1] == self.colours[p2]:
                         m = (self.cones[p1] + self.cones[p2])/2
-                        if m[0] not in midpoints_x and m[0]>0:
+                        if m[0] not in midpoints_x:
                             midpoints.append(m)
                             midpoints_x.append(m[0])
                         preproc_simplices.append(simplex)
@@ -70,6 +70,7 @@ class TrackPlanningSystem():
 
 
         last_element = np.array([0, 0])
+        last_angle=0
         midpoints = np.array(midpoints)
         non_used_midpoints = np.full(midpoints.shape[0], True, dtype=np.bool_)
         path = [last_element]
@@ -82,7 +83,7 @@ class TrackPlanningSystem():
 
             vectors[non_used_midpoints] = midpoints[non_used_midpoints] - last_element
             distances[non_used_midpoints] = np.linalg.norm(vectors[non_used_midpoints], axis=1)
-            angles[non_used_midpoints] = np.abs(np.arctan2(vectors[non_used_midpoints, 1], vectors[non_used_midpoints, 0]))
+            angles[non_used_midpoints] = np.abs(np.arctan2(vectors[non_used_midpoints, 1], vectors[non_used_midpoints, 0])-last_angle)
 
 
             weights = W_DISTANCE*distances + W_ANGLE*angles
@@ -92,13 +93,35 @@ class TrackPlanningSystem():
                 non_used_midpoints[next_midpoint] = False
                 path.append(midpoints[next_midpoint])
                 last_element = midpoints[next_midpoint]
+                last_angle = np.arctan2(last_element[1], last_element[0])
+                # rospy.logwarn([distances[next_midpoint],angles[next_midpoint],weights[next_midpoint]])
             else:
                 break
 
         route = np.array(path)
+
+        # route=[]
+        # N_splits = 10
+        # for i in range(1,len(path)-1):
+        #     route.extend([[(1-a)*path[i][0] + a*path[i+1][0],(1-a)*path[i][1] + a*path[i+1][1]] for a in np.linspace(0,1, num=N_splits)])
+        # route.extend([[(1-a)*path[-1][0] + a*path[0][0],(1-a)*path[-1][1] + a*path[0][1]] for a in np.linspace(0,1, num=N_splits)])
+        # route = np.array(route)
         
     
-        return route
+        triang = Triangulation()
+        for simplex in preproc_simplices:
+            s = Simplex()
+            for ind in simplex:
+                p = Point()
+                p.x = self.cones[ind][0]
+                p.y = self.cones[ind][1]
+                p.z = 0
+                s.simplex.append(p)
+            triang.simplices.append(s)  
+        
+        rospy.logerr([len(midpoints),len(self.cones),len(route)])
+
+        return route, triang
 
     def get_distance(self, p1, p2):
         p1b = p1.tobytes()

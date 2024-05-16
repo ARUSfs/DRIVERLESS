@@ -39,7 +39,7 @@ class PlanningSystem():
         self.colours = list()
         cone_points = list()
         for c in cones:
-            if c.confidence > 0.5 and c.color != 'o':
+            if c.color != 'o':
                 cone_points.append((c.position.x, c.position.y))
                 self.colours.append(c.color)
         self.cones = np.array(cone_points)
