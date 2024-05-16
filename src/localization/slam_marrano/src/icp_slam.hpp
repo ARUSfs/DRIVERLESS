@@ -14,6 +14,8 @@
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2/LinearMath/Quaternion.h>
 
+#include "PointXYZColorScore.h"
+
 using namespace std;
 
 class ICP_handle {
@@ -26,12 +28,12 @@ class ICP_handle {
 		ros::Subscriber sub;
 		ros::Publisher trans_pub;
 		ros::Publisher pcl_pub;
-		pcl::PointCloud<pcl::PointXYZI>::Ptr previous_map;
-		pcl::PointCloud<pcl::PointXYZI>::Ptr allp_clustered;
-		pcl::PointCloud<pcl::PointXYZI>::Ptr to_be_clustered;
+		pcl::PointCloud<PointXYZColorScore>::Ptr previous_map;
+		pcl::PointCloud<PointXYZColorScore>::Ptr allp_clustered;
+		pcl::PointCloud<PointXYZColorScore>::Ptr to_be_clustered;
 		Eigen::Matrix4f position;
 
-		float intensity = 1.0;
+		float score = 1.0;
 
 		tf2_ros::TransformBroadcaster br;
 		int flag = 0;

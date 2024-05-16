@@ -4,6 +4,7 @@ project(slam_marrano)
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
 
+
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -20,8 +21,8 @@ catkin_package(
         DEPENDS common_msgs
 )
 
-add_executable(main src/main.cpp src/icp_odometry.cpp)
-target_link_libraries(main ${catkin_LIBRARIES})
+add_executable(main src/main.cpp src/icp_slam.cpp)
+target_link_libraries(main ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES localization

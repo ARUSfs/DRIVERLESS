@@ -12,15 +12,17 @@
 #include <pcl/io/pcd_io.h>
 
 
+
 #include <pcl/common/impl/centroid.hpp>
 #include "icp_slam.hpp"
+// #include "PointXYZColorScore.h"
 
 
 using namespace std;
 
 ICP_handle::ICP_handle(){
-	previous_map = pcl::PointCloud<pcl::PointXYZI>::Ptr(new pcl::PointCloud<pcl::PointXYZI>);
-	allp_clustered = pcl::PointCloud<pcl::PointXYZI>::Ptr(new pcl::PointCloud<pcl::PointXYZI>);
+	previous_map = pcl::PointCloud<PointXYZColorScore>::Ptr(new pcl::PointCloud<PointXYZColorScore>);
+	allp_clustered = pcl::PointCloud<PointXYZColorScore>::Ptr(new pcl::PointCloud<PointXYZColorScore>);
 
 	position = Eigen::Matrix4f::Identity(4, 4);
 
@@ -33,15 +35,15 @@ ICP_handle::ICP_handle(){
 
 void ICP_handle::map_callback(common_msgs::Map map) {
 	i++;
-	intensity *= 1;
+	score *= 1;
 
 	int n_cones = map.cones.size();
-	pcl::PointCloud<pcl::PointXYZI>::Ptr new_map(new pcl::PointCloud<pcl::PointXYZI>(n_cones, 1));
+	pcl::PointCloud<PointXYZColorScore>::Ptr new_map(new pcl::PointCloud<PointXYZColorScore>(n_cones, 1));
 
 	for(int i = 0; i < n_cones; i++){
 		new_map->points[i].x = map.cones[i].position.x;
 		new_map->points[i].y = map.cones[i].position.y;
-		new_map->points[i].intensity = intensity;
+		new_map->points[i].score = score;
 	}
 
 	if(!has_map){
@@ -53,18 +55,18 @@ void ICP_handle::map_callback(common_msgs::Map map) {
 		return;
 	}
 
-	pcl::PointCloud<pcl::PointXYZI>::Ptr map_in_position = pcl::PointCloud<pcl::PointXYZI>::Ptr(new pcl::PointCloud<pcl::PointXYZI>);
+	pcl::PointCloud<PointXYZColorScore>::Ptr map_in_position = pcl::PointCloud<PointXYZColorScore>::Ptr(new pcl::PointCloud<PointXYZColorScore>);
 	pcl::transformPointCloud(*new_map, *map_in_position, position);
 
 
-	pcl::IterativeClosestPoint<pcl::PointXYZI, pcl::PointXYZI> icp;
+	pcl::IterativeClosestPoint<PointXYZColorScore, PointXYZColorScore> icp;
 	icp.setInputSource(map_in_position);
 	icp.setInputTarget(previous_map);
 	icp.setMaximumIterations(9000);
 	//icp.setEuclideanFitnessEpsilon (0.05);
 	icp.setTransformationEpsilon(1e-5);
 
-	pcl::PointCloud<pcl::PointXYZI> registered_map;
+	pcl::PointCloud<PointXYZColorScore> registered_map;
 	icp.setMaxCorrespondenceDistance (1.0);
 	icp.align(registered_map);
 
@@ -81,11 +83,11 @@ void ICP_handle::map_callback(common_msgs::Map map) {
 	*previous_map += registered_map;
 
 
-	pcl::search::KdTree<pcl::PointXYZI>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZI>);
+	pcl::search::KdTree<PointXYZColorScore>::Ptr tree (new pcl::search::KdTree<PointXYZColorScore>);
 	tree->setInputCloud(previous_map);
 
 	std::vector<pcl::PointIndices> cluster_indices;
-	pcl::EuclideanClusterExtraction<pcl::PointXYZI> ec;
+	pcl::EuclideanClusterExtraction<PointXYZColorScore> ec;
 	ec.setClusterTolerance (1.5);
 	ec.setMinClusterSize (3);
 	ec.setMaxClusterSize (100000);
@@ -93,31 +95,32 @@ void ICP_handle::map_callback(common_msgs::Map map) {
 	ec.setInputCloud (previous_map);
 	ec.extract (cluster_indices);
 
-	pcl::PointCloud<pcl::PointXYZI>::Ptr clustered_points (new pcl::PointCloud<pcl::PointXYZI>);
+	pcl::PointCloud<PointXYZColorScore>::Ptr clustered_points (new pcl::PointCloud<PointXYZColorScore>);
 	for(const auto& cluster : cluster_indices) {
 		//pcl::PointCloud<pcl::PointXYZI>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZI>);
 		//bool exists = false;
-		pcl::PointXYZI centro;
+		PointXYZColorScore centro;
 		centro.x = 0;
 		centro.y = 0;
 		centro.z = 0;
-		centro.intensity = 0.0f;
-		float sum_int = 0;
+		centro.color = 0;
+		centro.score = 0;
+		float sum_score = 0;
 		for (const auto& idx : cluster.indices) {
-			/*if((*previous_map)[idx].intensity == 1){
+			/*if((*previous_map)[idx].score == 1){
 				exists = true;
 				clustered_points->push_back((*previous_map)[idx]);
 				break;
 			}*/
 			//cloud_cluster->push_back((*previous_map)[idx]);
-			sum_int += (*previous_map)[idx].intensity;
-			centro.x += (*previous_map)[idx].x*(*previous_map)[idx].intensity;
-			centro.y += (*previous_map)[idx].y*(*previous_map)[idx].intensity;
+			sum_score += (*previous_map)[idx].score;
+			centro.x += (*previous_map)[idx].x*(*previous_map)[idx].score;
+			centro.y += (*previous_map)[idx].y*(*previous_map)[idx].score;
 			centro.z = 0;
 
 		}
-		centro.x /= sum_int;
-		centro.y /= sum_int;
+		centro.x /= sum_score;
+		centro.y /= sum_score;
 		for (const auto& idx : cluster.indices) {
 			(*previous_map)[idx].x = centro.x;
 			(*previous_map)[idx].y = centro.y;
@@ -140,7 +143,7 @@ void ICP_handle::map_callback(common_msgs::Map map) {
 		cout << "holaa" << endl;
 
 		std::vector<pcl::PointIndices> cluster_indices;
-		pcl::EuclideanClusterExtraction<pcl::PointXYZI> ec;
+		pcl::EuclideanClusterExtraction<PointXYZColorScore> ec;
 		ec.setClusterTolerance (1.5);
 		ec.setMinClusterSize (6);
 		ec.setMaxClusterSize (200);
@@ -148,7 +151,7 @@ void ICP_handle::map_callback(common_msgs::Map map) {
 		ec.setInputCloud (previous_map);
 		ec.extract (cluster_indices);
 
-		pcl::PointCloud<pcl::PointXYZI>::Ptr clustered_points (new pcl::PointCloud<pcl::PointXYZI>);
+		pcl::PointCloud<PointXYZColorScore>::Ptr clustered_points (new pcl::PointCloud<PointXYZColorScore>);
 
 		common_msgs::Map mapa_global;
 		mapa_global.header.frame_id = "map";
