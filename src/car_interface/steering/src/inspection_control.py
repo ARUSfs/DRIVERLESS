@@ -11,6 +11,8 @@ FREQUENCY = 0.2
 #0.2, 0.3, 0.5, 0.1, 0.3
 TARGET_SPEED = 10
 #3.5, 4, 4, 1, 2
+BRAKE_DURATION = 5
+BRAKE_THRESHOLD = 2
 
 
 AS_status = 0
@@ -27,13 +29,18 @@ current_time=0
 start_time=0
 prev_time = 0
 prev_error = 0
+brake_start_time = 0
+braking = False
 
 
 def AS_status_callback(AS_status_msg: Int16):
-        global start_time, AS_status
+        global start_time, AS_status, brake_start_time
         AS_status = AS_status_msg.data
         if AS_status == 0x02:
               start_time = rospy.get_time()
+        elif AS_status == 0x03:
+              brake_start_time = rospy.get_time()
+              braking = True
 
 
 def speed_callback(motor_speed_msg: Float32):
@@ -49,8 +56,10 @@ def speed_callback(motor_speed_msg: Float32):
             control_msg.steering = generate_sinusoidal_steering(current_time-start_time)
         # control_msg.steering = 0
 
-
-        control_msg.accelerator = accelerator_control(motor_speed_msg.data, TARGET_SPEED)
+        if braking:
+            control_msg.accelerator = brake_control(TARGET_SPEED, BRAKE_THRESHOLD)
+        else:
+            control_msg.accelerator = accelerator_control(motor_speed_msg.data, TARGET_SPEED)
         #control_msg.accelerator = 0
 
         # Publish the message
@@ -87,6 +96,19 @@ def accelerator_control(current: float, target: float):
         cmd = kp*Cp + ki*Ci + kd*Cd
 
         return min(cmd, 1) 
+    
+def brake_control(target_speed: float, brake_target_speed: float):
+    global brake_start_time
+    
+    time_since_brake_start = rospy.get_time() - brake_start_time
+    descent_time = BRAKE_DURATION
+    brake_speed = ((brake_target_speed - target_speed) * time_since_brake_start) / descent_time + target_speed
+    
+    if brake_speed < BRAKE_THRESHOLD:
+        brake_speed = 0
+        rospy.loginfo("Braking completed, speed below threshold")
+        
+    return brake_speed
 
 if __name__ == '__main__':
     rospy.init_node('sinusoidal_control_node')
