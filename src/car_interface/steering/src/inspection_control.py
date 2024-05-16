@@ -13,6 +13,8 @@ TARGET_SPEED = 10
 #3.5, 4, 4, 1, 2
 BRAKE_DURATION = 5
 BRAKE_THRESHOLD = 2
+SPEED_MARGIN = 0.05 # 5%
+STABLE_DURATION = 5
 
 
 AS_status = 0
@@ -29,22 +31,21 @@ current_time=0
 start_time=0
 prev_time = 0
 prev_error = 0
+speed_within_target_start = 0
 brake_start_time = 0
 braking = False
+is_speed_stable = False
 
 
 def AS_status_callback(AS_status_msg: Int16):
-        global start_time, AS_status, brake_start_time
+        global start_time, AS_status
         AS_status = AS_status_msg.data
         if AS_status == 0x02:
               start_time = rospy.get_time()
-        elif AS_status == 0x03:
-              brake_start_time = rospy.get_time()
-              braking = True
 
 
 def speed_callback(motor_speed_msg: Float32):
-        global current_time, start_time, AS_status
+        global current_time, start_time, AS_status, braking, is_speed_stable, speed_within_target_start, brake_start_time
         current_time = time.time()
 
         # Create a Controls message and assign sinusoidal steering and calculated acceleration
@@ -56,10 +57,22 @@ def speed_callback(motor_speed_msg: Float32):
             control_msg.steering = generate_sinusoidal_steering(current_time-start_time)
         # control_msg.steering = 0
 
+        if AS_status==0x02 and not braking:
+            if TARGET_SPEED * (1 - SPEED_MARGIN) <= motor_speed_msg.data <= TARGET_SPEED * (1 + SPEED_MARGIN):
+                if not is_speed_stable:
+                    speed_within_target_start = current_time
+                    is_speed_stable = True
+                elif current_time - speed_within_target_start >= STABLE_DURATION:
+                    braking = True
+                    brake_start_time = rospy.get_time()
+            else:
+                is_speed_stable = False
+        
         if braking:
-            control_msg.accelerator = brake_control(TARGET_SPEED, BRAKE_THRESHOLD)
-        else:
-            control_msg.accelerator = accelerator_control(motor_speed_msg.data, TARGET_SPEED)
+            motor_speed_msg.data = brake_control(TARGET_SPEED, BRAKE_THRESHOLD)
+        
+        control_msg.accelerator = accelerator_control(motor_speed_msg.data, TARGET_SPEED)
+        
         #control_msg.accelerator = 0
 
         # Publish the message
@@ -106,6 +119,8 @@ def brake_control(target_speed: float, brake_target_speed: float):
     
     if brake_speed < BRAKE_THRESHOLD:
         brake_speed = 0
+        # Añadir mensaje publisher para mandar por CAN el mensaje AS_Status 0x03 en el byte 2
+        
         rospy.loginfo("Braking completed, speed below threshold")
         
     return brake_speed
@@ -121,8 +136,4 @@ if __name__ == '__main__':
     rospy.Subscriber('/motor_speed', Float32, speed_callback,queue_size=1)
 
     rospy.spin()
-
-
-
-
-
+    
