@@ -17,12 +17,13 @@ import rospy
 class InterfaceHandle():
 
     def __init__(self):
-        self.subscribe_topics()
         self.pub = None
         self.pub2 = None
         self.pub3 = None
-        self.publish_topics()
         self.cones = []
+        self.frame = rospy.get_param("/interface/frame")
+        self.publish_topics()
+        self.subscribe_topics()
 
     def subscribe_topics(self):
         map_topic = rospy.get_param("/interface/topic_map")
@@ -69,7 +70,7 @@ class InterfaceHandle():
 
     def create_marker(self, px, py, c, i):
         marker = Marker()
-        marker.header.frame_id = "fssim/vehicle/cog"
+        marker.header.frame_id = self.frame
         marker.header.stamp = rospy.Time().now()
 
         marker.ns = "cone"
@@ -116,7 +117,7 @@ class InterfaceHandle():
 
     def send_route(self, points):
         path_marker = Marker()
-        path_marker.header.frame_id = "fssim/vehicle/cog"
+        path_marker.header.frame_id = self.frame
         path_marker.ns = 'delaunay'
         path_marker.header.stamp = rospy.Time.now()
    
@@ -140,7 +141,7 @@ class InterfaceHandle():
 
     def read_pursuit_point(self, msg):
         marker = Marker()
-        marker.header.frame_id = "fssim/vehicle/cog"
+        marker.header.frame_id = self.frame
         marker.header.stamp = rospy.Time().now()
 
         marker.ns = "pursuit"
@@ -171,7 +172,7 @@ class InterfaceHandle():
 
     def delaunay_callback(self, triang):
         marker = Marker()
-        marker.header.frame_id = "fssim/vehicle/cog"
+        marker.header.frame_id = self.frame
         marker.header.stamp = rospy.Time.now()
         marker.ns = 'delaunay'
         marker.id = 0

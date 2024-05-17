@@ -17,9 +17,10 @@ from geometry_msgs.msg import Point
 
 
 MAX_DISTANCE = 8
-W_DISTANCE = 0.5
-W_ANGLE = 2 #0.5
-W_THRESH = 7
+W_DISTANCE = 1
+W_ANGLE = 4
+W_THRESH = 8
+PREV_ANGLE = 0
 
 
 class PlanningSystem():
@@ -46,6 +47,9 @@ class PlanningSystem():
         self.distances = dict()
 
     def calculate_path(self):
+
+        global PREV_ANGLE
+
         if len(self.cones) < 3:
             return list(), list()
         triangles = Delaunay(self.cones)
@@ -112,6 +116,7 @@ class PlanningSystem():
 
 
         last_element = np.array([0, 0])
+        last_angle=PREV_ANGLE
         midpoints = np.array(midpoints)
         non_used_midpoints = np.full(midpoints.shape[0], True, dtype=np.bool_)
         path = [last_element]
@@ -124,7 +129,7 @@ class PlanningSystem():
 
             vectors[non_used_midpoints] = midpoints[non_used_midpoints] - last_element
             distances[non_used_midpoints] = np.linalg.norm(vectors[non_used_midpoints], axis=1)
-            angles[non_used_midpoints] = np.abs(np.arctan2(vectors[non_used_midpoints, 1], vectors[non_used_midpoints, 0]))
+            angles[non_used_midpoints] = np.abs(np.arctan2(vectors[non_used_midpoints, 1], vectors[non_used_midpoints, 0])-last_angle)
 
 
             weights = W_DISTANCE*distances + W_ANGLE*angles
@@ -134,11 +139,14 @@ class PlanningSystem():
                 non_used_midpoints[next_midpoint] = False
                 path.append(midpoints[next_midpoint])
                 last_element = midpoints[next_midpoint]
+                last_angle = np.arctan2(vectors[next_midpoint][1], vectors[next_midpoint][0])
+                # rospy.logwarn([distances[next_midpoint],angles[next_midpoint],weights[next_midpoint]])
             else:
                 break
-
+        PREV_ANGLE = np.arctan2(path[1][1], path[1][0])/2
         # route = np.array(path)
-        
+
+             
         route=[]
         for i in range(len(path)-1):
             route.extend([[(1-a)*path[i][0] + a*path[i+1][0],(1-a)*path[i][1] + a*path[i+1][1]] for a in np.linspace(0,1, num=5)])

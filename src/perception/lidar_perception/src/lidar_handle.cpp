@@ -10,8 +10,10 @@
 #include "common_msgs/Cone.h"
 #include <iostream>
 
+#include <cstdint>
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/common/transforms.h>
+#include <pcl/common/distances.h>
 #include <pcl/ModelCoefficients.h>
 #include <pcl/point_types.h>
 #include <pcl/io/pcd_io.h>
@@ -23,7 +25,9 @@
 #include <pcl/sample_consensus/model_types.h>
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/segmentation/extract_clusters.h>
-#include <iomanip> // for setw, setfill
+#include <iomanip>
+#include <sensor_msgs/PointCloud2.h>
+#include <pcl/point_cloud.h>
 
 using namespace std;
 
@@ -78,7 +82,7 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg){
     double H = H_FOV;
     //Condición de filtro de puntos
     auto condition = [Mx,My,Mz,H](const pcl::PointXYZI& p) {
-        return !(p.x<Mx && abs(p.y)<My && p.z<Mz && abs(atan2(p.y,p.x))<H/2);
+        return !(p.x<Mx && abs(p.y)<My && p.z<Mz && abs(atan2(p.y,p.x))<H/2  && (p.x*p.x + p.y*p.y)>4);
     };
 
     //Aplicamos el filtro
@@ -92,34 +96,34 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg){
     seg.setOptimizeCoefficients (true);
     seg.setModelType (pcl::SACMODEL_PLANE);
     seg.setMethodType (pcl::SAC_RANSAC);
-    seg.setMaxIterations (100);
-    seg.setDistanceThreshold (0.04);
+    seg.setMaxIterations (50);
+    seg.setDistanceThreshold (0.05);
 
-    int nr_points = (int) cloud->size ();
-    while (cloud->size () > 0.3 * nr_points){
+    // int nr_points = (int) cloud->size ();
+    // while (cloud->size () > 0.3 * nr_points){
         // Segment the largest planar component from the remaining cloud
-        seg.setInputCloud (cloud);
-        seg.segment (*inliers, *coefficients);
-        if (inliers->indices.size () == 0)
-        {
-            std::cout << "Could not estimate a planar model for the given dataset." << std::endl;
-            break;
-        }
-
-        // Extract the planar inliers from the input cloud
-        pcl::ExtractIndices<pcl::PointXYZI> extract;
-        extract.setInputCloud (cloud);
-        extract.setIndices (inliers);
-        extract.setNegative (false);
-
-        // Get the points associated with the planar surface
-        extract.filter (*cloud_plane);
-
-        // Remove the planar inliers, extract the rest
-        extract.setNegative (true);
-        extract.filter (*cloud_f);
-        *cloud = *cloud_f;
+    seg.setInputCloud (cloud);
+    seg.segment (*inliers, *coefficients);
+    if (inliers->indices.size () == 0)
+    {
+        std::cout << "Could not estimate a planar model for the given dataset." << std::endl;
+        // break;
     }
+
+    // Extract the planar inliers from the input cloud
+    pcl::ExtractIndices<pcl::PointXYZI> extract;
+    extract.setInputCloud (cloud);
+    extract.setIndices (inliers);
+    extract.setNegative (false);
+
+    // Get the points associated with the planar surface
+    extract.filter (*cloud_plane);
+
+    // Remove the planar inliers, extract the rest
+    extract.setNegative (true);
+    extract.filter (*cloud_f);
+    *cloud = *cloud_f;
+    // }
 
     sensor_msgs::PointCloud2 filtered_cloud_msg;
     pcl::toROSMsg(*cloud,filtered_cloud_msg);
@@ -132,35 +136,29 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg){
     
     std::vector<pcl::PointIndices> cluster_indices;
     pcl::EuclideanClusterExtraction<pcl::PointXYZI> ec;
-    ec.setClusterTolerance (0.2); // 2cm
-    ec.setMinClusterSize (5);
-    ec.setMaxClusterSize (25000);
+    ec.setClusterTolerance (0.5); // 2cm
+    ec.setMinClusterSize (3);
+    ec.setMaxClusterSize (200);
     ec.setSearchMethod (tree);
     ec.setInputCloud (cloud);
     ec.extract (cluster_indices);
 
     int i = 0;
+
     pcl::PointCloud<PointXYZColorScore>::Ptr map_cloud (new pcl::PointCloud<PointXYZColorScore>);
     // pcl::PointCloud<pcl::PointXYZI>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZI>);
     
     for (const auto& cluster : cluster_indices)
     {
-        float max_x = -10.0;
-        float min_x = 10.0;
-        float max_y = -10.0;
-        float min_y = 10.0;
-        float max_z = -10.0;
-        float min_z = 10.0;
-        pcl::PointXYZI p;
-        for (const auto& idx : cluster.indices) {
-            p = (*cloud)[idx];
-            max_x = max(p.x,max_x);
-            max_y = max(p.y,max_y);
-            max_z = max(p.z,max_z);
-            min_x = min(p.x,min_x);
-            min_y = min(p.y,min_y);
-            min_z = min(p.z,min_z);
-        }
+        pcl::PointXYZI min_pt, max_pt;
+        pcl::getMinMax3D(*cluster_cloud, min_pt, max_pt);
+        float max_x = max_pt.x;
+        float min_x = min_pt.x;
+        float max_y = max_pt.y;
+        float min_y = min_pt.y;
+        float max_z = max_pt.z;
+        float min_z = min_pt.z;
+        
         if((max_z-min_z)>0.1 && (max_z-min_z)<0.4 && (max_x-min_x)<0.3 && (max_y-min_y)<0.3){
             // for (const auto& idx : cluster.indices) {
             //     p = (*cloud)[idx];
@@ -179,13 +177,12 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg){
         i++;
 
     }
-
+      
     sensor_msgs::PointCloud2 map_msg;
     pcl::toROSMsg(*map_cloud,map_msg);
     map_msg.header.frame_id=frame_id;
     map_pub.publish(map_msg);
-    
-
+   
     ros::Time fin = ros::Time::now();
     std::cout << (fin-ini) << endl;
 }

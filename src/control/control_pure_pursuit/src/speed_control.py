@@ -59,4 +59,4 @@ class PIDController():
 
         cmd = self.kp * self.Cp + self.ki * self.Ci + self.kd * self.Cd
 
-        return min(cmd, MAX_CMD) 
+        return max(min(cmd, MAX_CMD),0)

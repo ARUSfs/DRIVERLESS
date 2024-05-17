@@ -1,0 +1,3 @@
+# Parameters of pure pursuit controller
+CMD: 0.1
+DELTA: 15

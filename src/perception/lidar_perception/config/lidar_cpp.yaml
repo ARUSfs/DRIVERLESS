@@ -6,10 +6,10 @@ filtered_cloud_topic: '/filtered_points'
 cones_marker_topic: 'lidar_markers'
 
 #FOV restrictions
-MAX_X_FOV: 20   # m
-MAX_Y_FOV: 10   # m
-MAX_Z_FOV: 0.6   # m
-H_FOV: 200   # degrees
+MAX_X_FOV: 25   # m
+MAX_Y_FOV: 12   # m
+MAX_Z_FOV: 0   # m
+H_FOV: 180   # degrees
 
 #LiDAR orinetation
 inverted: false
