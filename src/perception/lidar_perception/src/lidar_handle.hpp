@@ -3,6 +3,7 @@
 #include <iostream>
 #include "PointXYZColorScore.h"
 
+
 using namespace std;
 
 class LidarHandle {
