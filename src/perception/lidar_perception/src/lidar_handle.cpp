@@ -6,8 +6,6 @@
 #include <sensor_msgs/point_cloud_conversion.h>
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
-#include "common_msgs/Map.h"
-#include "common_msgs/Cone.h"
 #include <iostream>
 
 #include <cstdint>
@@ -149,7 +147,10 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg){
     // pcl::PointCloud<pcl::PointXYZI>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZI>);
     
     for (const auto& cluster : cluster_indices)
-    {
+    {   
+        pcl::PointCloud<pcl::PointXYZI>::Ptr cluster_cloud(new pcl::PointCloud<pcl::PointXYZI>);
+        pcl::copyPointCloud(*cloud, cluster, *cluster_cloud);
+
         pcl::PointXYZI min_pt, max_pt;
         pcl::getMinMax3D(*cluster_cloud, min_pt, max_pt);
         float max_x = max_pt.x;

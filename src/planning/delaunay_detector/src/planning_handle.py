@@ -6,7 +6,7 @@
 
 from itertools import combinations
 
-from common_msgs.msg import Map, Trajectory
+from common_msgs.msg import Trajectory
 from visualization_msgs.msg import Marker
 from geometry_msgs.msg import Point
 from common_msgs.msg import Simplex, Triangulation
