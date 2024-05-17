@@ -17,4 +17,4 @@ NUM_POINTS: 30
 DEGREE: 3
 
 # Color detection enabled
-color_enabled: true
+color_enabled: false
