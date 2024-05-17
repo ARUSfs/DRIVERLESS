@@ -1,3 +1,4 @@
+#define PCL_NO_PRECOMPILE
 #include "ros/ros.h"
 #include "std_msgs/String.h"
 #include "sensor_msgs/PointCloud2.h"
@@ -48,12 +49,12 @@ LidarHandle::LidarHandle(){
 
     nh.getParam("/lidar_perception/inverted",inverted);
     
+    map_pub = nh.advertise<sensor_msgs::PointCloud2>(map_topic, 1000);
+    filtered_cloud_pub = nh.advertise<sensor_msgs::PointCloud2>(filtered_cloud_topic, 1000);
 
     sub = nh.subscribe<sensor_msgs::PointCloud2>(lidar_topic, 1, &LidarHandle::callback, this);
 
-    map_pub = nh.advertise<common_msgs::Map>(map_topic, 1000);
-    filtered_cloud_pub = nh.advertise<sensor_msgs::PointCloud2>(filtered_cloud_topic, 1000);
-    markers_pub = nh.advertise<visualization_msgs::MarkerArray>(cones_marker_topic, 1000);
+    
     
 };
 
@@ -124,6 +125,11 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg){
     *cloud = *cloud_f;
     // }
 
+    sensor_msgs::PointCloud2 filtered_cloud_msg;
+    pcl::toROSMsg(*cloud,filtered_cloud_msg);
+    filtered_cloud_msg.header.frame_id=frame_id;
+    filtered_cloud_pub.publish(filtered_cloud_msg);
+
     // Creating the KdTree object for the search method of the extraction
     pcl::search::KdTree<pcl::PointXYZI>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZI>);
     tree->setInputCloud (cloud);
@@ -138,18 +144,12 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg){
     ec.extract (cluster_indices);
 
     int i = 0;
-    vector<float> X;
-    vector<float> Y;
-    vector<float> Z;
+
+    pcl::PointCloud<PointXYZColorScore>::Ptr map_cloud (new pcl::PointCloud<PointXYZColorScore>);
     // pcl::PointCloud<pcl::PointXYZI>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZI>);
-    common_msgs::Map map;
+    
     for (const auto& cluster : cluster_indices)
     {
-        // Crear una nube temporal para el cluster actual
-        pcl::PointCloud<pcl::PointXYZI>::Ptr cluster_cloud(new pcl::PointCloud<pcl::PointXYZI>);
-        pcl::copyPointCloud(*cloud, cluster, *cluster_cloud);
-
-        // Obtener la caja delimitadora (bounding box) del cluster
         pcl::PointXYZI min_pt, max_pt;
         pcl::getMinMax3D(*cluster_cloud, min_pt, max_pt);
         float max_x = max_pt.x;
@@ -159,62 +159,30 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg){
         float max_z = max_pt.z;
         float min_z = min_pt.z;
         
-        if((max_z-min_z)>0.05 && (max_z-min_z)<0.4 && (max_x-min_x)<0.4 && (max_y-min_y)<0.4){
-            X.push_back((max_x+min_x)/2);
-            Y.push_back((max_y+min_y)/2);
-            Z.push_back(min_z);
+        if((max_z-min_z)>0.1 && (max_z-min_z)<0.4 && (max_x-min_x)<0.3 && (max_y-min_y)<0.3){
             // for (const auto& idx : cluster.indices) {
             //     p = (*cloud)[idx];
             //     p.intensity = i;
             //     cloud_cluster->push_back(p);
             // }
-            common_msgs::Cone cone;
-            cone.position.x = (max_x+min_x)/2;
-            cone.position.y = (max_y+min_y)/2;
-            cone.position.z = min_z;
-            cone.color = 'b';
-            cone.confidence = 1;
-            map.cones.push_back(cone);
+            PointXYZColorScore cone;
+            cone.x = (max_x+min_x)/2;
+            cone.y = (max_y+min_y)/2;
+            cone.z = 0;
+            cone.color = 0;
+            cone.score = 1;
+            map_cloud->push_back(cone);
         }
 
         i++;
 
     }
-
-    sensor_msgs::PointCloud2 msg2;
-    pcl::toROSMsg(*cloud,msg2);
-        msg2.header.frame_id=frame_id;
-        filtered_cloud_pub.publish(msg2);
-
-    visualization_msgs::MarkerArray marker_array;
-
-    visualization_msgs::Marker delete_all_marker;
-    delete_all_marker.action = visualization_msgs::Marker::DELETEALL;
-    marker_array.markers.push_back(delete_all_marker);
-
-    for(int i=0; i<X.size();i++){
-        visualization_msgs::Marker cylinder_marker;
-        cylinder_marker.header.frame_id = frame_id;
-        cylinder_marker.id = i;
-        cylinder_marker.type = visualization_msgs::Marker::CYLINDER;
-        cylinder_marker.action = visualization_msgs::Marker::ADD;
-        cylinder_marker.pose.position.x = X[i];  
-        cylinder_marker.pose.position.y = Y[i];      
-        cylinder_marker.pose.position.z = Z[i]+0.25;      
-        cylinder_marker.scale.x = 0.2;  
-        cylinder_marker.scale.y = 0.2;  
-        cylinder_marker.scale.z = 0.5;  
-        cylinder_marker.color.g = 1.0;
-        cylinder_marker.color.a = 1.0;  
-
-        marker_array.markers.push_back(cylinder_marker);
-    }
-
-    markers_pub.publish(marker_array);
-
-
-    map_pub.publish(map);
-
+      
+    sensor_msgs::PointCloud2 map_msg;
+    pcl::toROSMsg(*map_cloud,map_msg);
+    map_msg.header.frame_id=frame_id;
+    map_pub.publish(map_msg);
+   
     ros::Time fin = ros::Time::now();
     std::cout << (fin-ini) << endl;
 }

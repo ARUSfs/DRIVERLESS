@@ -10,6 +10,8 @@ from common_msgs.msg import Map, Trajectory
 from visualization_msgs.msg import Marker
 from geometry_msgs.msg import Point
 from common_msgs.msg import Simplex, Triangulation
+from sensor_msgs.msg import PointCloud2
+from sensor_msgs import point_cloud2
 from scipy.interpolate import splprep, splev
 import numpy as np
 
@@ -31,10 +33,10 @@ class PlanningHandle():
         self.track_planning_system = TrackPlanningSystem()
 
         topic_perception_map = rospy.get_param('~topic_perception_map')
-        rospy.Subscriber(topic_perception_map, Map, self.get_trajectory, queue_size=1)
+        rospy.Subscriber(topic_perception_map, PointCloud2, self.get_trajectory, queue_size=1)
 
         topic_global_map = rospy.get_param('~topic_global_map')
-        rospy.Subscriber(topic_global_map, Map, self.get_global_track, queue_size=1)
+        rospy.Subscriber(topic_global_map, PointCloud2, self.get_global_track, queue_size=1)
 
         topic_route = rospy.get_param('~topic_route')
         self.pub_route = rospy.Publisher(topic_route, Trajectory, queue_size=1)
@@ -44,8 +46,8 @@ class PlanningHandle():
 
 
     def get_trajectory(self, msg):
-        data = msg.cones  # List of cones
-        self.planning_system.update_tracklimits(data)
+        cones = point_cloud2.read_points(msg, field_names=("x", "y", "z","color","score"),skip_nans=True)
+        self.planning_system.update_tracklimits(cones)
         self.publish_msg()
 
 
@@ -65,9 +67,9 @@ class PlanningHandle():
         self.pub_route.publish(msg)
 
 
-    def get_global_track(self, msg):
-        data = msg.cones  # List of cones
-        self.track_planning_system.update_tracklimits(data)
+    def get_global_track(self,msg :PointCloud2):
+        cones = point_cloud2.read_points(msg, field_names=("x", "y", "z","color","score"),skip_nans=True)
+        self.track_planning_system.update_tracklimits(cones)
         route = self.track_planning_system.calculate_path()
         route = route[1:]
 
