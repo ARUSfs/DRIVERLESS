@@ -1,7 +1,7 @@
 import rospy
 import can
 from can_reader import CanReader
-from std_msgs.msg import Float32MultiArray
+from std_msgs.msg import Float32MultiArray, Int16
 from common_msgs.msg import Controls
 from ctypes import *
 import threading
@@ -17,6 +17,7 @@ class CanPublisher:
         rospy.Subscriber("/controls",Controls, self.cmd_callback)
         #---------------------------------------------------------------------------------------------------------------------
         rospy.Subscriber("/steering/epos_info", Float32MultiArray, self.epos_info_callback)
+        rospy.Subscriber("/can/AS_status", Int16, self.pub_as_status)
 
         rospy.Timer(rospy.Duration(0.5), self.publish_temp)
         rospy.Timer(rospy.Duration(0.001), self.heart_beat)
@@ -41,6 +42,12 @@ class CanPublisher:
         datos_comanda = list(int.to_bytes(int(acc*(2**15))-1, byteorder='little', length=2, signed=True))
         msg = can.Message(arbitration_id=0x201, is_extended_id=False, data=[0x90]+datos_comanda)
         self.bus0.send(msg)
+
+    def pub_as_status(self, msg: Int16):
+        if msg.data==3:
+            rospy.logwarn("AS FINISHED")
+            m = can.Message(arbitration_id=0x202, is_extended_id=False, data=[0x01,0x01,0x03])
+            self.bus0.send(m)
 
     
     def publish_temp(self, event):
