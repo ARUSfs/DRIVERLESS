@@ -5,7 +5,7 @@ Script to execute fssim interface node
 @date: 20220524
 """
 
-from common_msgs.msg import Map, Cone, CarState, Controls, Trajectory
+from common_msgs.msg import CarState, Controls, Trajectory
 from geometry_msgs.msg import Point, Polygon, PolygonStamped
 from sensor_msgs.msg import PointCloud2, PointField
 from sensor_msgs import point_cloud2

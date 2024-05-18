@@ -9,7 +9,10 @@ import numpy as np
 import open3d as o3d
 import rospy
 from fssim_common.msg import State
-from common_msgs.msg import Map, Cone
+# from common_msgs.msg import Map, Cone
+from std_msgs.msg import Header
+from sensor_msgs.msg import PointCloud2, PointField
+from sensor_msgs import point_cloud2
 from visualization_msgs.msg import MarkerArray, Marker
 from scipy.interpolate import splprep, splev
 
@@ -23,21 +26,20 @@ path_gap = rospy.get_param('/data_association/path_gap')
 state_topic = rospy.get_param('/data_association/state_topic')
 perception_topic = rospy.get_param('/data_association/perception_topic')
 map_topic = rospy.get_param('/data_association/map_topic')
-map_marker_topic = rospy.get_param('/data_association/map_marker_topic')
 
-class Data_association2:
+class Data_association:
 
     def __init__(self):
 
         # Definiendo suscribers y publishers
         rospy.Subscriber(state_topic, State, self.state_callback, queue_size=20)
-        rospy.Subscriber(perception_topic, Map, self.perception_callback, queue_size=1)
-        self.pMap = rospy.Publisher(map_topic, Map, queue_size=1)
-        self.pMapView = rospy.Publisher(map_marker_topic, MarkerArray, queue_size=1)
+        rospy.Subscriber(perception_topic, PointCloud2, self.perception_callback, queue_size=1)
+        self.pMap = rospy.Publisher(map_topic, PointCloud2, queue_size=1)
 
 
         # Inicializando variables
-        self.map = Map() #Mapa
+        self.map = [] #Mapa
+        
         self.state = np.zeros(3) # Estado del coche [x, y, yaw]
         self.measurements = np.empty((0,2)) # Mediciones del sensor
         self.u = np.zeros(2) # Inputs de control [v, yaw]
@@ -62,7 +64,7 @@ class Data_association2:
         self.state[2] = msg.yaw
 
 
-    def perception_callback(self, msg: Map):
+    def perception_callback(self, msg: PointCloud2):
 
         if (np.linalg.norm(self.state[:2]-self.last_pos)>path_gap and np.all([np.linalg.norm(self.state[:2]-pos)>path_gap for pos in self.path])):
             self.last_pos = np.array([[self.state[0], self.state[1]]])
@@ -83,7 +85,7 @@ class Data_association2:
                 y = self.state[1]
                 for i in m:
                     corrected_position = rot @ i + np.array([x, y])
-                    self.map.cones.append(self.new_cone(corrected_position[0], corrected_position[1], 'o'))
+                    self.map.append([corrected_position[0], corrected_position[1],0,2,1])
                 self.empty_map = False 
                 
             # Si el mapa no está vacío se pasan los landmarks al marco global y se realiza la asociación de datos
@@ -94,16 +96,11 @@ class Data_association2:
             if self.count > new_lap_counter and self.u[0] > 0.2:
                 rospy.loginfo("%s", self.path)
                 self.coloring()
-                self.pMap.publish(self.map)
-                self.pub_markers()
-                self.map = Map()
+                self.publishMap()
+                self.map = []
                 self.count = 0
                 self.path = np.array([[0.,0.]])
                 self.empty_map= True
-                
-            # Se publica el mapa y su vista
-            if len(self.map.cones) > 0:
-                self.pub_markers()
         
         else:
             pass
@@ -126,9 +123,9 @@ class Data_association2:
             new_landmark = True
             gM = rot @ measurement + np.array([x, y])
 
-            for l in self.map.cones:
+            for l in self.map:
 
-                landmark = np.array([l.position.x, l.position.y])
+                landmark = np.array([l[0], l[1]])
                 
                 if np.linalg.norm(gM - landmark) < min_dist :
                     measurement_points_ICP = np.vstack((self.measurement_points_ICP, gM))
@@ -176,18 +173,7 @@ class Data_association2:
         t = transformation_matrix[:2,2]
         lc = new_landmarks_without_correction @ r.T + t
         for i in lc:
-            self.map.cones.append(self.new_cone(i[0], i[1], 'o'))
-
-    
-    def new_cone(self, x, y, color):
-        c = Cone()
-        c.position.x = x
-        c.position.y = y
-        c.position.z = 0
-        c.confidence = 1
-        c.color = color
-        return c
-    
+            self.map.append([i[0], i[1], 0, 2, 1])
 
     def coloring(self):
         #Colorea los conos según si están dentro o fuera de la curva generada por el recorrido del coche.
@@ -195,10 +181,10 @@ class Data_association2:
         u_new = np.linspace(u.min(), u.max(), 1000)
         puntos_curva = np.array(splev(u_new, tck))
         
-        for c in self.map.cones:
+        for c in self.map:
             n_cortes = 0
-            x0 = c.position.x
-            y0 = c.position.y
+            x0 = c[0]
+            y0 = c[1]
             
             for i in range(len(puntos_curva[0]) - 1):
                 punto1 = puntos_curva[:, i]
@@ -208,63 +194,33 @@ class Data_association2:
                     n_cortes += 1
             
             if n_cortes % 2 == 0:
-                c.color = 'b'
+                c[3] = 0 #Azul
             
             else:
-                c.color = 'y'
+                c[3] = 1 #Amarillo
             
     
-    def map_to_xyz_array(self, m : Map):
+    def map_to_xyz_array(self, m : PointCloud2):
+        cones = point_cloud2.read_points(m, field_names=("x", "y", "z","color","score"),skip_nans=True)
         points = np.empty((0,2))
-        for c in m.cones:
-            if c.confidence > 0.7:
-                points = np.vstack((points, np.array([[c.position.x, c.position.y]])))
+
+        for c in cones:
+            if c[4] > 0.7:
+                points = np.vstack((points, np.array([[c[0], c[1]]])))
+        
         return points
 
-
-    def pub_markers(self):
-        marray = MarkerArray()
-        m1 = Marker()
-        m1.id = 100000
-        m1.action = Marker.DELETEALL
-        marray.markers.append(m1)
-        for i, lm in enumerate(self.map.cones):
-            marker = Marker()
-            marker.id = i
-            marker.header.frame_id = 'map'
-            marker.header.stamp = rospy.Time().now()
-            marker.type = Marker.CYLINDER
-            marker.action = Marker.MODIFY
-            marker.pose.position.x = lm.position.x
-            marker.pose.position.y = lm.position.y
-            marker.pose.position.z = lm.position.z
-            marker.pose.orientation.x = 0.0
-            marker.pose.orientation.y = 0.0
-            marker.pose.orientation.z = 0.0
-            marker.pose.orientation.w = 1.0
-            marker.scale.x = 0.3
-            marker.scale.y = 0.3
-            marker.scale.z = 0.3
-            if lm.color == 'b':
-                marker.color.r = 0
-                marker.color.g = 0
-                marker.color.b = 1
-                marker.color.a = 1.0
-            elif lm.color == 'y':
-                marker.color.r = 1
-                marker.color.g = 1
-                marker.color.b = 0
-                marker.color.a = 1.0
-            else:
-                marker.color.r = 0
-                marker.color.g = 0
-                marker.color.b = 0
-                marker.color.a = 1.0
-
-            marker.lifetime = rospy.Duration()
-
-            marray.markers.append(marker)
-            marker.lifetime = rospy.Duration()
-            marray.markers.append(marker)
-
-        self.pMapView.publish(marray)
+    def publishMap(self):
+        
+        header = Header()
+        header.frame_id='map'
+        header.stamp = rospy.Time().now()
+        fields = [
+        PointField(name="x", offset=0, datatype=PointField.FLOAT32, count=1),
+        PointField(name="y", offset=4, datatype=PointField.FLOAT32, count=1),
+        PointField(name="z", offset=8, datatype=PointField.FLOAT32, count=1),
+        PointField(name="color", offset=12, datatype=PointField.UINT32, count=1),
+        PointField(name="score", offset=16, datatype=PointField.FLOAT32, count=1)
+        ]
+        map_cloud = point_cloud2.create_cloud(header=header, fields=fields,points=self.map)
+        self.pMap.publish(map_cloud)

@@ -49,7 +49,6 @@ class ControlHandle():
         topic1 = rospy.get_param('/control_pure_pursuit/route_topic')
         rospy.Subscriber(topic1, Trajectory, self.update_trajectory_callback)
         if sim_mode:
-            pass
             rospy.Subscriber('/fssim/base_pose_ground_truth', State, self.update_state_sim, queue_size=1)
         else:
             rospy.Subscriber('/motor_speed', Float32, self.update_state, queue_size=1)
@@ -102,7 +101,8 @@ class ControlHandle():
         msg = Controls()
         msg.steering = di
         msg.accelerator = ai
-        if time.time()-self.vel_update_time > 0.05:
+
+        if not sim_mode and time.time()-self.vel_update_time > 0.05:
             msg.accelerator = 0
 
         p = Point()
@@ -112,5 +112,5 @@ class ControlHandle():
             p.y = self.control.target_course.cy[ind]
             self.pub2.publish(p)
 
-        if self.AS_status == 0x02:
+        if sim_mode or self.AS_status == 0x02:
             self.pub.publish(msg)

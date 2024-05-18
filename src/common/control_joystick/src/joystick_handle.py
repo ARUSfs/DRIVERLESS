@@ -27,6 +27,9 @@ class joystick():
 
     def send_controllers(self, msg: Status) :
         cmd = Controls()
-        cmd.accelerator = msg.axis_left_y * CMD
-        cmd.steering = msg.axis_right_x * DELTA
+        delta = 0.5
+        if msg.button_r2 == 1:
+            delta = (msg.axis_r2 + 1) / 2
+        cmd.accelerator = delta * msg.axis_left_y * CMD
+        cmd.steering = delta * msg.axis_right_x * DELTA
         self.pub.publish(cmd)

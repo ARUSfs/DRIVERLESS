@@ -1,6 +1,6 @@
 <launch>
 
-  <node name="inspection_control" pkg="steering" type="inspection_control.py"  output="screen">
+  <node name="inspection_control" pkg="tests" type="inspection_control.py"  output="screen">
 	</node>
 
 	<node name="steering" pkg="steering" type="main.py" output="screen">

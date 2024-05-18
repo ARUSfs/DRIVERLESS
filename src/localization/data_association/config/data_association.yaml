@@ -15,6 +15,3 @@ path_gap: 4
 state_topic: '/fssim/base_pose_ground_truth'
 perception_topic: '/perception_map'
 map_topic: '/data_association/map'
-map_marker_topic: '/data_association/landmarks'
-map_list_topic: '/data_association/map_list'
-map_list_marker_topic: '/data_association/final_map'

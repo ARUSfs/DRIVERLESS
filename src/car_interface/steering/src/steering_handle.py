@@ -4,9 +4,9 @@ from eposhandle import EPOSHandle
 from std_msgs.msg import Float32MultiArray,Float32
 
 
-MAX_ACCELERATION = rospy.get_param('~MAX_ACCELERATION', 6000)
-MAX_DECELERATION = rospy.get_param('~MAX_DECELERATION', 6000)
-PROFILE_VELOCITY = rospy.get_param('~PROFILE_VELOCITY', 1000)
+MAX_ACCELERATION = 6000
+MAX_DECELERATION = 6000
+PROFILE_VELOCITY = 1500
 
 class SteeringHandle:
     def __init__(self):
