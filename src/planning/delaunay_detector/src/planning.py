@@ -143,7 +143,11 @@ class PlanningSystem():
                 # rospy.logwarn([distances[next_midpoint],angles[next_midpoint],weights[next_midpoint]])
             else:
                 break
-        PREV_ANGLE = np.arctan2(path[1][1], path[1][0])/2
+        
+        if len(path)>1:
+            PREV_ANGLE = np.arctan2(path[1][1], path[1][0])/2
+        else:
+            PREV_ANGLE = 0
         # route = np.array(path)
 
              

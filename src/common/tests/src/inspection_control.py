@@ -9,6 +9,7 @@ import time
 AMPLITUDE = 20
 FREQUENCY = 0.1
 TARGET_SPEED = 0
+MAX_CMD = 1
 
 AS_status = 0
 
@@ -29,15 +30,14 @@ def speed_callback(motor_speed_msg: Float32):
 
         control_msg = Controls()
         control_msg.steering = generate_sinusoidal_steering(time.time()-start_time)
-        # control_msg.accelerator = accelerator_control(motor_speed_msg.data, TARGET_SPEED)
-        control_msg.accelerator = 0
+        control_msg.accelerator = accelerator_control(motor_speed_msg.data, TARGET_SPEED)
 
         if AS_status==0x02:
             control_publisher.publish(control_msg)
 
 def generate_sinusoidal_steering(time):
-#     steering_angle = AMPLITUDE * math.sin(2*math.pi*FREQUENCY *time)
-    steering_angle = AMPLITUDE * math.sin(FREQUENCY * time*time)
+    steering_angle = AMPLITUDE * math.sin(2*math.pi*FREQUENCY *time)
+#     steering_angle = AMPLITUDE * math.sin(FREQUENCY * time*time)
     return steering_angle
 
 def accelerator_control(current: float, target: float):
@@ -46,7 +46,7 @@ def accelerator_control(current: float, target: float):
 
         cmd = kp*error
 
-        return min(cmd, 0.2) 
+        return max(min(cmd, MAX_CMD),-MAX_CMD) 
 
 if __name__ == '__main__':
     rospy.init_node('sinusoidal_control_node')
