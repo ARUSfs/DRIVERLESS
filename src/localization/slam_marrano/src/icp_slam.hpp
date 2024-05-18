@@ -1,7 +1,6 @@
 #include "ros/ros.h"
 #include "std_msgs/Float32MultiArray.h"
 
-#include "common_msgs/Map.h"
 #include <sensor_msgs/PointCloud2.h>
 
 #include <pcl/point_types.h>

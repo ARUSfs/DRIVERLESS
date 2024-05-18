@@ -6,18 +6,14 @@
 #include <sensor_msgs/point_cloud_conversion.h>
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
-#include "common_msgs/Map.h"
-#include "common_msgs/Cone.h"
- #include <pcl/visualization/cloud_viewer.h>
+#include <pcl/visualization/cloud_viewer.h>
 #include <iostream>
 #include <pcl/common/io.h>
 #include <pcl/io/pcd_io.h>
 
 
-
 #include <pcl/common/impl/centroid.hpp>
 #include "icp_slam.hpp"
-// #include "PointXYZColorScore.h"
 
 
 using namespace std;
@@ -30,7 +26,7 @@ ICP_handle::ICP_handle(){
 
 	sub = nh.subscribe<sensor_msgs::PointCloud2>("/perception_map", 1000, &ICP_handle::map_callback, this);
 
-	trans_pub = nh.advertise<common_msgs::Map>("/mapa_icp", 10);
+	trans_pub = nh.advertise<sensor_msgs::PointCloud2>("/mapa_icp", 10);
 
 	pcl_pub = nh.advertise<sensor_msgs::PointCloud2>("/nube", 10);
 }
@@ -154,18 +150,18 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 		ec.setInputCloud (previous_map);
 		ec.extract (cluster_indices);
 
-		pcl::PointCloud<PointXYZColorScore>::Ptr clustered_points (new pcl::PointCloud<PointXYZColorScore>);
+		
 
-		common_msgs::Map mapa_global;
-		mapa_global.header.frame_id = "map";
-		mapa_global.header.stamp = ros::Time::now();
+		pcl::PointCloud<PointXYZColorScore>::Ptr clustered_points (new pcl::PointCloud<PointXYZColorScore>);
+		pcl::PointCloud<PointXYZColorScore>::Ptr mapa_global (new pcl::PointCloud<PointXYZColorScore>);
 		for(const auto& cluster : cluster_indices) {
 			int j = 0;
-			common_msgs::Cone cono;
-			cono.position.x = (*previous_map)[cluster.indices[0]].x;
-			cono.position.y = (*previous_map)[cluster.indices[0]].y;
-			cono.color = "b";
-			cono.confidence = 1;
+			PointXYZColorScore cono;
+			cono.x = (*previous_map)[cluster.indices[0]].x;
+			cono.y = (*previous_map)[cluster.indices[0]].y;
+			cono.z = 0;
+			cono.color = 0;
+			cono.score = 1;
 			for (const auto& idx : cluster.indices) {
 				if(j < 50)
 					clustered_points->push_back((*previous_map)[idx]);
@@ -173,10 +169,16 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 					break;
 				j++;
 			}
-			mapa_global.cones.push_back(cono);
-
+			mapa_global->push_back(cono);
 		}
-		trans_pub.publish(mapa_global);
+
+		sensor_msgs::PointCloud2 map_msg;
+
+		pcl::toROSMsg(*mapa_global, map_msg);
+		map_msg.header.frame_id = "map";
+		trans_pub.publish(map_msg);
+
+
 		*previous_map = *clustered_points;
 
 

@@ -5,8 +5,6 @@
 #include <sensor_msgs/point_cloud_conversion.h>
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
-#include "common_msgs/Map.h"
-#include "common_msgs/Cone.h"
 #include <iostream>
 
 #include <cstdint>
