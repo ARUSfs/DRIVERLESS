@@ -3,7 +3,6 @@
 #include <ros/console.h>
 #include <pcl/registration/icp.h>
 
-#include "common_msgs/Cone.h"
 
 int main(int argc, char **argv) {
 	ros::init(argc, argv, "icp_odometry");
