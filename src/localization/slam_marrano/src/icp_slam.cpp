@@ -26,24 +26,15 @@ ICP_handle::ICP_handle(){
 
 	sub = nh.subscribe<sensor_msgs::PointCloud2>("/perception_map", 1000, &ICP_handle::map_callback, this);
 
-	trans_pub = nh.advertise<sensor_msgs::PointCloud2>("/mapa_icp", 10);
+	map_publisher = nh.advertise<sensor_msgs::PointCloud2>("/mapa_icp", 10);
 
-	pcl_pub = nh.advertise<sensor_msgs::PointCloud2>("/nube", 10);
 }
 
 void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
-	i++;
-	score *= 1;
+	callback_iteration++;
 
-	// int n_cones = map.cones.size();
 	pcl::PointCloud<PointXYZColorScore>::Ptr new_map(new pcl::PointCloud<PointXYZColorScore>);
 	pcl::fromROSMsg(map_msg, *new_map);
-	// for(int i = 0; i < n_cones; i++){
-	// 	new_map->points[i].x = map.cones[i].position.x;
-	// 	new_map->points[i].y = map.cones[i].position.y;
-	// 	new_map->points[i].score = score;
-	// }
-	int n_cones = new_map->size();
 
 	if(!has_map){
 		*allp_clustered = *new_map;
@@ -60,10 +51,13 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 
 	pcl::IterativeClosestPoint<PointXYZColorScore, PointXYZColorScore> icp;
 	icp.setInputSource(map_in_position);
-	icp.setInputTarget(previous_map);
+        if(callback_iteration < 10)
+            icp.setInputTarget(previous_map);
+        else
+            icp.setInputTarget(allp_clustered);
 	icp.setMaximumIterations(9000);
-	//icp.setEuclideanFitnessEpsilon (0.05);
-	icp.setTransformationEpsilon(1e-5);
+	icp.setEuclideanFitnessEpsilon (0.005);
+	//icp.setTransformationEpsilon(1e-5);
 
 	pcl::PointCloud<PointXYZColorScore> registered_map;
 	icp.setMaxCorrespondenceDistance (1.0);
@@ -72,7 +66,8 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 	Eigen::Matrix4f transformation = icp.getFinalTransformation();
 
 	float ang = (float)-atan2(transformation.coeff(0, 1), transformation.coeff(0,0));
-	cout << transformation.coeff(12) << ", " << transformation.coeff(13) << ", " << ang << endl;
+
+        // TODO: Remove??
 	if(ang < -0.15 || ang > 0.15)
 		return;
 
@@ -96,8 +91,6 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 
 	pcl::PointCloud<PointXYZColorScore>::Ptr clustered_points (new pcl::PointCloud<PointXYZColorScore>);
 	for(const auto& cluster : cluster_indices) {
-		//pcl::PointCloud<pcl::PointXYZI>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZI>);
-		//bool exists = false;
 		PointXYZColorScore centro;
 		centro.x = 0;
 		centro.y = 0;
@@ -106,12 +99,6 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 		centro.score = 0;
 		float sum_score = 0;
 		for (const auto& idx : cluster.indices) {
-			/*if((*previous_map)[idx].score == 1){
-				exists = true;
-				clustered_points->push_back((*previous_map)[idx]);
-				break;
-			}*/
-			//cloud_cluster->push_back((*previous_map)[idx]);
 			sum_score += (*previous_map)[idx].score;
 			centro.x += (*previous_map)[idx].x*(*previous_map)[idx].score;
 			centro.y += (*previous_map)[idx].y*(*previous_map)[idx].score;
@@ -130,17 +117,9 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 	}
 	*allp_clustered = *clustered_points;
 
-	sensor_msgs::PointCloud2 output;
-
-	pcl::toROSMsg(*previous_map, output);
-	output.header.frame_id = "map";
-	pcl_pub.publish(output);
 
 
-
-	if(i % 10 == 9) {
-		cout << "holaa" << endl;
-
+	if(callback_iteration % 10 == 9) {
 		std::vector<pcl::PointIndices> cluster_indices;
 		pcl::EuclideanClusterExtraction<PointXYZColorScore> ec;
 		ec.setClusterTolerance (1.5);
@@ -150,7 +129,7 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 		ec.setInputCloud (previous_map);
 		ec.extract (cluster_indices);
 
-		
+
 
 		pcl::PointCloud<PointXYZColorScore>::Ptr clustered_points (new pcl::PointCloud<PointXYZColorScore>);
 		pcl::PointCloud<PointXYZColorScore>::Ptr mapa_global (new pcl::PointCloud<PointXYZColorScore>);
@@ -163,6 +142,9 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 			cono.color = 0;
 			cono.score = 1;
 			for (const auto& idx : cluster.indices) {
+                                // This is a botch that works but should be changed. PCL ICP doesn't sopport weighted points,
+                                // so the more reliable we consider a point to be, the more that are placed on the exact same
+                                // coordinates (limited in this case to 50).
 				if(j < 50)
 					clustered_points->push_back((*previous_map)[idx]);
 				else
@@ -176,12 +158,9 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 
 		pcl::toROSMsg(*mapa_global, map_msg);
 		map_msg.header.frame_id = "map";
-		trans_pub.publish(map_msg);
-
+		map_publisher.publish(map_msg);
 
 		*previous_map = *clustered_points;
-
-
 	}
 
 }

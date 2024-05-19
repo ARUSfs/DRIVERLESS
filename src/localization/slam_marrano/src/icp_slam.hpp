@@ -20,26 +20,23 @@ using namespace std;
 class ICP_handle {
 	private:
 		bool has_map = false;
-		float prev_time = 0;
-		int i = 0;
+		int callback_iteration = 0;
+		void send_position();
 	public:
 		ros::NodeHandle nh;
 		ros::Subscriber sub;
-		ros::Publisher trans_pub;
-		ros::Publisher pcl_pub;
+		ros::Publisher map_publisher;
+
+		tf2_ros::TransformBroadcaster br;
+
 		pcl::PointCloud<PointXYZColorScore>::Ptr previous_map;
 		pcl::PointCloud<PointXYZColorScore>::Ptr allp_clustered;
-		pcl::PointCloud<PointXYZColorScore>::Ptr to_be_clustered;
+
 		Eigen::Matrix4f position;
 
 		float score = 1.0;
 
-		tf2_ros::TransformBroadcaster br;
-		int flag = 0;
-
-	public:
 		ICP_handle();
 		void map_callback(sensor_msgs::PointCloud2);
-		void send_position();
 
 };
