@@ -28,7 +28,6 @@ class transformerFssim():
         self.pub_map = None
         self.pub_state = None
         self.pub_cmd = None
-        self.pub_marker = None
         self.publish_topics()
 
     def publish_topics(self):
@@ -36,15 +35,13 @@ class transformerFssim():
         self.pub_map = rospy.Publisher('/perception_map', PointCloud2, queue_size=10)
         self.pub_state = rospy.Publisher('state', CarState, queue_size=10)
         self.pub_cmd = rospy.Publisher('/fssim/cmd', Cmd, queue_size=10)
-        self.pub_marker = rospy.Publisher('/control/pure_pursuit/center_line',
-                                          PolygonStamped, queue_size=10)
 
     def subscribe_topics(self):
 
         rospy.Subscriber('/lidar/cones', PointCloud2, self.send_cones)
         rospy.Subscriber('fssim/base_pose_ground_truth', State,
                          self.send_state)
-        rospy.Subscriber('controls', Controls, self.send_controllers)
+        rospy.Subscriber('/controller/controls', Controls, self.send_controllers)
 
     def send_cones(self, msg):
 

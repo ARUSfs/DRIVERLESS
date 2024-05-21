@@ -5,7 +5,6 @@
 """
 
 from itertools import combinations
-
 from common_msgs.msg import Trajectory
 from visualization_msgs.msg import Marker
 from geometry_msgs.msg import Point
@@ -44,6 +43,8 @@ class PlanningHandle():
         topic_simplices = rospy.get_param('~topic_simplices')
         self.delaunay_publisher = rospy.Publisher(topic_simplices, Triangulation, queue_size=1)
 
+        self.pub_global_route = rospy.Publisher('/delaunay/global_route', Trajectory, queue_size=1)
+
 
     def get_trajectory(self, msg):
         cones = point_cloud2.read_points(msg, field_names=("x", "y", "z","color","score"),skip_nans=True)
@@ -71,41 +72,18 @@ class PlanningHandle():
         cones = point_cloud2.read_points(msg, field_names=("x", "y", "z","color","score"),skip_nans=True)
         self.track_planning_system.update_tracklimits(cones)
         route = self.track_planning_system.calculate_path()
+
         route = route[1:]
-
-        tck, u = splprep(route.T, s=0, per=True)  
-        u_new = np.linspace(u.min(), u.max(), 1000)
-        puntos_curva = np.array(splev(u_new, tck))
-
-        acum=0
-        s=[]
-        s.append(0)
-        xp = []
-        yp = []
-        for i in range(len(puntos_curva[0])-1):
-            p1=puntos_curva[:,i]
-            p2=puntos_curva[:,i+1]
-            xp.append(p2[0]-p1[0])
-            yp.append(p2[1]-p1[1])
-            acum+=np.sqrt((p1[0]-p2[0])**2+(p1[1]-p2[1])**2)
-            s.append(acum)
-        xp.append(xp[-1])
-        yp.append(yp[-1])
-
-        xpp=[]
-        ypp=[]
-        for i in range(len(xp)-1):
-            xpp.append(xp[i+1]-xp[i])
-            ypp.append(yp[i+1]-yp[i])
-        xpp.append(xpp[-1])
-        ypp.append(xpp[-1])
-
-        k=[]
-        for i in range(len(xpp)):
-            k.append((xp[i]*ypp[i] - xpp[i]*yp[i])/(xp[i]**2+yp[i]**2)**1.5)
         
+        # rospy.logwarn(route)
+        msg2 = Trajectory()
+        msg2.trajectory = [Point(p[0],p[1],0) for p in route]
+        # rospy.logwarn(msg2)
+        rospy.logerr([len(route),len(msg2.trajectory)])
 
-        # k y s se pasarán al MPC !!!
+        self.pub_global_route.publish(msg2)
+
+       
 
 
 

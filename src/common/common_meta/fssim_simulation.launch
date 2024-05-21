@@ -42,5 +42,8 @@
     </rosparam>
   </node>
 
+  <node pkg="mpc_control" name="utrilla_node" type="utrilla_node"/>
+  <node pkg="controller" name="controller" type="main.py"/>
+
 
 </launch>
