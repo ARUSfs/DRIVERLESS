@@ -5,9 +5,9 @@ Script to execute fssim interface node
 @date: 20220524
 """
 
-from common_msgs.msg import Map, Cone, CarState, Controls, Trajectory
+from common_msgs.msg import CarState, Controls, Trajectory
 from geometry_msgs.msg import Point, Polygon, PolygonStamped
-from sensor_msgs.msg import PointCloud2
+from sensor_msgs.msg import PointCloud2, PointField
 from sensor_msgs import point_cloud2
 from fssim_common.msg import State, Cmd
 
@@ -32,7 +32,7 @@ class transformerFssim():
 
     def publish_topics(self):
 
-        self.pub_map = rospy.Publisher('perception_map', Map, queue_size=10)
+        self.pub_map = rospy.Publisher('/perception_map', PointCloud2, queue_size=10)
         self.pub_state = rospy.Publisher('state', CarState, queue_size=10)
         self.pub_cmd = rospy.Publisher('/fssim/cmd', Cmd, queue_size=10)
 
@@ -51,31 +51,33 @@ class transformerFssim():
                                                       "probability_yellow",
                                                       "probability_orange"),
                                          skip_nans=True)
-
-        msg_map = Map()
+        
+        points = []
         for c in cones:
-            cone = Cone()
-            cone.position.x = c[0]
-            cone.position.y = c[1]
             prob = np.array(c[3:])
 
             # Index of color with highest probability
             maxp = np.where(prob == np.amax(prob))[0][0]
 
             if maxp == 0:  # blue
-                cone.color = 'b'
-                cone.confidence = prob[0]
+                points.append([c[0],c[1],c[2],0,prob[0]])
             elif maxp == 1:  # yellow
-                cone.color = 'y'
-                cone.confidence = prob[1]
+                points.append([c[0],c[1],c[2],1,prob[1]])
+                # cone.color = 'y'
+                # cone.confidence = prob[1]
             if maxp == 2:  # orange
-                cone.color = 'o'
-                cone.confidence = prob[2]
+                points.append([c[0],c[1],c[2],2,prob[1]])
 
-            msg_map.cones.append(cone)
-
-        rospy.loginfo(msg_map)
-        self.pub_map.publish(msg_map)
+        fields = [
+        PointField(name="x", offset=0, datatype=PointField.FLOAT32, count=1),
+        PointField(name="y", offset=4, datatype=PointField.FLOAT32, count=1),
+        PointField(name="z", offset=8, datatype=PointField.FLOAT32, count=1),
+        PointField(name="color", offset=12, datatype=PointField.UINT32, count=1),
+        PointField(name="score", offset=16, datatype=PointField.FLOAT32, count=1)
+        ]
+        new_cloud = point_cloud2.create_cloud(header=msg.header, fields=fields,points=points)
+        
+        self.pub_map.publish(new_cloud)
 
     def send_state(self, msg):
 
@@ -91,7 +93,7 @@ class transformerFssim():
         state.vy = msg.vy
         state.vz = 0
 
-        rospy.loginfo(state)
+       
         self.pub_state.publish(state)
 
     def send_controllers(self, msg):

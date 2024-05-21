@@ -1,0 +1,16 @@
+<launch>
+
+  <node name="inspection_control" pkg="tests" type="pushing_inspection.py"  output="screen">
+	</node>
+
+	<node name="steering" pkg="steering" type="main.py" output="screen">
+	</node>
+
+  <node name="can" pkg="can" type="main.py" output="screen">
+	</node>
+
+  <!-- Se guardan en $HOME/.ros/ -->
+  <node pkg="rosbag" type="record" name="rosbag_record" args="record -o pushing_inspection -a"/>
+
+
+</launch>

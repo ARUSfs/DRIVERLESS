@@ -17,16 +17,17 @@ import rospy
 class InterfaceHandle():
 
     def __init__(self):
-        self.subscribe_topics()
         self.pub = None
         self.pub2 = None
         self.pub3 = None
-        self.publish_topics()
         self.cones = []
+        self.frame = rospy.get_param("/interface/frame")
+        self.publish_topics()
+        self.subscribe_topics()
 
     def subscribe_topics(self):
-        map_topic = rospy.get_param("/interface/topic_map")
-        rospy.Subscriber(map_topic, Map, self.read_map)
+        # map_topic = rospy.get_param("/interface/topic_map")
+        # rospy.Subscriber(map_topic, Map, self.read_map)
 
         topic_route = rospy.get_param("/interface/topic_route")
         rospy.Subscriber(topic_route, Trajectory, self.read_route)
@@ -38,38 +39,38 @@ class InterfaceHandle():
         rospy.Subscriber(topic_delaunay, Triangulation, self.delaunay_callback)
 
     def publish_topics(self):
-        self.pub = rospy.Publisher("visualization_cones", MarkerArray, queue_size=1)
+        # self.pub = rospy.Publisher("visualization_cones", MarkerArray, queue_size=1)
         self.pub2 = rospy.Publisher("visualization_path", Marker, queue_size=1)
         self.pub3 = rospy.Publisher("visualization_pursuit", Marker, queue_size=1)
         self.delaunay_pub = rospy.Publisher("visualization_delaunay", Marker, queue_size=1)
 
 
 
-    def read_map(self, msg):
-        data = msg.cones  # List of cones
-        cones = list()
-        for c in data:
-            cone = (c.position.x, c.position.y, c.color, c.confidence)
-            cones.append(cone)
+    # def read_map(self, msg):
+    #     data = msg.cones  # List of cones
+    #     cones = list()
+    #     for c in data:
+    #         cone = (c.position.x, c.position.y, c.color, c.confidence)
+    #         cones.append(cone)
 
-        self.cones = cones
-        self.draw(cones)
+    #     self.cones = cones
+    #     self.draw(cones)
 
-    def draw(self, cones):
-        markerarray = MarkerArray()
-        m1 = Marker()
-        m1.action = Marker.DELETEALL
-        markerarray.markers.append(m1)
-        for i, p in enumerate(cones):
-            px, py, c, prob = p
-            marker = self.create_marker(px, py, c, i)
-            markerarray.markers.append(marker)
+    # def draw(self, cones):
+    #     markerarray = MarkerArray()
+    #     m1 = Marker()
+    #     m1.action = Marker.DELETEALL
+    #     markerarray.markers.append(m1)
+    #     for i, p in enumerate(cones):
+    #         px, py, c, prob = p
+    #         marker = self.create_marker(px, py, c, i)
+    #         markerarray.markers.append(marker)
 
-        self.pub.publish(markerarray)
+    #     self.pub.publish(markerarray)
 
     def create_marker(self, px, py, c, i):
         marker = Marker()
-        marker.header.frame_id = "fssim/vehicle/cog"
+        marker.header.frame_id = self.frame
         marker.header.stamp = rospy.Time().now()
 
         marker.ns = "cone"
@@ -116,7 +117,7 @@ class InterfaceHandle():
 
     def send_route(self, points):
         path_marker = Marker()
-        path_marker.header.frame_id = "fssim/vehicle/cog"
+        path_marker.header.frame_id = self.frame
         path_marker.ns = 'delaunay'
         path_marker.header.stamp = rospy.Time.now()
    
@@ -140,7 +141,7 @@ class InterfaceHandle():
 
     def read_pursuit_point(self, msg):
         marker = Marker()
-        marker.header.frame_id = "fssim/vehicle/cog"
+        marker.header.frame_id = self.frame
         marker.header.stamp = rospy.Time().now()
 
         marker.ns = "pursuit"
@@ -171,7 +172,7 @@ class InterfaceHandle():
 
     def delaunay_callback(self, triang):
         marker = Marker()
-        marker.header.frame_id = "fssim/vehicle/cog"
+        marker.header.frame_id = self.frame
         marker.header.stamp = rospy.Time.now()
         marker.ns = 'delaunay'
         marker.id = 0

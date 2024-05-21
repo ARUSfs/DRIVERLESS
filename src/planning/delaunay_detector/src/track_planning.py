@@ -39,9 +39,9 @@ class TrackPlanningSystem():
         self.colours = list()
         cone_points = list()
         for c in cones:
-            if c.color != 'o':
-                cone_points.append((c.position.x, c.position.y))
-                self.colours.append(c.color)
+            if c[4]>0.5 and c[3] != 2:
+                cone_points.append((c[0], c[1]))
+                self.colours.append(c[3])
         self.cones = np.array(cone_points)
         self.distances = dict()
 

@@ -1,6 +1,8 @@
 #include "ros/ros.h"
 #include "sensor_msgs/PointCloud2.h"
 #include <iostream>
+#include "PointXYZColorScore.h"
+
 
 using namespace std;
 

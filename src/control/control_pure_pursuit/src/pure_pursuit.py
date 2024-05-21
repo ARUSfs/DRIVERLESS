@@ -7,7 +7,9 @@
 import numpy as np
 import math
 from car_state import State
+import rospy
 
+MIN_VEL =  rospy.get_param('/control_pure_pursuit/min_vel') # minimum velocity to start steering
 
 class TargetCourse:
     """Class to choose pursuit point of trajectory.
@@ -73,7 +75,7 @@ def pure_pursuit_control(state: State, trajectory: list, pind: int, WB: float, D
 
     ind, Lf = trajectory.search_target_index(state)
 
-    if ind == -1 or state.v <0.5:
+    if ind == -1 or state.v < MIN_VEL:
         delta = 0
     else:
         if pind >= ind:

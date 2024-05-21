@@ -11,10 +11,9 @@ import time
 
 from common_msgs.msg import Controls, Trajectory
 from geometry_msgs.msg import Point
-from common_msgs.srv import Spawn
 from control import ControlCar
 from fssim_common.msg import State
-from std_msgs.msg import Float32
+from std_msgs.msg import Float32,Int16
 import math
 
 # Constants
@@ -28,6 +27,8 @@ class ControlHandle():
     def __init__(self):
 
         self.control = ControlCar(time.time())
+        self.AS_status=0
+        self.vel_update_time = 0
 
         self.subscribe_topics()
         self.pub = None
@@ -51,6 +52,9 @@ class ControlHandle():
             rospy.Subscriber('/fssim/base_pose_ground_truth', State, self.update_state_sim, queue_size=1)
         else:
             rospy.Subscriber('/motor_speed', Float32, self.update_state, queue_size=1)
+        
+        rospy.Subscriber('/can/AS_status', Int16, self.update_AS_status, queue_size=1)
+        rospy.Timer(rospy.Duration(1/100),self.publish_msg)
 
 
     def publish_topics(self):
@@ -68,6 +72,8 @@ class ControlHandle():
         
         self.control.update_state(rospy.Time.now(), v)
 
+        self.vel_update_time = time.time()
+
     def update_state_sim(self, msg: State):
 
         v = math.hypot(msg.vx,msg.vy)  # get velocity from fssim
@@ -83,15 +89,21 @@ class ControlHandle():
         pointsy = [p.y for p in data]
 
         self.control.update_trajectory(pointsx, pointsy)
-        self.publish_msg()
+        # self.publish_msg()
+
+    def update_AS_status(self, msg):
+        self.AS_status = msg.data
 
 
-    def publish_msg(self):
+    def publish_msg(self, event):
 
         ai, di = self.control.get_cmd()
         msg = Controls()
         msg.steering = di
         msg.accelerator = ai
+
+        if not sim_mode and time.time()-self.vel_update_time > 0.05:
+            msg.accelerator = 0
 
         p = Point()
         ind = self.control.target_ind
@@ -100,4 +112,5 @@ class ControlHandle():
             p.y = self.control.target_course.cy[ind]
             self.pub2.publish(p)
 
-        self.pub.publish(msg)
+        if sim_mode or self.AS_status == 0x02:
+            self.pub.publish(msg)
