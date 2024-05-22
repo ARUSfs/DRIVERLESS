@@ -93,35 +93,16 @@ class TrackPlanningSystem():
                 non_used_midpoints[next_midpoint] = False
                 path.append(midpoints[next_midpoint])
                 last_element = midpoints[next_midpoint]
-                last_angle = np.arctan2(last_element[1], last_element[0])
+                last_angle = np.arctan2(vectors[next_midpoint][1], vectors[next_midpoint][0])
                 # rospy.logwarn([distances[next_midpoint],angles[next_midpoint],weights[next_midpoint]])
             else:
                 break
 
         route = np.array(path)
-
-        # route=[]
-        # N_splits = 10
-        # for i in range(1,len(path)-1):
-        #     route.extend([[(1-a)*path[i][0] + a*path[i+1][0],(1-a)*path[i][1] + a*path[i+1][1]] for a in np.linspace(0,1, num=N_splits)])
-        # route.extend([[(1-a)*path[-1][0] + a*path[0][0],(1-a)*path[-1][1] + a*path[0][1]] for a in np.linspace(0,1, num=N_splits)])
-        # route = np.array(route)
-        
-    
-        triang = Triangulation()
-        for simplex in preproc_simplices:
-            s = Simplex()
-            for ind in simplex:
-                p = Point()
-                p.x = self.cones[ind][0]
-                p.y = self.cones[ind][1]
-                p.z = 0
-                s.simplex.append(p)
-            triang.simplices.append(s)  
         
         rospy.logerr([len(midpoints),len(self.cones),len(route)])
 
-        return route, triang
+        return route
 
     def get_distance(self, p1, p2):
         p1b = p1.tobytes()
