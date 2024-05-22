@@ -9,20 +9,26 @@ import math
 from mpc_handle import MPCHandle
 
 
+
 class Controller():
 
     def __init__(self):
         
         self.MPC_handler = MPCHandle()
 
-        self.pub_cmd = rospy.Publisher('/controller/controls', Controls, queue_size=1)
+        self.controller_mode = rospy.get_param('~controller_mode')
+        topic_controller_control = rospy.get_param('~topic_controller_control')
+        topic_pp_control = rospy.get_param('~topic_pp_control')
+        topic_mpc_control = rospy.get_param('~topic_mpc_control')
 
-        rospy.Subscriber('controls_pp', Controls, self.send_controllers_pp, queue_size=1)
-        rospy.Subscriber('controls_mpc', Controls, self.send_controllers_mpc, queue_size=1)     
+        self.pub_cmd = rospy.Publisher(topic_controller_control, Controls, queue_size=1)
+
+        rospy.Subscriber(topic_pp_control, Controls, self.send_controllers_pp, queue_size=1)
+        rospy.Subscriber(topic_mpc_control, Controls, self.send_controllers_mpc, queue_size=1)     
 
 
     def send_controllers_pp(self, msg):
-        if self.MPC_handler.FIRST_LAP:
+        if self.controller_mode=='PP' or (self.MPC_handler.FIRST_LAP and self.controller_mode=='PP-MPC'):
 
             self.MPC_handler.par = msg.accelerator
             self.MPC_handler.delta = math.radians(msg.steering)
@@ -31,7 +37,7 @@ class Controller():
             self.pub_cmd.publish(msg)
 
     def send_controllers_mpc(self, msg):
-        if (not self.MPC_handler.FIRST_LAP):
+        if (self.controller_mode=='PP-MPC' and not self.MPC_handler.FIRST_LAP):
 
             self.MPC_handler.par = msg.accelerator
             self.MPC_handler.delta = math.radians(msg.steering)
