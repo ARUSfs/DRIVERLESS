@@ -47,7 +47,7 @@
   <node pkg="controller" name="controller" type="main.py">
   <rosparam command="load" file="$(find controller)/config/controller.yaml"/>
     <rosparam>
-      controller_mode: 'PP'
+      controller_mode: 'MPC'
     </rosparam>
   </node>
 

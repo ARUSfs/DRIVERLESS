@@ -24,7 +24,11 @@ class Controller():
         self.pub_cmd = rospy.Publisher(topic_controller_control, Controls, queue_size=1)
 
         rospy.Subscriber(topic_pp_control, Controls, self.send_controllers_pp, queue_size=1)
-        rospy.Subscriber(topic_mpc_control, Controls, self.send_controllers_mpc, queue_size=1)     
+        rospy.Subscriber(topic_mpc_control, Controls, self.send_controllers_mpc, queue_size=1)   
+
+        if self.controller_mode == 'MPC':
+            time.sleep(2)
+            self.MPC_handler.set_virtual_mpc_route()  
 
 
     def send_controllers_pp(self, msg):
@@ -37,7 +41,7 @@ class Controller():
             self.pub_cmd.publish(msg)
 
     def send_controllers_mpc(self, msg):
-        if (self.controller_mode=='PP-MPC' and not self.MPC_handler.FIRST_LAP):
+        if ((self.controller_mode=='PP-MPC' or self.controller_mode=='MPC') and not self.MPC_handler.FIRST_LAP):
 
             self.MPC_handler.par = msg.accelerator
             self.MPC_handler.delta = math.radians(msg.steering)

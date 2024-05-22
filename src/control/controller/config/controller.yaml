@@ -3,5 +3,5 @@ topic_controller_control: '/controller/controls'
 topic_pp_control: 'controls_pp'
 topic_mpc_control: 'controls_mpc'
 
-# Type of control: 'PP' or 'PP-MPC' 
-controller_mode: 'PP-MPC'
+# Type of control: 'PP', 'PP-MPC' or 'MPC'
+controller_mode: 'MPC'
