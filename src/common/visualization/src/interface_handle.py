@@ -5,7 +5,7 @@
 """
 from itertools import combinations
 
-from common_msgs.msg import Map, Trajectory, Triangulation
+from common_msgs.msg import Trajectory, Triangulation
 from geometry_msgs.msg import PoseStamped
 from visualization_msgs.msg import Marker, MarkerArray
 from nav_msgs.msg import Path
