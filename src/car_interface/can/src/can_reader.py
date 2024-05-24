@@ -61,7 +61,7 @@ class CanReader:
                 if sub_id == 0x00:
                     self.parse_AS_HB(message)
                 elif sub_id == 0x01:
-                    rospy.loginfo("AS")
+                    #rospy.loginfo("AS")
                     self.parse_as_status(message)
                 elif sub_id == 0x02:
                     self.parse_fault_code(message)

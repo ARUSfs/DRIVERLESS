@@ -19,7 +19,7 @@ class CanPublisher:
         rospy.Subscriber("/steering/epos_info", Float32MultiArray, self.epos_info_callback)
         rospy.Subscriber("/can/AS_status", Int16, self.pub_as_status)
 
-        rospy.Timer(rospy.Duration(0.5), self.publish_temp)
+       # rospy.Timer(rospy.Duration(0.5), self.publish_temp)
         rospy.Timer(rospy.Duration(0.001), self.heart_beat)
 
 

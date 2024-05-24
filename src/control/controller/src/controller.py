@@ -64,9 +64,9 @@ class Controller():
         if self.braking_target == -1:
             self.braking_target = msg.data
             
-        elif self.braking_target > 0.5:
+        elif self.braking_target > 0.5 or msg.data > 0.5:
         
-            self.braking_target = self.braking_target - a*(time.time()-self.braking_time)
+            self.braking_target = max(self.braking_target - a*(time.time()-self.braking_time),0)
             self.braking_time = time.time()
 
             rospy.logerr(self.braking_target)
