@@ -60,7 +60,7 @@ void recostruccion(const pcl::PointCloud<pcl::PointXYZI>::Ptr& cloud, const pcl:
     kdtree.setInputCloud(cloud_f);
 
     // Definir el radio de búsqueda
-    float search_radius = 0.30; // Puedes ajustar este valor segun sea necesario
+    float search_radius = 0.20; // Puedes ajustar este valor segun sea necesario
 
     // Desenrollar el bucle externo
     for (size_t idx = 0; idx < punto.size(); ++idx) // Incrementar en 2 en cada iteración
@@ -104,17 +104,6 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg)
     pcl::PointCloud<pcl::PointXYZI>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZI>);
     pcl::PointCloud<pcl::PointXYZI>::Ptr cloud_f(new pcl::PointCloud<pcl::PointXYZI>);
     pcl::fromROSMsg(msg, *cloud);
-
-    if (inverted)
-    {
-        // //Definimos matriz de transformación
-        Eigen::Affine3f transform = Eigen::Affine3f::Identity();
-        transform(1, 1) = -transform(1, 1); // Invertir el eje Y
-        transform(2, 2) = -transform(2, 2); // Invertir el eje Z
-
-        // // Aplicar la transformación a la nube de puntos
-        pcl::transformPointCloud(*cloud, *cloud, transform);
-    }
 
     double Mx = MAX_X_FOV;
     double My = MAX_Y_FOV;
@@ -179,13 +168,13 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg)
     ec.setInputCloud(cloud);
     ec.extract(cluster_indices);
 
-/*
-    ****OPCIONAL****
+
+    //****OPCIONAL****
     std::vector<pcl::PointXYZI> puntos;
     obtenerPuntosDeClusters(puntos, cluster_indices, cloud);
     
     recostruccion(cloud, cloud_plane, puntos);
-*/
+
 
     int i = 0;
     // pcl::PointCloud<pcl::PointXYZI>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZI>);

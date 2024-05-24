@@ -3,6 +3,10 @@
   <node name="inspection_control" pkg="tests" type="inspection_control.py"  output="screen">
 	</node>
 
+  <node pkg="controller" name="controller" type="main.py" output='screen'>
+  <rosparam command="load" file="$(find controller)/config/controller.yaml"/>
+  </node>
+
 	<node name="steering" pkg="steering" type="main.py" output="screen">
 	</node>
 
