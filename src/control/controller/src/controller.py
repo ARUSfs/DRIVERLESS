@@ -27,11 +27,11 @@ class Controller():
 
         self.braking_ini = 0
 
-        self.pub_cmd = rospy.Publisher(topic_controller_control, Controls, queue_size=10)
+        self.pub_cmd = rospy.Publisher(topic_controller_control, Controls, queue_size=1)
         self.pub_AS_status = rospy.Publisher('can/AS_status', Int16, queue_size=10)
 
-        rospy.Subscriber(topic_pp_control, Controls, self.send_controllers_pp, queue_size=10)
-        rospy.Subscriber(topic_mpc_control, Controls, self.send_controllers_mpc, queue_size=10)   
+        rospy.Subscriber(topic_pp_control, Controls, self.send_controllers_pp, queue_size=1)
+        rospy.Subscriber(topic_mpc_control, Controls, self.send_controllers_mpc, queue_size=1)   
         rospy.Subscriber('/braking',Bool, self.start_braking, queue_size=10)  
 
 
