@@ -6,6 +6,10 @@
   <node name="can" pkg="can" type="main.py">
 	</node>
 
+  <node pkg="controller" name="controller" type="main.py" output='screen'>
+  <rosparam command="load" file="$(find controller)/config/controller.yaml"/>
+  </node>
+
   <node pkg="lidar_perception" name="lidar_perception" type="main" output="screen">
     <rosparam command="load" file="$(find lidar_perception)/config/lidar_cpp.yaml"/>
   </node>

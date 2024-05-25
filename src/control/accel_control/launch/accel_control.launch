@@ -1,0 +1,6 @@
+<launch>
+  <node pkg="accel_control" name="accel_control" type="main.py">
+  <rosparam command="load" file="$(find accel_control)/config/accel_control.yaml"/>
+  </node>
+
+</launch>

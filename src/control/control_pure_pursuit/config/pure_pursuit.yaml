@@ -21,6 +21,7 @@ simulation: true
 
 # Maximum command to the inverter
 max_cmd: 0.2
+min_cmd: 0
 
 # Minimum velocity to start steering
 min_vel: 0.5

@@ -9,6 +9,7 @@ import rospy
 
 # Constants
 MAX_CMD = rospy.get_param('/control_pure_pursuit/max_cmd')  # maximum command
+MIN_CMD = rospy.get_param('/control_pure_pursuit/min_cmd') 
 
 class PIDController():
 

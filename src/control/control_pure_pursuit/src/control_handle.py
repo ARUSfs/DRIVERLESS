@@ -35,15 +35,6 @@ class ControlHandle():
         self.pub2 = None
         self.publish_topics()
 
-        # self.tfBuffer = tf2_ros.Buffer()
-        # tf2_ros.TransformListener(self.tfBuffer)
-
-        # rospy.wait_for_service('spawn')
-        # spawner = rospy.ServiceProxy('spawn', Spawn)
-        # name = 'local_map'  # Name of frame
-        # spawner(4, 2, 0, name)
-
-
     def subscribe_topics(self):
 
         topic1 = rospy.get_param('/control_pure_pursuit/route_topic')
@@ -54,7 +45,7 @@ class ControlHandle():
             rospy.Subscriber('/motor_speed', Float32, self.update_state, queue_size=1)
         
         rospy.Subscriber('/can/AS_status', Int16, self.update_AS_status, queue_size=1)
-        rospy.Timer(rospy.Duration(1/100),self.publish_msg)
+        # rospy.Timer(rospy.Duration(1/100),self.publish_msg)
 
 
     def publish_topics(self):
@@ -73,12 +64,14 @@ class ControlHandle():
         self.control.update_state(rospy.Time.now(), v)
 
         self.vel_update_time = time.time()
+        self.publish_msg()
 
     def update_state_sim(self, msg: State):
 
         v = math.hypot(msg.vx,msg.vy)  # get velocity from fssim
         
         self.control.update_state(rospy.Time.now(), v)
+        self.publish_msg()
 
 
     def update_trajectory_callback(self, msg):
@@ -89,21 +82,19 @@ class ControlHandle():
         pointsy = [p.y for p in data]
 
         self.control.update_trajectory(pointsx, pointsy)
-        # self.publish_msg()
+        
 
     def update_AS_status(self, msg):
         self.AS_status = msg.data
 
 
-    def publish_msg(self, event):
+    def publish_msg(self):
 
         ai, di = self.control.get_cmd()
         msg = Controls()
         msg.steering = di
         msg.accelerator = ai
 
-        if not sim_mode and time.time()-self.vel_update_time > 0.05:
-            msg.accelerator = 0
 
         p = Point()
         ind = self.control.target_ind

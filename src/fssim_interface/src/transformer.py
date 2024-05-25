@@ -24,11 +24,11 @@ class transformerFssim():
 
     def __init__(self):
 
-        self.subscribe_topics()
         self.pub_map = None
         self.pub_state = None
         self.pub_cmd = None
         self.publish_topics()
+        self.subscribe_topics()
 
     def publish_topics(self):
 
@@ -41,7 +41,7 @@ class transformerFssim():
         rospy.Subscriber('/lidar/cones', PointCloud2, self.send_cones)
         rospy.Subscriber('fssim/base_pose_ground_truth', State,
                          self.send_state)
-        rospy.Subscriber('/controller/controls', Controls, self.send_controllers)
+        rospy.Subscriber('/controls', Controls, self.send_controllers)
 
     def send_cones(self, msg):
 
