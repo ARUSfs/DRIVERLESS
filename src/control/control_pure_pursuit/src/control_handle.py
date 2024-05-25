@@ -27,18 +27,15 @@ class ControlHandle():
     def __init__(self):
 
         self.control = ControlCar(time.time())
-        # self.AS_status=0
+        self.AS_status=0
         self.vel_update_time = 0
 
-        
         self.pub = None
         self.pub2 = None
         self.publish_topics()
         self.subscribe_topics()
 
     def subscribe_topics(self):
-        if sim_mode:
-            rospy.wait_for_message('/can/AS_status', Int16)
 
         topic1 = rospy.get_param('/control_pure_pursuit/route_topic')
         rospy.Subscriber(topic1, Trajectory, self.update_trajectory_callback)
@@ -47,7 +44,7 @@ class ControlHandle():
         else:
             rospy.Subscriber('/motor_speed', Float32, self.update_state, queue_size=1)
         
-        # rospy.Subscriber('/can/AS_status', Int16, self.update_AS_status, queue_size=1)
+        rospy.Subscriber('/can/AS_status', Int16, self.update_AS_status, queue_size=1)
         # rospy.Timer(rospy.Duration(1/100),self.publish_msg)
 
 
@@ -87,8 +84,8 @@ class ControlHandle():
         self.control.update_trajectory(pointsx, pointsy)
         
 
-    # def update_AS_status(self, msg):
-    #     self.AS_status = msg.data
+    def update_AS_status(self, msg):
+        self.AS_status = msg.data
 
 
     def publish_msg(self):
@@ -106,5 +103,5 @@ class ControlHandle():
             p.y = self.control.target_course.cy[ind]
             self.pub2.publish(p)
 
-        # if sim_mode or self.AS_status == 0x02:
-        self.pub.publish(msg)
+        if sim_mode or self.AS_status == 0x02:
+            self.pub.publish(msg)

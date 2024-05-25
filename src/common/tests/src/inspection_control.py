@@ -11,21 +11,33 @@ DURATION = 1000 #s
 TARGET_DURATION = 20 #s
 
 AMPLITUDE = 20 #degrees
-FREQUENCY = 0.1 #s
+FREQUENCY = 0.5 #s
 KP=0.5
 
-TARGET_SPEED = 2 #m/s
-MAX_CMD = 0.2 
+TARGET_SPEED = 5 #m/s
+MAX_CMD = 0.4 
 MIN_CMD = 0
+
+
+def AS_status_callback(AS_status_msg: Int16):
+        global AS_status, start_time
+        AS_status = AS_status_msg.data
+        if AS_status == 2 and start_time==0:
+              start_time = time.time()
 
 
 def speed_callback(motor_speed_msg: Float32):
         global start_time,braking,actual_speed,last_speed_update
 
-        if not braking:
+        if AS_status==0x02 and not braking:
 
             control_msg = Controls()
-            control_msg.steering = generate_sinusoidal_steering(time.time()-start_time)
+            if motor_speed_msg.data>2:
+                control_msg.steering = generate_sinusoidal_steering(time.time()-start_time)
+            else:
+                 control_msg.steering = 0
+                 start_time = time.time()
+
             if PUSHING:
                 control_msg.accelerator = 0
             else:
@@ -62,14 +74,13 @@ if __name__ == '__main__':
 
     start_time = 0
     target_reached_time = 0
+    AS_status = 0
 
     braking = False
 
     control_publisher = rospy.Publisher('/controls_pp', Controls, queue_size=1)
     braking_publisher = rospy.Publisher('/braking', Bool, queue_size=10)
-
-    rospy.wait_for_message('/can/AS_status', Int16)
-    start_time = time.time()
     rospy.Subscriber('/motor_speed', Float32, speed_callback,queue_size=1)
+    rospy.Subscriber('/can/AS_status', Int16, AS_status_callback,queue_size=1)
 
     rospy.spin()
