@@ -46,17 +46,20 @@ class AccelControl():
         self.avg_speed = 0.0001
         self.i = 0
         self.braking = False
-        self.AS_status = 0
+        # self.AS_status = 0
 
         self.cmd_publisher = rospy.Publisher('/controls_pp', Controls, queue_size=1) 
         self.braking_publisher = rospy.Publisher('/braking', Bool, queue_size=10)
+
+        if sim_mode:
+            rospy.wait_for_message('/can/AS_status', Int16)
 
         rospy.Subscriber('/perception_map', PointCloud2, self.update_route, queue_size=10)
         if sim_mode:
             rospy.Subscriber('/fssim/base_pose_ground_truth', State, self.update_speed, queue_size=1)
         else:
             rospy.Subscriber('/motor_speed', Float32, self.update_speed, queue_size=1)
-        rospy.Subscriber('/can/AS_status', Int16, self.update_AS_status, queue_size=1)
+        # rospy.Subscriber('/can/AS_status', Int16, self.update_AS_status, queue_size=1)
 
 
 
@@ -67,23 +70,23 @@ class AccelControl():
         else:
             self.speed = msg.data
 
-        if sim_mode or self.AS_status == 0x02:
-            if self.start_time == 0 and self.speed > 0.1:
-                self.start_time = time.time()
-                self.avg_speed = 0.0001
-                self.i=0
+        # if sim_mode or self.AS_status == 0x02:
+        if self.start_time == 0 and self.speed > 0.1:
+            self.start_time = time.time()
+            self.avg_speed = 0.0001
+            self.i=0
 
-            self.i += 1
-            self.avg_speed = (self.avg_speed*(self.i-1) + self.speed)/self.i
+        self.i += 1
+        self.avg_speed = (self.avg_speed*(self.i-1) + self.speed)/self.i
 
-            if self.start_time!=0 and (self.braking or (time.time()-self.start_time > self.track_length/self.avg_speed)):
-                self.braking = True
-                braking_msg = Bool()
-                braking_msg.data = True
-                self.braking_publisher.publish(braking_msg)
-            else:
-                self.acc = self.get_acc()
-                self.publish_cmd()
+        if self.start_time!=0 and (self.braking or (time.time()-self.start_time > self.track_length/self.avg_speed)):
+            self.braking = True
+            braking_msg = Bool()
+            braking_msg.data = True
+            self.braking_publisher.publish(braking_msg)
+        else:
+            self.acc = self.get_acc()
+            self.publish_cmd()
 
 
     def update_route(self, msg: PointCloud2):
@@ -91,8 +94,8 @@ class AccelControl():
         self.steer = self.get_steer(a,b)
 
 
-    def update_AS_status(self, msg):
-        self.AS_status = msg.data
+    # def update_AS_status(self, msg):
+    #     self.AS_status = msg.data
 
 
     def get_steer(self, a, b):
