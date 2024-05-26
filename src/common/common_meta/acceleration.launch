@@ -33,10 +33,10 @@
       target: 10
       track_length: 30
 
-      lqr_dist: 3.1623
-      lqr_yaw: 36.0
+      lqr_dist: 1.0
+      lqr_yaw: 25.0
       lqr_beta: 0.0
-      lqr_r: 0.0
+      lqr_r: 3.0
     </rosparam>
   </node>
 
