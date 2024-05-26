@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>PP_cpp</name>
+  <version>0.1.0</version>
+  <description>Implementation of Pure Pursuit in CPP</description>
+
+  <maintainer email="pindado.jacobo@gmail.com">Jacobo Pindado Perea</maintainer>
+
+
+  <license>TODO</license>
+
+  <build_depend>common_msgs</build_depend>
+  <exec_depend>common_msgs</exec_depend>
+
+  <build_depend>tf2</build_depend>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+</package>
