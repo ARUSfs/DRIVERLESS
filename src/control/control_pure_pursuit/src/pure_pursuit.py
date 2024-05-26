@@ -76,7 +76,7 @@ def pure_pursuit_control(state: State, trajectory: list, pind: int, WB: float, D
     ind, Lf = trajectory.search_target_index(state)
 
     if ind == -1 or state.v < MIN_VEL:
-        delta = 0
+        delta = state.prev_delta
     else:
         if pind >= ind:
             ind = pind
