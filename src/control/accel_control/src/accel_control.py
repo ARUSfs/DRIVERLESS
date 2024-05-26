@@ -110,7 +110,7 @@ class AccelControl():
         beta = 0
         r = (yaw-self.prev_yaw)/(time.time()-self.prev_time)
 
-        if abs(yaw-self.prev_yaw)>math.pi/6:
+        if abs(yaw)>math.pi/4:
             self.prev_time=time.time()
             return self.steer
 

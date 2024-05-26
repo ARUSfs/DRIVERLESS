@@ -162,7 +162,7 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg)
     std::vector<pcl::PointIndices> cluster_indices;
     pcl::EuclideanClusterExtraction<pcl::PointXYZI> ec;
     ec.setClusterTolerance(0.5); // 2cm
-    ec.setMinClusterSize(3);
+    ec.setMinClusterSize(5);
     ec.setMaxClusterSize(200);
     ec.setSearchMethod(tree);
     ec.setInputCloud(cloud);
@@ -197,7 +197,7 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg)
         float max_z = max_pt.z;
         float min_z = min_pt.z;
 
-        if ((max_z - min_z) > 0.05 && (max_z - min_z) < 0.4 && (max_x - min_x) < 0.4 && (max_y - min_y) < 0.4)
+        if ((max_z - min_z) > 0.1 && (max_z - min_z) < 0.4 && (max_x - min_x) < 0.4 && (max_y - min_y) < 0.4)
         {
             // for (const auto& idx : cluster.indices) {
             //     p = (*cloud)[idx];

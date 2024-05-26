@@ -24,7 +24,7 @@ class CanPublisher:
 
 
         self.temp = 0
-        self.MAX_ACC = 0.1
+        self.MAX_ACC = 1 # No bajar de 1, ya está limitada en el controls
         self.motor_speed_req()
         self.canReader = CanReader()
         self.can_reader_thread0 = threading.Thread(target=self.canReader.read_can0)
