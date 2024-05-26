@@ -1,7 +1,16 @@
 # Topics names of controller node
-topic_controller_control: '/controller/controls'
+topic_controller_control: '/controls'
 topic_pp_control: 'controls_pp'
 topic_mpc_control: 'controls_mpc'
 
 # Type of control: 'PP' or 'PP-MPC' 
-controller_mode: 'PP-MPC'
+controller_mode: 'PP'
+
+# for braking
+braking_kp: 0.5
+deceleration:  5
+min_braking_cmd: -0.2 
+
+# for accelerating
+max_cmd: 1 
+min_cmd: 0

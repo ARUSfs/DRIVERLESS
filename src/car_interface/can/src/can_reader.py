@@ -37,7 +37,25 @@ class CanReader:
 
             message = self.bus1.recv()
 
-            if message.arbitration_id == 0x380:
+            if message.arbitration_id == 0x182:
+                sub_id = int(message.data[0])
+                if sub_id == 0x00:
+                    self.parse_AS_HB(message)
+                elif sub_id == 0x01:
+                    #rospy.loginfo("AS")
+                    self.parse_as_status(message)
+                elif sub_id == 0x02:
+                    self.parse_fault_code(message)
+                elif sub_id == 0x03:
+                    self.parse_apps(message)
+                elif sub_id == 0x04:
+                    self.parse_brake_pressure(message)
+                elif sub_id == 0x05:
+                    self.parse_pneumatic_pressure(message)
+                elif sub_id == 0x06:
+                    self.parse_valves_state(message)
+
+            elif message.arbitration_id == 0x380:
                #IMU acc
                 self.parse_acc(message)
 
@@ -56,23 +74,7 @@ class CanReader:
             elif message.arbitration_id == 0x382:
                 self.parse_angular_velocity(message)
 
-            elif message.arbitration_id == 0x182:
-                sub_id = int(message.data[0])
-                if sub_id == 0x00:
-                    self.parse_AS_HB(message)
-                elif sub_id == 0x01:
-                    rospy.loginfo("AS")
-                    self.parse_as_status(message)
-                elif sub_id == 0x02:
-                    self.parse_fault_code(message)
-                elif sub_id == 0x03:
-                    self.parse_apps(message)
-                elif sub_id == 0x04:
-                    self.parse_brake_pressure(message)
-                elif sub_id == 0x05:
-                    self.parse_pneumatic_pressure(message)
-                elif sub_id == 0x06:
-                    self.parse_valves_state(message)
+            
             
             elif message.arbitration_id == 0x185:
                 sub_id = int(message.data[0])
@@ -274,11 +276,7 @@ class CanReader:
 
 ########################################################### BUZZER ########################################################
     def parse_buzzer(self, message):
-        rospy.sleep(2)
-        self.as_status = 2
-        msg = Int16()
-        msg.data = self.as_status
-        self.AS_status_pub.publish(msg)
+        pass
 
     #Publishers ------------------------------------------------------------------------------------------
 

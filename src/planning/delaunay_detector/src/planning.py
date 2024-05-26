@@ -144,10 +144,8 @@ class PlanningSystem():
             else:
                 break
         
-        if len(path)>1:
+        if len(path)>2:
             PREV_ANGLE = np.arctan2(path[1][1], path[1][0])/2
-        else:
-            PREV_ANGLE = 0
             
         # route = np.array(path)
 
