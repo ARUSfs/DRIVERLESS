@@ -11,20 +11,17 @@ class PurePursuit {
         std::vector<float> distance_along_curve;
         bool path_updated = false;
 
-        const std::string global_frame;
-        const std::string car_frame;
-
         tf2_ros::Buffer tfBuffer;
         tf2_ros::TransformListener tfListener;
 
+        pcl::PointXY search_pursuit_point(float look_ahead_distance,
+                                          const PointXY car_position);
 
     public:
-        PurePursuit(std::string global_f, std::string car_f)
-            : global_frame(global_f)
-            , car_frame(car_f)
-            , tfListener(tfBuffer) { }
+        PurePursuit()
+            : tfListener(tfBuffer) { }
 
         void update_path(const std::vector<pcl::PointXY> &new_path);
-        pcl::PointXY search_pursuit_point(float look_ahead_distance);
+        float get_steering_angle();
 
 };

@@ -1,5 +1,7 @@
 #include "PurePursuit.hpp"
 
+#include <cmath>
+
 #include <pcl/point_types.h>
 #include <pcl/common/norms.h>
 
@@ -22,19 +24,8 @@ void PurePursuit::update_path(const vector<pcl::PointXY> &new_path) {
 }
 
 
-PointXY PurePursuit::search_pursuit_point(const float look_ahead_distance) {
+PointXY PurePursuit::search_pursuit_point(const float look_ahead_distance, const PointXY car_position) {
     // TODO: Should check for empty path in class
-
-    geometry_msgs::TransformStamped transform;
-    PointXY car_position;
-    try {
-        transform = tfBuffer.lookupTransform(car_frame, global_frame, ros::Time(0));
-        car_position.x = transform.transform.translation.x;
-        car_position.y = transform.transform.translation.y;
-    } catch(tf2::TransformException &ex) {
-        car_position = {0.0f, 0.0f};
-        ROS_ERROR("%s", ex.what());
-    }
 
     size_t closest_point_index = 0;
     float min_distance = numeric_limits<float>::infinity();
@@ -83,5 +74,28 @@ PointXY PurePursuit::search_pursuit_point(const float look_ahead_distance) {
     }
 
     return path[path.size() - 1];
+
+}
+
+float PurePursuit::get_steering_angle() {
+
+    geometry_msgs::TransformStamped transform;
+    PointXY car_position;
+    try {
+        transform = tfBuffer.lookupTransform("map", "velodyne", , ros::Time(0));
+        car_position.x = -transform.transform.translation.x;
+        car_position.y = -transform.transform.translation.y;
+    } catch(tf2::TransformException &ex) {
+        ROS_ERROR("%s", ex.what());
+        return 0.0f;
+    }
+
+    PointXY pPoint = search_pursuit_point(3, car_position);
+
+    tf2_ros::Matrix3x3 rotation_matrix;
+    rotation_matrix.setRotation(transform.transform.rotation);
+
+
+    rotation_matrix.setRotation(transform
 
 }
