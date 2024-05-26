@@ -21,21 +21,20 @@ from geometry_msgs.msg import Point
 
 from accel_localization import AccelLocalization
 
-sim_mode = False
+SIM_MODE = rospy.get_param('/accel_control/sim_mode')
+KP = rospy.get_param('/accel_control/kp')
+TARGET = rospy.get_param('/accel_control/target')
+TRACK_LENGTH = rospy.get_param('/accel_control/track_length')
+LQR_PARAMS = np.array([rospy.get_param('/accel_control/lqr_dist'),
+                       rospy.get_param('/accel_control/lqr_yaw'),
+                       rospy.get_param('/accel_control/lqr_beta'),
+                       rospy.get_param('/accel_control/lqr_r')],np.float64) 
 
 class AccelControl():
 
     def __init__(self):
         
         self.accel_localizator = AccelLocalization()
-
-        ### Parámetros ###
-        self.params = np.array([3.1623, 36, 0, 0],np.float64) 
-        self.kp = 0.5
-        self.target = 10
-        self.max_cmd = 1
-        self.min_cmd = 0
-        self.track_length = 50
 
         ### Inicializaciones ###
         self.prev_time = 0
@@ -54,7 +53,7 @@ class AccelControl():
 
         self.recta_publisher = rospy.Publisher("/recta", Point, queue_size=10)
         rospy.Subscriber('/perception_map', PointCloud2, self.update_route, queue_size=10)
-        if sim_mode:
+        if SIM_MODE:
             rospy.Subscriber('/fssim/base_pose_ground_truth', State, self.update_speed, queue_size=1)
         else:
             rospy.Subscriber('/motor_speed', Float32, self.update_speed, queue_size=1)
@@ -64,12 +63,12 @@ class AccelControl():
 
 
     def update_speed(self, msg):
-        if sim_mode:
+        if SIM_MODE:
             self.speed = math.hypot(msg.vx,msg.vy)
         else:
             self.speed = msg.data
 
-        if sim_mode or self.AS_status == 0x02:
+        if SIM_MODE or self.AS_status == 0x02:
             if self.start_time == 0 and self.speed > 0.1:
                 self.start_time = time.time()
                 self.avg_speed = 0.0001
@@ -78,7 +77,7 @@ class AccelControl():
             self.i += 1
             self.avg_speed = (self.avg_speed*(self.i-1) + self.speed)/self.i
 
-            if self.start_time!=0 and (self.braking or (time.time()-self.start_time > self.track_length/self.avg_speed)):
+            if self.start_time!=0 and (self.braking or (time.time()-self.start_time > TRACK_LENGTH/self.avg_speed)):
                 self.braking = True
                 braking_msg = Bool()
                 braking_msg.data = True
@@ -110,7 +109,9 @@ class AccelControl():
         beta = 0
         r = (yaw-self.prev_yaw)/(time.time()-self.prev_time)
 
+        
         if abs(yaw)>math.pi/4:
+            rospy.logwarn(yaw)
             self.prev_time=time.time()
             return self.steer
 
@@ -118,16 +119,16 @@ class AccelControl():
         self.prev_time = time.time()
 
         w = np.array([dist, yaw, beta, r], np.float64) 
-        steer = -np.dot(self.params, w)         # u = -K*w
+        steer = -np.dot(LQR_PARAMS, w)         # u = -K*w
 
-        return max(min(steer, 20),-20)
+        return max(min(steer, 19.9),-19.9)
 
 
     def get_acc(self):
-        error = self.target - self.speed
-        cmd = self.kp * error
+        error = TARGET - self.speed
+        cmd = KP * error
 
-        return max(min(cmd, self.max_cmd),0)
+        return max(min(cmd, 1),-1)
 
 
     def publish_cmd(self):

@@ -8,9 +8,15 @@ import time
 import math
 
 from mpc_handle import MPCHandle
-a = 5
-kp=0.5
-MIN_CMD = -0.2
+
+# for braking
+KP=0.5
+DECELERATION = 5
+MIN_BRAKING_CMD = -0.2 
+
+# for accelerating
+MAX_CMD = 1 
+MIN_CMD = 0
 
 
 
@@ -37,7 +43,10 @@ class Controller():
 
     def send_controllers_pp(self, msg):
         if self.controller_mode=='PP' or (self.MPC_handler.FIRST_LAP and self.controller_mode=='PP-MPC'):
-
+            #limit command
+            msg.accelerator = min(max(msg.accelerator,MIN_CMD),MAX_CMD)
+            msg.steering = min(max(msg.steering,-19.9),19.9)
+            
             self.MPC_handler.par = msg.accelerator
             self.MPC_handler.delta = math.radians(msg.steering)
 
@@ -46,6 +55,9 @@ class Controller():
 
     def send_controllers_mpc(self, msg):
         if (self.controller_mode=='PP-MPC' and not self.MPC_handler.FIRST_LAP):
+            # limit command
+            msg.accelerator = min(max(msg.accelerator,MIN_CMD),MAX_CMD)
+            msg.steering = min(max(msg.steering,-19.9),19.9)
 
             self.MPC_handler.par = msg.accelerator
             self.MPC_handler.delta = math.radians(msg.steering)
@@ -66,16 +78,14 @@ class Controller():
             
         elif self.braking_target > 0.5 or msg.data > 0.5:
         
-            self.braking_target = max(self.braking_target - a*(time.time()-self.braking_time),0)
+            self.braking_target = max(self.braking_target - DECELERATION*(time.time()-self.braking_time),0)
             self.braking_time = time.time()
 
-            rospy.logerr(self.braking_target)
-
             error = self.braking_target - msg.data
-            cmd = kp*error
+            cmd = KP*error
     
             control_msg = Controls()
-            control_msg.accelerator = min(max(cmd,MIN_CMD),0)
+            control_msg.accelerator = min(max(cmd,MIN_BRAKING_CMD),0)
             control_msg.steering = 0
 
             self.pub_cmd.publish(control_msg)
