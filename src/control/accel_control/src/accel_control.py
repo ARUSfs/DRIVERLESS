@@ -17,10 +17,11 @@ from fssim_common.msg import State
 from visualization_msgs.msg import Marker
 from sensor_msgs.msg import PointCloud2
 from std_msgs.msg import Float32,Bool,Int16
+from geometry_msgs.msg import Point
 
 from accel_localization import AccelLocalization
 
-sim_mode = True
+sim_mode = False
 
 class AccelControl():
 
@@ -29,12 +30,12 @@ class AccelControl():
         self.accel_localizator = AccelLocalization()
 
         ### Parámetros ###
-        self.params = np.array([3.1623, 16.7034, 0.0002, 2.8281],np.float64) 
+        self.params = np.array([3.1623, 36, 0, 0],np.float64) 
         self.kp = 0.5
         self.target = 10
-        self.max_cmd = 0.5
+        self.max_cmd = 1
         self.min_cmd = 0
-        self.track_length = 75
+        self.track_length = 50
 
         ### Inicializaciones ###
         self.prev_time = 0
@@ -51,6 +52,7 @@ class AccelControl():
         self.cmd_publisher = rospy.Publisher('/controls_pp', Controls, queue_size=1) 
         self.braking_publisher = rospy.Publisher('/braking', Bool, queue_size=10)
 
+        self.recta_publisher = rospy.Publisher("/recta", Point, queue_size=10)
         rospy.Subscriber('/perception_map', PointCloud2, self.update_route, queue_size=10)
         if sim_mode:
             rospy.Subscriber('/fssim/base_pose_ground_truth', State, self.update_speed, queue_size=1)
@@ -81,6 +83,9 @@ class AccelControl():
                 braking_msg = Bool()
                 braking_msg.data = True
                 self.braking_publisher.publish(braking_msg)
+                self.steer=0
+                self.acc=0
+                self.publish_cmd()
             else:
                 self.acc = self.get_acc()
                 self.publish_cmd()
@@ -89,6 +94,10 @@ class AccelControl():
     def update_route(self, msg: PointCloud2):
         a,b = self.accel_localizator.get_route(msg)
         self.steer = self.get_steer(a,b)
+        msg = Point()
+        msg.x = a
+        msg.y = b
+        self.recta_publisher.publish(msg)
 
 
     def update_AS_status(self, msg):
@@ -100,6 +109,10 @@ class AccelControl():
         yaw = - math.atan(a)             # Ángulo entre la trayectoria y el coche
         beta = 0
         r = (yaw-self.prev_yaw)/(time.time()-self.prev_time)
+
+        if abs(yaw-self.prev_yaw)>math.pi/6:
+            self.prev_time=time.time()
+            return self.steer
 
         self.prev_yaw = yaw
         self.prev_time = time.time()

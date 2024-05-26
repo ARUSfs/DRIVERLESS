@@ -11,11 +11,11 @@ DURATION = 1000 #s
 TARGET_DURATION = 20 #s
 
 AMPLITUDE = 20 #degrees
-FREQUENCY = 0.5 #s
+FREQUENCY = 0.2 #s
 KP=0.5
 
-TARGET_SPEED = 5 #m/s
-MAX_CMD = 0.4 
+TARGET_SPEED = 3 #m/s
+MAX_CMD = 0.4
 MIN_CMD = 0
 
 
@@ -32,7 +32,7 @@ def speed_callback(motor_speed_msg: Float32):
         if AS_status==0x02 and not braking:
 
             control_msg = Controls()
-            if motor_speed_msg.data>2:
+            if motor_speed_msg.data>1:
                 control_msg.steering = generate_sinusoidal_steering(time.time()-start_time)
             else:
                  control_msg.steering = 0
