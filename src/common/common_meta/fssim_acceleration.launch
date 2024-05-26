@@ -1,11 +1,13 @@
 <launch>
 
 
-  <node pkg="controller" name="controller" type="main.py">
-  <rosparam command="load" file="$(find controller)/config/controller.yaml"/>
-    <rosparam>
-      controller_mode: 'PP'
-    </rosparam>
+  <node pkg="controller" name="controller" type="main.py" output='screen'>
+    <rosparam command="load" file="$(find controller)/config/controller.yaml"/>
+      braking_kp: 0.5
+      deceleration:  5
+      min_braking_cmd: -0.2 
+      max_cmd: 1 
+      min_cmd: 0
   </node>
 
   <node pkg="fssim_interface" name="fssim_interface" type="main.py">

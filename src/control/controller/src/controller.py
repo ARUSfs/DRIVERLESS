@@ -10,13 +10,23 @@ import math
 from mpc_handle import MPCHandle
 
 # for braking
-KP=0.5
+BRAKING_KP=0.5
 DECELERATION = 5
 MIN_BRAKING_CMD = -0.2 
 
 # for accelerating
 MAX_CMD = 1 
 MIN_CMD = 0
+
+
+# for braking
+BRAKING_KP = rospy.get_param('/controller/braking_kp')
+DECELERATION = rospy.get_param('/controller/deceleration')
+MIN_BRAKING_CMD = rospy.get_param('/controller/min_braking_cmd') 
+
+# for accelerating
+MAX_CMD = rospy.get_param('/controller/max_cmd')
+MIN_CMD = rospy.get_param('/controller/min_cmd')
 
 
 
@@ -26,10 +36,10 @@ class Controller():
         
         self.MPC_handler = MPCHandle()
 
-        self.controller_mode = rospy.get_param('~controller_mode')
-        topic_controller_control = rospy.get_param('~topic_controller_control')
-        topic_pp_control = rospy.get_param('~topic_pp_control')
-        topic_mpc_control = rospy.get_param('~topic_mpc_control')
+        self.controller_mode = rospy.get_param('/controller/controller_mode')
+        topic_controller_control = rospy.get_param('/controller/topic_controller_control')
+        topic_pp_control = rospy.get_param('/controller/topic_pp_control')
+        topic_mpc_control = rospy.get_param('/controller/topic_mpc_control')
 
         self.braking_ini = 0
 
@@ -46,7 +56,7 @@ class Controller():
             #limit command
             msg.accelerator = min(max(msg.accelerator,MIN_CMD),MAX_CMD)
             msg.steering = min(max(msg.steering,-19.9),19.9)
-            
+
             self.MPC_handler.par = msg.accelerator
             self.MPC_handler.delta = math.radians(msg.steering)
 
@@ -82,7 +92,7 @@ class Controller():
             self.braking_time = time.time()
 
             error = self.braking_target - msg.data
-            cmd = KP*error
+            cmd = BRAKING_KP*error
     
             control_msg = Controls()
             control_msg.accelerator = min(max(cmd,MIN_BRAKING_CMD),0)

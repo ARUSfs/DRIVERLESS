@@ -15,8 +15,6 @@ FREQUENCY = 0.2 #s
 KP=0.5
 
 TARGET_SPEED = 3 #m/s
-MAX_CMD = 0.4
-MIN_CMD = 0
 
 
 def AS_status_callback(AS_status_msg: Int16):
@@ -67,7 +65,7 @@ def accelerator_control(current: float, target: float):
             braking_msg.data = True
             braking_publisher.publish(braking_msg)
 
-        return max(min(cmd, MAX_CMD),MIN_CMD) 
+        return max(min(cmd, 1),-1) 
 
 if __name__ == '__main__':
     rospy.init_node('sinusoidal_control_node')

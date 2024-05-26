@@ -19,9 +19,5 @@ TARGET_SPEED: 6 #10 / 3.6  # [m/s]
 # Simulation mode: (true for get velocity from fssim)
 simulation: true
 
-# Maximum command to the inverter
-max_cmd: 0.2
-min_cmd: 0
-
 # Minimum velocity to start steering
 min_vel: 0.5

@@ -4,7 +4,12 @@
 	</node>
 
   <node pkg="controller" name="controller" type="main.py" output='screen'>
-  <rosparam command="load" file="$(find controller)/config/controller.yaml"/>
+    <rosparam command="load" file="$(find controller)/config/controller.yaml"/>
+      braking_kp: 0.5
+      deceleration:  5
+      min_braking_cmd: -0.2 
+      max_cmd: 0.5
+      min_cmd: 0
   </node>
 
 	<node name="steering" pkg="steering" type="main.py" output="screen">
