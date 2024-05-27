@@ -8,7 +8,7 @@ import time
 
 PUSHING = False
 DURATION = 1000 #s
-TARGET_DURATION = 20 #s
+TARGET_DURATION = 10 #s
 
 AMPLITUDE = 20 #degrees
 FREQUENCY = 0.2 #s
