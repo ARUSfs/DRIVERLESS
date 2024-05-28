@@ -35,19 +35,19 @@ using namespace std;
 LidarHandle::LidarHandle()
 {
 
-    nh.getParam("/lidar_perception/lidar_topic", lidar_topic);
-    nh.getParam("/lidar_perception/frame_id", frame_id);
-    nh.getParam("/lidar_perception/map_topic", map_topic);
-    nh.getParam("/lidar_perception/filtered_cloud_topic", filtered_cloud_topic);
-    nh.getParam("/lidar_perception/cones_marker_topic", cones_marker_topic);
+    nh.getParam("/new_lidar_perception/lidar_topic", lidar_topic);
+    nh.getParam("/new_lidar_perception/frame_id", frame_id);
+    nh.getParam("/new_lidar_perception/map_topic", map_topic);
+    nh.getParam("/new_lidar_perception/filtered_cloud_topic", filtered_cloud_topic);
+    nh.getParam("/new_lidar_perception/cones_marker_topic", cones_marker_topic);
 
-    nh.getParam("/lidar_perception/MAX_X_FOV", MAX_X_FOV);
-    nh.getParam("/lidar_perception/MAX_Y_FOV", MAX_Y_FOV);
-    nh.getParam("/lidar_perception/MAX_Z_FOV", MAX_Z_FOV);
-    nh.getParam("/lidar_perception/H_FOV", H_FOV);
+    nh.getParam("/new_lidar_perception/MAX_X_FOV", MAX_X_FOV);
+    nh.getParam("/new_lidar_perception/MAX_Y_FOV", MAX_Y_FOV);
+    nh.getParam("/new_lidar_perception/MAX_Z_FOV", MAX_Z_FOV);
+    nh.getParam("/new_lidar_perception/H_FOV", H_FOV);
     H_FOV = H_FOV * (M_PI / 180);
 
-    nh.getParam("/lidar_perception/inverted", inverted);
+    nh.getParam("/new_lidar_perception/inverted", inverted);
 
     sub = nh.subscribe<sensor_msgs::PointCloud2>(lidar_topic, 1, &LidarHandle::callback, this);
 
@@ -144,14 +144,73 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 cloud_msg)
         }
         
     }
+
+
+
+    pcl::search::KdTree<pcl::PointXYZI>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZI>);
+    tree->setInputCloud(final_cloud);
+
+    std::vector<pcl::PointIndices> final_indices;
+    pcl::EuclideanClusterExtraction<pcl::PointXYZI> ec;
+    ec.setClusterTolerance(0.5); // 2cm
+    ec.setMinClusterSize(2);
+    ec.setMaxClusterSize(200);
+    ec.setSearchMethod(tree);
+    ec.setInputCloud(final_cloud);
+    ec.extract(final_indices);
+
+
+    int j = 0;
+    pcl::PointCloud<PointXYZColorScore>::Ptr map_cloud (new pcl::PointCloud<PointXYZColorScore>);
+    
+    // common_msgs::Map map;
+    for (const auto &cluster : final_indices)
+    {
+        // Crear una nube temporal para el cluster actual
+        pcl::PointCloud<pcl::PointXYZI>::Ptr cluster_cloud(new pcl::PointCloud<pcl::PointXYZI>);
+        pcl::copyPointCloud(*final_cloud, cluster, *cluster_cloud);
+
+        // Obtener la caja delimitadora (bounding box) del cluster
+        pcl::PointXYZI min_pt, max_pt;
+        pcl::getMinMax3D(*cluster_cloud, min_pt, max_pt);
+        float max_x = max_pt.x;
+        float min_x = min_pt.x;
+        float max_y = max_pt.y;
+        float min_y = min_pt.y;
+        float max_z = max_pt.z;
+        float min_z = min_pt.z;
+
+        if ((max_z - min_z) < 0.4 && (max_x - min_x) < 0.4 && (max_y - min_y) < 0.4)
+        {
+            // for (const auto& idx : cluster.indices) {
+            //     p = (*cloud)[idx];
+            //     p.intensity = i;
+            //     cloud_cluster->push_back(p);
+            // }
+            PointXYZColorScore cone;
+            cone.x = (max_x+min_x)/2;
+            cone.y = (max_y+min_y)/2;
+            cone.z = 0;
+            cone.color = 0;
+            cone.score = 1;
+            map_cloud->push_back(cone);
+        }
+
+        j++;
+    }
     
 
 
 
     sensor_msgs::PointCloud2 msg2;
     pcl::toROSMsg(*final_cloud, msg2);
-    msg2.header.frame_id = "rslidar";
+    msg2.header.frame_id = frame_id;
     filtered_cloud_pub.publish(msg2);
+
+    sensor_msgs::PointCloud2 map_msg;
+    pcl::toROSMsg(*map_cloud,map_msg);
+    map_msg.header.frame_id=frame_id;
+    map_pub.publish(map_msg);
 
     ros::Time fin = ros::Time::now();
     std::cout << (fin - ini) << endl;

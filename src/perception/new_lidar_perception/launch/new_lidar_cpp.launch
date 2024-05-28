@@ -1,6 +1,6 @@
 <launch>
   <node pkg="new_lidar_perception" name="new_lidar_perception" type="new_main" output="screen">
-  <rosparam command="load" file="$(find new_lidar_perception)/config/lidar_cpp.yaml"/>
+  <rosparam command="load" file="$(find new_lidar_perception)/config/new_lidar_cpp.yaml"/>
   </node>
 
   <!-- <node name="fssim_rviz" pkg="rviz" type="rviz" args="-d $(find lidar_perception)/config/lidar_rviz.rviz"/> -->
