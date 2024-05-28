@@ -3,8 +3,8 @@
     <param name="config_path" value=""/>
 	</node>
   
-  <node pkg="rslidar_sdk" name="velodyne_transformer" type="velodyne_transformer.py"/>
-  <node pkg="rslidar_sdk" name="imu_transformer" type="imu_transformer.py"/>
+  <!-- <node pkg="rslidar_sdk" name="velodyne_transformer" type="velodyne_transformer.py"/>
+  <node pkg="rslidar_sdk" name="imu_transformer" type="imu_transformer.py"/> -->
 
   <node name="steering" pkg="steering" type="main.py" output="screen">
   </node>
@@ -30,8 +30,8 @@
     <rosparam>
       sim_mode: false
       kp: 0.5
-      target: 10
-      track_length: 30
+      target: 5
+      track_length: 50
 
       lqr_dist: 1.0
       lqr_yaw: 25.0

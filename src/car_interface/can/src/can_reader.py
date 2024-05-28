@@ -26,7 +26,8 @@ class CanReader:
         
         self.bus0 = can.interface.Bus(channel='can0', bustype='socketcan')
         self.bus1 = can.interface.Bus(channel='can1', bustype='socketcan')
-        self.bus0.set_filters([{"can_id": 0x181, "can_mask": 0x7FF, "extended": False}])
+        self.bus0.set_filters([{"can_id": 0x181, "can_mask": 0x7FF, "extended": False},
+                               {"can_id": 0x18b, "can_mask": 0x7FF, "extended": False}])
         self.bus1.set_filters([{"can_id": 0x182, "can_mask": 0x7FF, "extended": False},
                                {"can_id": 0x380, "can_mask": 0x7FF, "extended": False},
                                {"can_id": 0x394, "can_mask": 0x7FF, "extended": False},
@@ -119,7 +120,9 @@ class CanReader:
             if message.arbitration_id == 0x181 and int(message.data[0]) == 0x30:
                 #Inv speed
                 self.parse_inv_speed(message)
-   
+
+            #elif message.arbitration_id == 0x18b:
+                #rospy.logwarn(message.data)
    
     #Parsers --------------------------------------------------------
     #################################################### ACQUISITION ########################################################

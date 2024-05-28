@@ -151,7 +151,7 @@ class PlanningSystem():
 
         route=[]
         for i in range(len(path)-1):
-            route.extend([[(1-a)*path[i][0] + a*path[i+1][0],(1-a)*path[i][1] + a*path[i+1][1]] for a in np.linspace(0,1, num=5)])
+            route.extend([[(1-a)*path[i][0] + a*path[i+1][0],(1-a)*path[i][1] + a*path[i+1][1]] for a in np.linspace(0,1, num=10)])
         route = np.array(route)
 
         triang = Triangulation()
