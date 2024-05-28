@@ -61,16 +61,16 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 cloud_msg)
 {
     ros::Time ini = ros::Time::now();
 
-    double Mx = MAX_X_FOV;
-    double My = MAX_Y_FOV;
-    double Mz = MAX_Z_FOV;
-    double H = H_FOV;
+    const double Mx = MAX_X_FOV;
+    const double My = MAX_Y_FOV;
+    const double Mz = MAX_Z_FOV;
+    const double H = H_FOV;
 
-    int offset_x = cloud_msg.fields[0].offset;
-    int offset_y = cloud_msg.fields[1].offset;
-    int offset_z = cloud_msg.fields[2].offset;
-    int offset_i = cloud_msg.fields[3].offset;
-    int offset_ring = cloud_msg.fields[4].offset;
+    const size_t offset_x = cloud_msg.fields[0].offset;
+    const size_t offset_y = cloud_msg.fields[1].offset;
+    const size_t offset_z = cloud_msg.fields[2].offset;
+    const size_t offset_i = cloud_msg.fields[3].offset;
+    const size_t offset_ring = cloud_msg.fields[4].offset;
 
 
     std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> cloud_vector;
@@ -83,21 +83,21 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 cloud_msg)
 
     for (size_t point_idx = 0; point_idx < cloud_msg.width * cloud_msg.height; ++point_idx) {
         uint8_t* point_data = &cloud_msg.data[point_idx * cloud_msg.point_step];
-        
+
         float x = *reinterpret_cast<float*>(point_data + offset_x);
         float y = *reinterpret_cast<float*>(point_data + offset_y);
         float z = *reinterpret_cast<float*>(point_data + offset_z);
         float intensity = *reinterpret_cast<float*>(point_data + offset_i);
         uint16_t ring = *reinterpret_cast<uint16_t*>(point_data + offset_ring);
 
-        pcl::PointXYZI p; 
+        pcl::PointXYZI p;
         p.x = x;
         p.y = y;
         p.z = z;
         p.intensity = ring;
 
         cloud_vector[ring]->push_back(p);
-        
+
 
 
     }
@@ -115,7 +115,7 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 cloud_msg)
         layer->erase(std::remove_if(layer->points.begin(), layer->points.end(), condition), layer->points.end());
 
         if (layer->width > 0){
-            
+
             // Creating the KdTree object for the search method of the extraction
             pcl::search::KdTree<pcl::PointXYZI>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZI>);
             tree->setInputCloud(layer);
@@ -142,7 +142,7 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 cloud_msg)
                 i++;
             }
         }
-        
+
     }
 
 
@@ -215,5 +215,5 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 cloud_msg)
     ros::Time fin = ros::Time::now();
     std::cout << (fin - ini) << endl;
 
-   
+
 }
