@@ -110,7 +110,7 @@ class AccelControl():
         r = (yaw-self.prev_yaw)/(time.time()-self.prev_time)
 
         
-        if abs(yaw)>math.pi/4:
+        if abs(yaw)>math.pi/6:
             rospy.logwarn(yaw)
             self.prev_time=time.time()
             return self.steer

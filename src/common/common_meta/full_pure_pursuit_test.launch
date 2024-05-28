@@ -3,8 +3,8 @@
     <param name="config_path" value=""/>
   </node>
     
-  <node pkg="rslidar_sdk" name="velodyne_transformer" type="velodyne_transformer.py"/>
-  <node pkg="rslidar_sdk" name="imu_transformer" type="imu_transformer.py"/>
+  <!-- <node pkg="rslidar_sdk" name="velodyne_transformer" type="velodyne_transformer.py"/>
+  <node pkg="rslidar_sdk" name="imu_transformer" type="imu_transformer.py"/> -->
 
   <node name="steering" pkg="steering" type="main.py" output="screen">
 	</node>
@@ -50,9 +50,9 @@
     <rosparam command="load" file="$(find control_pure_pursuit)/config/pure_pursuit.yaml"/>
     <rosparam>
       LFC: 4
-      TARGET_SPEED: 2
+      TARGET_SPEED: 3
       simulation: false
-      min_vel: 0.5
+      min_vel: 0.3
     </rosparam>
   </node>
 
