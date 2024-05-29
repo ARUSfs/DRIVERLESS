@@ -9,15 +9,12 @@ import tf2_ros
 import tf_conversions
 import time
 
-from common_msgs.msg import Controls, Trajectory
+from common_msgs.msg import Controls, Trajectory, CarState
 from geometry_msgs.msg import Point
 from control import ControlCar
 from fssim_common.msg import State
 from std_msgs.msg import Float32,Int16
 import math
-
-# Constants
-sim_mode = rospy.get_param('/control_pure_pursuit/simulation') # look for simulation mode
 
 class ControlHandle():
     """Listen route and state and generate command controls of steering and
@@ -39,11 +36,7 @@ class ControlHandle():
 
         topic1 = rospy.get_param('/control_pure_pursuit/route_topic')
         rospy.Subscriber(topic1, Trajectory, self.update_trajectory_callback)
-        if sim_mode:
-            rospy.Subscriber('/fssim/base_pose_ground_truth', State, self.update_state_sim, queue_size=1)
-        else:
-            rospy.Subscriber('/motor_speed', Float32, self.update_state, queue_size=1)
-        
+        rospy.Subscriber('/car_state/state', CarState, self.update_state, queue_size=1)
         rospy.Subscriber('/can/AS_status', Int16, self.update_AS_status, queue_size=1)
         # rospy.Timer(rospy.Duration(1/100),self.publish_msg)
 
@@ -57,16 +50,7 @@ class ControlHandle():
         self.pub2 = rospy.Publisher(topic_pursuit, Point, queue_size=10)
 
 
-    def update_state(self, msg: Float32):
-
-        v = msg.data
-        
-        self.control.update_state(rospy.Time.now(), v)
-
-        self.vel_update_time = time.time()
-        self.publish_msg()
-
-    def update_state_sim(self, msg: State):
+    def update_state(self, msg: CarState):
 
         v = math.hypot(msg.vx,msg.vy)  # get velocity from fssim
         
@@ -103,5 +87,6 @@ class ControlHandle():
             p.y = self.control.target_course.cy[ind]
             self.pub2.publish(p)
 
-        if sim_mode or self.AS_status == 0x02:
+        if self.AS_status == 0x02:
             self.pub.publish(msg)
+               

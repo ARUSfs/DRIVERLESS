@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import rospy
-from common_msgs.msg import Controls
+from common_msgs.msg import Controls, CarState
 from std_msgs.msg import Int16, Float32, Bool
 import numpy as np
 import time
@@ -80,18 +80,19 @@ class Controller():
             self.controller_mode = 'BRAKING'
             self.braking_time = time.time()
             self.braking_target = -1
-            rospy.Subscriber('/motor_speed', Float32, self.braking_callback,queue_size=1)
+            rospy.Subscriber('/car_state/state', CarState, self.braking_callback,queue_size=1)
 
-    def braking_callback(self, msg):
+    def braking_callback(self, msg:CarState):
+        v = math.hypot(msg.vx,msg.vy)
         if self.braking_target == -1:
-            self.braking_target = msg.data
+            self.braking_target = v
             
-        elif self.braking_target > 0.5 or msg.data > 0.5:
+        elif self.braking_target > 0.5 or v > 0.5:
         
             self.braking_target = max(self.braking_target - DECELERATION*(time.time()-self.braking_time),0)
             self.braking_time = time.time()
 
-            error = self.braking_target - msg.data
+            error = self.braking_target - v
             cmd = BRAKING_KP*error
     
             control_msg = Controls()

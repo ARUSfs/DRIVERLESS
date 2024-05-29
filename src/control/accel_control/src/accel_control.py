@@ -12,8 +12,7 @@ import math
 import time
 
 # ROS msgs
-from common_msgs.msg import Controls
-from fssim_common.msg import State
+from common_msgs.msg import Controls, CarState
 from visualization_msgs.msg import Marker
 from sensor_msgs.msg import PointCloud2
 from std_msgs.msg import Float32,Bool,Int16
@@ -21,7 +20,6 @@ from geometry_msgs.msg import Point
 
 from accel_localization import AccelLocalization
 
-SIM_MODE = rospy.get_param('/accel_control/sim_mode')
 KP = rospy.get_param('/accel_control/kp')
 TARGET = rospy.get_param('/accel_control/target')
 TRACK_LENGTH = rospy.get_param('/accel_control/track_length')
@@ -53,22 +51,16 @@ class AccelControl():
 
         self.recta_publisher = rospy.Publisher("/recta", Point, queue_size=10)
         rospy.Subscriber('/perception_map', PointCloud2, self.update_route, queue_size=10)
-        if SIM_MODE:
-            rospy.Subscriber('/fssim/base_pose_ground_truth', State, self.update_speed, queue_size=1)
-        else:
-            rospy.Subscriber('/motor_speed', Float32, self.update_speed, queue_size=1)
+        rospy.Subscriber('/car_state/state', CarState, self.update_speed, queue_size=1)
         rospy.Subscriber('/can/AS_status', Int16, self.update_AS_status, queue_size=1)
 
 
 
 
     def update_speed(self, msg):
-        if SIM_MODE:
-            self.speed = math.hypot(msg.vx,msg.vy)
-        else:
-            self.speed = msg.data
-
-        if SIM_MODE or self.AS_status == 0x02:
+        self.speed = math.hypot(msg.vx,msg.vy)
+        
+        if self.AS_status == 0x02:
             if self.start_time == 0 and self.speed > 0.1:
                 self.start_time = time.time()
                 self.avg_speed = 0.0001

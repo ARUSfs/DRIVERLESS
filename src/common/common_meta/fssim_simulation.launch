@@ -38,7 +38,7 @@
       max_dist: 10 
       new_lap_counter: 40 
       path_gap: 4
-      state_topic: '/fssim/base_pose_ground_truth'
+      state_topic: '/car_state/state'
     </rosparam>
   </node>
 

@@ -1,0 +1,12 @@
+<package>
+  <description brief="car_state">
+
+     car_state
+
+  </description>
+  <author>Gonzalo</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/car_state</url>
+
+</package>
