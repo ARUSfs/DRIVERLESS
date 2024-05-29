@@ -27,6 +27,7 @@ class StateClass:
     def motorspeed_callback(self, msg):
         self.vx = msg.data
 
+
     def subscribe_topics(self):
         rospy.Subscriber('/motor_speed', Float32, self.motorspeed_callback)
 
