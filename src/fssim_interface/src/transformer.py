@@ -29,9 +29,10 @@ class transformerFssim():
         self.pub_map = None
         self.pub_state = None
         self.pub_cmd = None
+        self.pub_as_status = None
         self.publish_topics()
         self.subscribe_topics()
-        self.pub_as_status = None
+        
 
     def publish_topics(self):
 
@@ -114,5 +115,6 @@ class transformerFssim():
 
     
     def GOsignal_callback(self,msg):
-        if msg:
-            self.pub_as_status.publish(0x02)
+        status_msg=Int16()
+        status_msg.data=0x02
+        self.pub_as_status.publish(status_msg)
