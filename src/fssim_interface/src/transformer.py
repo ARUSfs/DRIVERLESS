@@ -36,7 +36,7 @@ class transformerFssim():
     def publish_topics(self):
 
         self.pub_map = rospy.Publisher('/perception_map', PointCloud2, queue_size=10)
-        self.pub_state = rospy.Publisher('car_state/state', CarState, queue_size=10)
+        self.pub_state = rospy.Publisher('/car_state/state', CarState, queue_size=10)
         self.pub_cmd = rospy.Publisher('/fssim/cmd', Cmd, queue_size=10)
         self.pub_as_status = rospy.Publisher('/can/AS_status', Int16, queue_size=10)
 
@@ -47,6 +47,7 @@ class transformerFssim():
                          self.send_state)
         rospy.Subscriber('/controls', Controls, self.send_controllers)
         rospy.Subscriber('/fssim/GO_marker',Marker,self.GOsignal_callback,queue_size=1)
+        
 
     def send_cones(self, msg):
 
