@@ -9,7 +9,7 @@ import tf2_ros
 import tf_conversions
 import time
 
-from common_msgs.msg import Controls, Trajectory
+from common_msgs.msg import Controls, Trajectory, CarState
 from geometry_msgs.msg import Point
 from control import ControlCar
 from fssim_common.msg import State
@@ -40,7 +40,7 @@ class ControlHandle():
         topic1 = rospy.get_param('/control_pure_pursuit/route_topic')
         rospy.Subscriber(topic1, Trajectory, self.update_trajectory_callback)
         if sim_mode:
-            rospy.Subscriber('/fssim/base_pose_ground_truth', State, self.update_state_sim, queue_size=1)
+            rospy.Subscriber('/car_state/state', CarState, self.update_state_sim, queue_size=1)
         else:
             rospy.Subscriber('/motor_speed', Float32, self.update_state, queue_size=1)
         
@@ -66,7 +66,7 @@ class ControlHandle():
         self.vel_update_time = time.time()
         self.publish_msg()
 
-    def update_state_sim(self, msg: State):
+    def update_state_sim(self, msg: CarState):
 
         v = math.hypot(msg.vx,msg.vy)  # get velocity from fssim
         
@@ -105,3 +105,4 @@ class ControlHandle():
 
         if sim_mode or self.AS_status == 0x02:
             self.pub.publish(msg)
+               
