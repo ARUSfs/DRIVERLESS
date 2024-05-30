@@ -110,6 +110,7 @@ float PurePursuit::get_steering_angle() {
         return 0.0f;
     }
 
+
     tf2::Quaternion quaternion;
     tf2::fromMsg(transform.transform.rotation, quaternion);
     tf2::Matrix3x3 rotationMatrix(quaternion);
@@ -123,7 +124,6 @@ float PurePursuit::get_steering_angle() {
 
     delta = max(-19.9,min(180*delta/M_PI,19.9));
 
-    std::cout << delta << std::endl;  
     return delta;
 
 }
