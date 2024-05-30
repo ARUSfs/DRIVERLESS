@@ -1,6 +1,7 @@
 #include "ros/ros.h"
 #include <std_msgs/Float32.h>
 #include "common_msgs/Trajectory.h"
+#include "common_msgs/CarState.h"
 
 #include "PurePursuit.hpp"
 
@@ -10,13 +11,15 @@ class ControlHandle {
 
         ros::NodeHandle nh;
         ros::Publisher control_publisher;
+        ros::Publisher pursuit_point_publisher;
         ros::Subscriber velocity_sub;
         ros::Subscriber path_sub;
+        ros::Timer publisher_timer;
 
 
         PurePursuit pPursuit;
 
-        void motor_speed_callback(const std_msgs::Float32);
+        void speed_callback(const common_msgs::CarState);
         void path_callback(const common_msgs::Trajectory);
         void control_timer_callback(const ros::TimerEvent&);
 

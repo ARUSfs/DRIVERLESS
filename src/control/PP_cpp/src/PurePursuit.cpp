@@ -7,7 +7,15 @@
 
 #include <ros/ros.h>
 #include <geometry_msgs/TransformStamped.h>
+#include <geometry_msgs/Point.h>
 #include <tf2_ros/transform_listener.h>
+#include <tf2/LinearMath/Transform.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2/LinearMath/Matrix3x3.h>
+#include <cmath>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h> 
+#include <numeric>
+
 
 using namespace std;
 using namespace pcl;
@@ -24,8 +32,13 @@ void PurePursuit::update_path(const vector<pcl::PointXY> &new_path) {
 }
 
 
-PointXY PurePursuit::search_pursuit_point(const float look_ahead_distance, const PointXY car_position) {
+PointXY PurePursuit::search_pursuit_point(const float look_ahead_distance, const pcl::PointXY car_position) {
     // TODO: Should check for empty path in class
+
+    if(path.empty()){
+        PointXY p;
+        return p;
+    }
 
     size_t closest_point_index = 0;
     float min_distance = numeric_limits<float>::infinity();
@@ -35,7 +48,7 @@ PointXY PurePursuit::search_pursuit_point(const float look_ahead_distance, const
     }
 
     for(size_t point_index = 0; point_index < path.size(); point_index++){
-        const PointXY current_point = path[point_index];
+        const pcl::PointXY current_point = path[point_index];
 
         // Actually not the distance but L2 squared, since the actual distance
         // doesn't matter.
@@ -56,11 +69,11 @@ PointXY PurePursuit::search_pursuit_point(const float look_ahead_distance, const
                 distance_along_curve.push_back(0.0f);
             }
             else {
-                const PointXY previous_point =  path[point_index-1];
+                const pcl::PointXY previous_point =  path[point_index-1];
                 const float dist_dx = current_point.x - previous_point.x;
                 const float dist_dy = current_point.y - previous_point.y;
-                const float distance_from_previous = dist_dx*dist_dx + dist_dy*dist_dy;
-                distance_along_curve.push_back(distance_from_previous);
+                const float distance_from_previous = sqrt(dist_dx*dist_dx + dist_dy*dist_dy);
+                distance_along_curve.push_back(distance_from_previous + distance_along_curve[distance_along_curve.size() - 1]);
             }
         }
     }
@@ -69,7 +82,8 @@ PointXY PurePursuit::search_pursuit_point(const float look_ahead_distance, const
     for(size_t point_index = closest_point_index; point_index < path.size(); point_index++) {
         const float cur_dist = distance_along_curve[point_index] - closest_point_dist;
         if(cur_dist > look_ahead_distance) {
-            return path[point_index];
+            pursuit_index = point_index;
+            return path[pursuit_index];
         }
     }
 
@@ -80,22 +94,40 @@ PointXY PurePursuit::search_pursuit_point(const float look_ahead_distance, const
 float PurePursuit::get_steering_angle() {
 
     geometry_msgs::TransformStamped transform;
-    PointXY car_position;
+    pcl::PointXY car_position;
     try {
-        transform = tfBuffer.lookupTransform("map", "velodyne", , ros::Time(0));
-        car_position.x = -transform.transform.translation.x;
-        car_position.y = -transform.transform.translation.y;
+        transform = tfBuffer.lookupTransform("map", "rslidar" , ros::Time(0));
+        car_position.x = transform.transform.translation.x;
+        car_position.y = transform.transform.translation.y;
     } catch(tf2::TransformException &ex) {
         ROS_ERROR("%s", ex.what());
         return 0.0f;
     }
 
-    PointXY pPoint = search_pursuit_point(3, car_position);
+    pcl::PointXY pPoint = search_pursuit_point(3, car_position);
+    //para evitar volantazos cuando no hay ruta
+    if(pPoint.x*pPoint.x + pPoint.y*pPoint.y < 0.5){
+        return 0.0f;
+    }
 
-    tf2_ros::Matrix3x3 rotation_matrix;
-    rotation_matrix.setRotation(transform.transform.rotation);
+    tf2::Quaternion quaternion;
+    tf2::fromMsg(transform.transform.rotation, quaternion);
+    tf2::Matrix3x3 rotationMatrix(quaternion);
+    double roll, pitch, yaw;
+    rotationMatrix.getRPY(roll, pitch, yaw);
 
 
-    rotation_matrix.setRotation(transform
+    float alpha = atan2((pPoint.y - car_position.y),(pPoint.x - car_position.x))-yaw;
 
+    float delta = atan2((2.0 * 1.5 * sin(alpha))/3,1.0);
+
+    delta = max(-19.9,min(180*delta/M_PI,19.9));
+
+    std::cout << delta << std::endl;  
+    return delta;
+
+}
+
+PurePursuit::PurePursuit(){
+    
 }

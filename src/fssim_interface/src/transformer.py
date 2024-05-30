@@ -33,7 +33,7 @@ class transformerFssim():
     def publish_topics(self):
 
         self.pub_map = rospy.Publisher('/perception_map', PointCloud2, queue_size=10)
-        self.pub_state = rospy.Publisher('state', CarState, queue_size=10)
+        self.pub_state = rospy.Publisher('/car_state/state', CarState, queue_size=10)
         self.pub_cmd = rospy.Publisher('/fssim/cmd', Cmd, queue_size=10)
 
     def subscribe_topics(self):
@@ -41,7 +41,7 @@ class transformerFssim():
         rospy.Subscriber('/lidar/cones', PointCloud2, self.send_cones)
         rospy.Subscriber('fssim/base_pose_ground_truth', State,
                          self.send_state)
-        rospy.Subscriber('/controller/controls', Controls, self.send_controllers)
+        rospy.Subscriber('/controls', Controls, self.send_controllers)
 
     def send_cones(self, msg):
 
@@ -66,7 +66,7 @@ class transformerFssim():
                 # cone.color = 'y'
                 # cone.confidence = prob[1]
             if maxp == 2:  # orange
-                points.append([c[0],c[1],c[2],2,prob[1]])
+                points.append([c[0],c[1],c[2],2,prob[2]])
 
         fields = [
         PointField(name="x", offset=0, datatype=PointField.FLOAT32, count=1),

@@ -169,7 +169,7 @@ void ICP_handle::send_position() {
 	geometry_msgs::TransformStamped transformSt;
 	transformSt.header.stamp = ros::Time::now();
 	transformSt.header.frame_id = "map";
-	transformSt.child_frame_id = "velodyne";
+	transformSt.child_frame_id = "rslidar";
 
 	transformSt.transform.translation.x = position.coeff(12);
 	transformSt.transform.translation.y = position.coeff(13);

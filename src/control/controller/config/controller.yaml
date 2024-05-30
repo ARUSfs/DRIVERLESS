@@ -1,5 +1,5 @@
 # Topics names of controller node
-topic_controller_control: '/controller/controls'
+topic_controller_control: '/controls'
 topic_pp_control: 'controls_pp'
 topic_mpc_control: 'controls_mpc'
 

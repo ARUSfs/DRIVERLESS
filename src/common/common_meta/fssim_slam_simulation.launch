@@ -1,0 +1,48 @@
+<launch>
+
+  <node pkg="slam_marrano" name="slam_marrano" type="main" output="screen">
+  </node>
+
+  <node pkg="delaunay_detector" name="delaunay_detector" type="main.py" output="screen">
+    <rosparam command="load" file="$(find delaunay_detector)/config/delaunay.yaml"/>
+    <rosparam>
+      topic_perception_map: '/mapa_icp'
+      color_enabled: false
+    </rosparam>
+  </node>
+
+  <node pkg="fssim_interface" name="fssim_interface" type="main.py">
+  </node>
+
+  <node name="interface" pkg="visualization" type="main_interface.py">
+	  <rosparam command="load" file="$(find visualization)/config/interface.yaml"/>
+    <rosparam>
+      frame: 'map'
+    </rosparam>
+	</node>
+	<node name="car_broadcaster" pkg="visualization" type="car_broadcaster.py">
+	</node>
+
+  
+
+  <!-- <node name="telemetries" pkg="telemetries" type="main.py">
+  <rosparam command="load" file="$(find control_pure_pursuit)/config/pure_pursuit.yaml"/>
+	</node> -->
+
+  <node pkg="controller" name="controller" type="main.py">
+  <rosparam command="load" file="$(find controller)/config/controller.yaml"/>
+    <rosparam>
+      controller_mode: 'PP'
+    </rosparam>
+  </node>
+
+ 
+
+  <node pkg="PP_cpp" name="PP_cpp" type="main" output="screen">
+  </node>
+
+
+ 
+
+
+</launch>
