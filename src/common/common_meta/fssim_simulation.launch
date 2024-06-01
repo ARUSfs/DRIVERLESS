@@ -21,7 +21,7 @@
     <rosparam command="load" file="$(find control_pure_pursuit)/config/pure_pursuit.yaml"/>
     <rosparam>
       LFC: 6
-      TARGET_SPEED: 4
+      TARGET_SPEED: 15
       simulation: true
       max_cmd: 0.2
     </rosparam>
@@ -31,7 +31,7 @@
   <rosparam command="load" file="$(find control_pure_pursuit)/config/pure_pursuit.yaml"/>
 	</node> -->
 
-  <node pkg="data_association" name="data_association" type="main.py" output="screen">
+  <!-- <node pkg="data_association" name="data_association" type="main.py" output="screen">
     <rosparam command="load" file="$(find data_association)/config/data_association.yaml"/>
     <rosparam>
       min_dist: 1.5 
@@ -40,16 +40,16 @@
       path_gap: 4
       state_topic: '/fssim/base_pose_ground_truth'
     </rosparam>
-  </node>
+  </node> -->
 
-  <node pkg="mpc_control" name="utrilla_node" type="utrilla_node"/>
+  <!-- <node pkg="mpc_control" name="utrilla_node" type="utrilla_node"/> -->
 
-  <node pkg="controller" name="controller" type="main.py">
+  <!-- <node pkg="controller" name="controller" type="main.py">
   <rosparam command="load" file="$(find controller)/config/controller.yaml"/>
     <rosparam>
-      controller_mode: 'MPC'
+      controller_mode: 'PP'
     </rosparam>
-  </node>
+  </node> -->
 
 
 </launch>

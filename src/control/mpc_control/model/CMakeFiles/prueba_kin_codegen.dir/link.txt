@@ -1,1 +1,1 @@
-/usr/bin/c++   -std=c++0x  -rdynamic CMakeFiles/prueba_kin_codegen.dir/prueba_kin.cpp.o  -o prueba_kin_codegen  -Wl,-rpath,/home/alvaro/workspaces/ACADOtoolkit/lib /home/alvaro/workspaces/ACADOtoolkit/lib/libacado_toolkit_s.so 
+/usr/bin/c++   -std=c++0x  -rdynamic CMakeFiles/prueba_kin_codegen.dir/prueba_kin.cpp.o  -o prueba_kin_codegen  -Wl,-rpath,/home/juv/Documentos/UNIVERSIDAD/ARUS/ACADOtoolkit/build/lib /home/juv/Documentos/UNIVERSIDAD/ARUS/ACADOtoolkit/build/lib/libacado_toolkit_s.so 

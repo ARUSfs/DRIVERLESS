@@ -92,14 +92,14 @@ int main(int argc, char * const argv[ ])
 	ocp.minimizeLSQEndTerm(WN, rfN);
 
 	// Box restrictions
-	ocp.subjectTo(0.0 <= vx <= 20.0);
-	ocp.subjectTo(-0.6 <= mu <= 0.6);
-	ocp.subjectTo(-pi/4 <= delta <= pi/4);
-	ocp.subjectTo(-1.0 <= D <= 1.0);
-	ocp.subjectTo(-30.0 <= deltap <= 30.0);
+	ocp.subjectTo(0.0 <= vx <= 5.0);
+	ocp.subjectTo(-1.0 <= mu <= 1.0);
+	ocp.subjectTo(-pi/9 <= delta <= pi/9);
+	ocp.subjectTo(-0.2 <= D <= 0.3);
+	ocp.subjectTo(-pi/9 <= deltap <= pi/9);
 	ocp.subjectTo(-300 <= Dp <= 300);
 	ocp.subjectTo(0.0 <= sp);
-	ocp.subjectTo(-15<= vx*vx*k <= 15);	
+	ocp.subjectTo(-5<= vx*vx*k <= 5);	
 	ocp.subjectTo( AT_END, 0.0 <= vx <= 10.0);
 
 

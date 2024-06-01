@@ -1,7 +1,10 @@
 # Topics names of controller node
 topic_controller_control: '/controller/controls'
+topic_controller_control_compensated: '/controller/control_compensation'
 topic_pp_control: 'controls_pp'
 topic_mpc_control: 'controls_mpc'
 
 # Type of control: 'PP', 'PP-MPC' or 'MPC'
-controller_mode: 'MPC'
+controller_mode: 'PP'
+# Steering compensation mode
+steering_compensation: 'Tru'

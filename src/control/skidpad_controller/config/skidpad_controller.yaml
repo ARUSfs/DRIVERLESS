@@ -1,0 +1,8 @@
+# Par máximo 
+max_cmd: 0.5
+
+# Parameters of PID controller
+KP: 0.5 #1.0            # Speed proportional gain
+KI: 0.0                 # Speed integrative gain
+KD: 0.0                 # Speed derivate gain
+TARGET_SPEED: 10 #10     # [m/s]

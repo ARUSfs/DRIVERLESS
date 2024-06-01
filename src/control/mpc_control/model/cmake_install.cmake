@@ -1,4 +1,4 @@
-# Install script for directory: /home/alvaro/Videos/mpc_ws/src/DRIVERLESS/src/control/rpg_mpc/model
+# Install script for directory: /home/juv/workspaces/mpc_pipeline_ws/src/DRIVERLESS/src/control/mpc_control/model
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -45,5 +45,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/alvaro/Videos/mpc_ws/src/DRIVERLESS/src/control/rpg_mpc/model/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/juv/workspaces/mpc_pipeline_ws/src/DRIVERLESS/src/control/mpc_control/model/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

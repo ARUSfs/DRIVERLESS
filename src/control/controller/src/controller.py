@@ -16,10 +16,19 @@ class Controller():
         
         self.MPC_handler = MPCHandle()
 
+        steering_compensation = rospy.get_param('~steering_compensation')
+
+
         self.controller_mode = rospy.get_param('~controller_mode')
-        topic_controller_control = rospy.get_param('~topic_controller_control')
+
+        if steering_compensation=='True':
+            topic_controller_control = rospy.get_param('~topic_controller_control_compensated')
+        else:
+            topic_controller_control = rospy.get_param('~topic_controller_control')
+
         topic_pp_control = rospy.get_param('~topic_pp_control')
         topic_mpc_control = rospy.get_param('~topic_mpc_control')
+
 
         self.pub_cmd = rospy.Publisher(topic_controller_control, Controls, queue_size=1)
 
