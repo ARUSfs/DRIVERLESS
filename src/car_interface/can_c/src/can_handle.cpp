@@ -409,6 +409,7 @@ CanInterface::CanInterface()
         return;
     }
 
+    canBusOn(hndW0);
     canBusOn(hndW1);
 
     // Publishers
