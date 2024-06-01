@@ -380,6 +380,16 @@ void CanInterface::steeringInfoCallback(std_msgs::Int32MultiArray msg)
     canWrite(hndW1, 0x183, msgEposTorque, 3, canMSG_STD);
 }
 
+void CanInterface::pubIMU(const ros::TimerEvent&)
+{
+    IMUPub.publish(IMUData);
+}
+
+void CanInterface::pubHeartBeat(const ros::TimerEvent&)
+{
+    char data[1] = {0x01};
+    canWrite(hndW1, 0x183, data, 1, canMSG_STD);
+}
 //################################################# CAN HANDLE ############################################################
 CanInterface::CanInterface()
 {
@@ -399,7 +409,6 @@ CanInterface::CanInterface()
         return;
     }
 
-    canBusOn(hndW0);
     canBusOn(hndW1);
 
     // Publishers
@@ -416,5 +425,9 @@ CanInterface::CanInterface()
     controlsSub = nh.subscribe<common_msgs::Controls>("/controls", 100, &CanInterface::controlsCallback, this);    
     ASStatusSub = nh.subscribe<std_msgs::Int16>("can/AS_status", 100, &CanInterface::ASStatusCallback, this);
     steeringInfoSub = nh.subscribe<std_msgs::Int32MultiArray>("can/steering_info", 100, &CanInterface::steeringInfoCallback, this);
+
+    //Timers
+    IMUTimer = nh.createTimer(ros::Duration(1/500), &CanInterface::pubIMU, this);
+    heartBeatTimer = nh.createTimer(ros::Duration(1/500), &CanInterface::pubHeartBeat, this);
 }
 

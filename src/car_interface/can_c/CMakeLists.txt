@@ -1,32 +1,31 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(can_c)
 
+## Find catkin and any catkin packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp
-  sensor_msgs
   std_msgs
+  sensor_msgs
   common_msgs
 )
 
-# find_library(CANLIB_LIBRARY NAMES canlib PATHS /usr/lib)
-
-include_directories(
-  include ${catkin_INCLUDE_DIRS}
-)
-
+## Declare a catkin package
 catkin_package(
-
-  CATKIN_DEPENDS roscpp sensor_msgs std_msgs
+  CATKIN_DEPENDS roscpp std_msgs sensor_msgs common_msgs
 )
 
-
+## Include directories
 include_directories(
-# include
+  include
   ${catkin_INCLUDE_DIRS}
-  # ${CANLIB_LIBRARY}
-
+  /usr/local/include # Asegúrate de que la ruta a las cabeceras de canlib es correcta
 )
 
-add_executable(main src/main.cpp src/can_handle.cpp)
-target_link_libraries(main ${catkin_LIBRARIES})
+## Declare the C++ executable
+add_executable(can_c_node src/main.cpp src/can_handle.cpp)
 
+## Specify libraries to link a library or executable target against
+target_link_libraries(can_c_node
+  ${catkin_LIBRARIES}
+  /usr/lib/libcanlib.so # Asegúrate de que la ruta a la biblioteca canlib es correcta
+)
