@@ -1,6 +1,6 @@
 sim_mode: false
 kp: 0.5
-target: 2
+target: 10
 track_length: 50
 
 lqr_dist: 3.1623
