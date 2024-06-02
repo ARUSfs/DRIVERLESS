@@ -70,9 +70,7 @@ class transformerFssim():
                 points.append([c[0],c[1],c[2],0,prob[0]])
             elif maxp == 1:  # yellow
                 points.append([c[0],c[1],c[2],1,prob[1]])
-                # cone.color = 'y'
-                # cone.confidence = prob[1]
-            if maxp == 2:  # orange
+            elif maxp == 2:  # orange
                 points.append([c[0],c[1],c[2],2,prob[1]])
 
         fields = [
@@ -83,6 +81,7 @@ class transformerFssim():
         PointField(name="score", offset=16, datatype=PointField.FLOAT32, count=1)
         ]
         new_cloud = point_cloud2.create_cloud(header=msg.header, fields=fields,points=points)
+        new_cloud.is_dense = True
         
         self.pub_map.publish(new_cloud)
 

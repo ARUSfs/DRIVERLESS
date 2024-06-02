@@ -1,0 +1,10 @@
+sim_mode: false
+kp: 0.5
+target: 2
+track_length: 50
+
+lqr_dist: 3.1623
+lqr_yaw: 36.0
+lqr_beta: 0.0
+lqr_r: 0.0
+

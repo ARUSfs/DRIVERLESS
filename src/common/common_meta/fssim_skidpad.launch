@@ -16,19 +16,11 @@
   </node>
 
 
-  <node name="accel_control" pkg="accel_control" type="main.py"  output="screen">
-  <rosparam command="load" file="$(find accel_control)/config/accel_control.yaml"/>
-    <rosparam>
-      sim_mode: true
-      kp: 0.5
-      target: 10
-      track_length: 75
+  <node name="skidpad_control" pkg="skidpad_control" type="main.py"  output="screen">
+  <rosparam command="load" file="$(find skidpad_control)/config/skidpad_control.yaml"/>
+  </node>
 
-      lqr_dist: 1.0
-      lqr_yaw: 25.0
-      lqr_beta: 0.0
-      lqr_r: 3.0
-    </rosparam>
+  <node name="slam_marrano" pkg="slam_marrano" type="main"  output="screen">
   </node>
 
 
