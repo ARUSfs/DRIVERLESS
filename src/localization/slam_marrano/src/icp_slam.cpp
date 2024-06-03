@@ -97,16 +97,14 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 		centro.z = 0;
 		centro.color = 0;
 		centro.score = 0;
-		float sum_score = 0;
 		for (const auto& idx : cluster.indices) {
-			sum_score += (*previous_map)[idx].score;
-			centro.x += (*previous_map)[idx].x*(*previous_map)[idx].score;
-			centro.y += (*previous_map)[idx].y*(*previous_map)[idx].score;
+			centro.x += (*previous_map)[idx].x;
+			centro.y += (*previous_map)[idx].y;
 			centro.z = 0;
 
 		}
-		centro.x /= sum_score;
-		centro.y /= sum_score;
+		centro.x /= cluster.size);
+		centro.y /= cluster.size();
 		for (const auto& idx : cluster.indices) {
 			(*previous_map)[idx].x = centro.x;
 			(*previous_map)[idx].y = centro.y;
@@ -169,7 +167,7 @@ void ICP_handle::send_position() {
 	geometry_msgs::TransformStamped transformSt;
 	transformSt.header.stamp = ros::Time::now();
 	transformSt.header.frame_id = "map";
-	transformSt.child_frame_id = "velodyne";
+	transformSt.child_frame_id = "body";
 
 	transformSt.transform.translation.x = position.coeff(12);
 	transformSt.transform.translation.y = position.coeff(13);

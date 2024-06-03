@@ -24,14 +24,8 @@ from geometry_msgs.msg import PointStamped
 
 from skidpad_localization import SkidpadLocalization
 
-SIM_MODE = rospy.get_param('/skidpad_control/sim_mode')
 KP = rospy.get_param('/skidpad_control/kp')
 TARGET = rospy.get_param('/skidpad_control/target')
-TRACK_LENGTH = rospy.get_param('/skidpad_control/track_length')
-LQR_PARAMS = np.array([rospy.get_param('/skidpad_control/lqr_dist'),
-                       rospy.get_param('/skidpad_control/lqr_yaw'),
-                       rospy.get_param('/skidpad_control/lqr_beta'),
-                       rospy.get_param('/skidpad_control/lqr_r')],np.float64) 
 
 class SkidpadControl():
 
@@ -52,7 +46,7 @@ class SkidpadControl():
 
         self.centers = []
         self.start_time = None
-        self.calib_time = 5
+        self.calib_time = 2
         self.calibrated = False
 
         self.i = 0
@@ -102,7 +96,7 @@ class SkidpadControl():
             self.centers.append(C2)
         elif not self.calibrated:
 
-            epsilon = 0.5  # Distancia máxima entre puntos para considerarlos vecinos
+            epsilon = 1  # Distancia máxima entre puntos para considerarlos vecinos
             min_samples = int(5*self.calib_time)  # Número mínimo de puntos para formar un clúster
 
             dbscan = DBSCAN(eps=epsilon, min_samples=min_samples)

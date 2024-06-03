@@ -66,7 +66,7 @@ class SkidpadLocalization():
             i,j,k = random.choices(range(len(cones)),k=3)
             x_center,y_center,r = self.find_circle_center(cones[i], cones[j], cones[k])
 
-            if (np.abs(r-7.625)<2) or (np.abs(r-10.625)<2):
+            if ((np.abs(r-7.625)<2) or (np.abs(r-10.625)<2)) and x_center>5:
                 non_used_cones = np.full(cones.shape[0], True, dtype=np.bool_)
                 inliers=0
                 for i in range(cones.shape[0]):
@@ -88,7 +88,7 @@ class SkidpadLocalization():
                 i,j,k = random.choices(range(len(cones)),k=3)
                 x_center,y_center,r = self.find_circle_center(cones[i],cones[j],cones[k])
 
-                if ((np.abs(r-7.625)<2) or (np.abs(r-10.625)<2)) and (np.abs(18.25 - np.linalg.norm([best_center[0]-x_center,best_center[1]-y_center])) < 2):
+                if ((np.abs(r-7.625)<2) or (np.abs(r-10.625)<2)) and x_center>5 and (np.abs(18.25 - np.linalg.norm([best_center[0]-x_center,best_center[1]-y_center])) < 2):
                     inliers=0
                     for i in range(cones.shape[0]):
                         d = np.linalg.norm(cones[i]-np.array([x_center,y_center]))
