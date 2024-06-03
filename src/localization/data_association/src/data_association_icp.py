@@ -9,7 +9,7 @@ import numpy as np
 import open3d as o3d
 import rospy
 from fssim_common.msg import State
-# from common_msgs.msg import Map, Cone
+from common_msgs.msg import CarState
 from std_msgs.msg import Header
 from sensor_msgs.msg import PointCloud2, PointField
 from sensor_msgs import point_cloud2
@@ -32,7 +32,7 @@ class Data_association:
     def __init__(self):
 
         # Definiendo suscribers y publishers
-        rospy.Subscriber(state_topic, State, self.state_callback, queue_size=20)
+        rospy.Subscriber(state_topic, CarState, self.state_callback, queue_size=20)
         rospy.Subscriber(perception_topic, PointCloud2, self.perception_callback, queue_size=1)
         self.pMap = rospy.Publisher(map_topic, PointCloud2, queue_size=1)
 

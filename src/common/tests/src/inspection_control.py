@@ -1,22 +1,21 @@
 #!/usr/bin/env python3
 import rospy
-from common_msgs.msg import Controls
-from std_msgs.msg import Float32, Int16
+from common_msgs.msg import Controls, CarState
+from std_msgs.msg import Int16, Bool
 import math
 import time
 
 
-AMPLITUDE = 20
-FREQUENCY = 0.1
-TARGET_SPEED = 0
-MAX_CMD = 1
+PUSHING = False
+DURATION = 1000 #s
+TARGET_DURATION = 10 #s
 
-AS_status = 0
+AMPLITUDE = 20 #degrees
+FREQUENCY = 0.2 #s
+KP=0.5
 
-kp=0.5
-
-prev_time = 0
-prev_error = 0
+TARGET_SPEED = 3 #m/s
+MIN_VEL=1
 
 
 def AS_status_callback(AS_status_msg: Int16):
@@ -26,14 +25,26 @@ def AS_status_callback(AS_status_msg: Int16):
               start_time = time.time()
 
 
-def speed_callback(motor_speed_msg: Float32):
+def speed_callback(msg: CarState):
+        global start_time,braking,actual_speed,last_speed_update
 
-        control_msg = Controls()
-        control_msg.steering = generate_sinusoidal_steering(time.time()-start_time)
-        control_msg.accelerator = accelerator_control(motor_speed_msg.data, TARGET_SPEED)
+        if AS_status==0x02 and not braking:
+            
+            v = math.hypot(msg.vx,msg.vy)
+            control_msg = Controls()
+            if v>MIN_VEL:
+                control_msg.steering = generate_sinusoidal_steering(time.time()-start_time)
+            else:
+                 control_msg.steering = 0
+                 start_time = time.time()
 
-        if AS_status==0x02:
+            if PUSHING:
+                control_msg.accelerator = 0
+            else:
+                control_msg.accelerator = accelerator_control(v, TARGET_SPEED)
+
             control_publisher.publish(control_msg)
+            rospy.logerr(control_msg)
 
 def generate_sinusoidal_steering(time):
     steering_angle = AMPLITUDE * math.sin(2*math.pi*FREQUENCY *time)
@@ -41,20 +52,35 @@ def generate_sinusoidal_steering(time):
     return steering_angle
 
 def accelerator_control(current: float, target: float):
+        global start_time,target_reached_time,braking
 
         error = target - current
 
-        cmd = kp*error
+        cmd = KP*error
 
-        return max(min(cmd, MAX_CMD),-MAX_CMD) 
+        if abs(error)<target*0.01 and target_reached_time==0:
+            target_reached_time = time.time()
+
+        if (target_reached_time!=0 and time.time()-target_reached_time>TARGET_DURATION) or (time.time()-start_time > DURATION):
+            braking = True
+            braking_msg = Bool()
+            braking_msg.data = True
+            braking_publisher.publish(braking_msg)
+
+        return max(min(cmd, 1),-1) 
 
 if __name__ == '__main__':
     rospy.init_node('sinusoidal_control_node')
 
-    start_time = time.time()
+    start_time = 0
+    target_reached_time = 0
+    AS_status = 0
 
-    control_publisher = rospy.Publisher('/controls', Controls, queue_size=1)
-    rospy.Subscriber('/motor_speed', Float32, speed_callback,queue_size=1)
+    braking = False
+
+    control_publisher = rospy.Publisher('/controls_pp', Controls, queue_size=1)
+    braking_publisher = rospy.Publisher('/braking', Bool, queue_size=10)
+    rospy.Subscriber('/car_state/state', CarState, speed_callback,queue_size=1)
     rospy.Subscriber('/can/AS_status', Int16, AS_status_callback,queue_size=1)
 
     rospy.spin()

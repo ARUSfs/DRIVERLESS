@@ -10,6 +10,8 @@ from geometry_msgs.msg import Point, Polygon, PolygonStamped
 from sensor_msgs.msg import PointCloud2, PointField
 from sensor_msgs import point_cloud2
 from fssim_common.msg import State, Cmd
+from visualization_msgs.msg import Marker
+from std_msgs.msg import Int16
 
 import rospy
 import numpy as np
@@ -24,17 +26,20 @@ class transformerFssim():
 
     def __init__(self):
 
-        self.subscribe_topics()
         self.pub_map = None
         self.pub_state = None
         self.pub_cmd = None
+        self.pub_as_status = None
         self.publish_topics()
+        self.subscribe_topics()
+        
 
     def publish_topics(self):
 
         self.pub_map = rospy.Publisher('/perception_map', PointCloud2, queue_size=10)
         self.pub_state = rospy.Publisher('/car_state/state', CarState, queue_size=10)
         self.pub_cmd = rospy.Publisher('/fssim/cmd', Cmd, queue_size=10)
+        self.pub_as_status = rospy.Publisher('/can/AS_status', Int16, queue_size=10)
 
     def subscribe_topics(self):
 
@@ -42,6 +47,7 @@ class transformerFssim():
         rospy.Subscriber('fssim/base_pose_ground_truth', State,
                          self.send_state)
         rospy.Subscriber('/controls', Controls, self.send_controllers)
+        rospy.Subscriber('/fssim/GO_marker',Marker,self.GOsignal_callback,queue_size=1)
 
     def send_cones(self, msg):
 
@@ -79,7 +85,7 @@ class transformerFssim():
         
         self.pub_map.publish(new_cloud)
 
-    def send_state(self, msg):
+    def send_state(self, msg: CarState):
 
         state = CarState()
         state.x = msg.x
@@ -104,4 +110,10 @@ class transformerFssim():
 
         rospy.loginfo(cmd)
         self.pub_cmd.publish(cmd)
+        
 
+    
+    def GOsignal_callback(self,msg):
+        status_msg=Int16()
+        status_msg.data=0x02
+        self.pub_as_status.publish(status_msg)

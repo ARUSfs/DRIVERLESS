@@ -145,16 +145,14 @@ class PlanningSystem():
             else:
                 break
         
-        if len(path)>1:
+        if len(path)>2:
             PREV_ANGLE = np.arctan2(path[1][1], path[1][0])/2
-        else:
-            PREV_ANGLE = 0
             
         # route = np.array(path)
 
         route=[]
         for i in range(len(path)-1):
-            route.extend([[(1-a)*path[i][0] + a*path[i+1][0],(1-a)*path[i][1] + a*path[i+1][1]] for a in np.linspace(0,1, num=5)])
+            route.extend([[(1-a)*path[i][0] + a*path[i+1][0],(1-a)*path[i][1] + a*path[i+1][1]] for a in np.linspace(0,1, num=10)])
         route = np.array(route)
 
         triang = Triangulation()

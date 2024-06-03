@@ -38,16 +38,21 @@
       max_dist: 10 
       new_lap_counter: 40 
       path_gap: 4
-      state_topic: '/fssim/base_pose_ground_truth'
+      state_topic: '/car_state/state'
     </rosparam>
   </node>
 
   <node pkg="mpc_control" name="utrilla_node" type="utrilla_node"/>
 
-  <node pkg="controller" name="controller" type="main.py">
-  <rosparam command="load" file="$(find controller)/config/controller.yaml"/>
+  <node pkg="controller" name="controller" type="main.py" output='screen'>
+    <rosparam command="load" file="$(find controller)/config/controller.yaml"/>
     <rosparam>
-      controller_mode: 'PP'
+      braking_kp: 0.5
+      deceleration:  5
+      min_braking_cmd: -0.2 
+      max_cmd: 1 
+      min_cmd: -1
+      controller_mode: 'PP-MPC'
     </rosparam>
   </node>
 

@@ -19,12 +19,11 @@ class CanPublisher:
         rospy.Subscriber("/steering/epos_info", Float32MultiArray, self.epos_info_callback)
         rospy.Subscriber("/can/AS_status", Int16, self.pub_as_status)
 
-        rospy.Timer(rospy.Duration(0.5), self.publish_temp)
-        rospy.Timer(rospy.Duration(0.001), self.heart_beat)
+        # rospy.Timer(rospy.Duration(0.5), self.publish_temp)
+        rospy.Timer(rospy.Duration(0.1), self.heart_beat)
 
 
         self.temp = 0
-        self.MAX_ACC = 0.1
         self.motor_speed_req()
         self.canReader = CanReader()
         self.can_reader_thread0 = threading.Thread(target=self.canReader.read_can0)
@@ -38,7 +37,6 @@ class CanPublisher:
     def cmd_callback(self, msg: Controls):
         #rospy.loginfo("Peligro")
         acc =  msg.accelerator
-        acc = min(acc,self.MAX_ACC)
         datos_comanda = list(int.to_bytes(int(acc*(2**15))-1, byteorder='little', length=2, signed=True))
         msg = can.Message(arbitration_id=0x201, is_extended_id=False, data=[0x90]+datos_comanda)
         self.bus0.send(msg)

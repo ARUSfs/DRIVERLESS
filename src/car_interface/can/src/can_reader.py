@@ -19,13 +19,25 @@ class CanReader:
         #--------------------------------------------------------
         self.steering_extensometer = rospy.Publisher('/can/extensometer', Float32, queue_size=10)
         self.AS_status_pub = rospy.Publisher('/can/AS_status', Int16, queue_size=10)
-        self.IMU_pub = rospy.Publisher('/IMU', Imu, queue_size=10)
+        self.IMU_pub = rospy.Publisher('/can/IMU', Imu, queue_size=10)
         self.pGPS_loc = rospy.Publisher('GPS_location', NavSatFix, queue_size=10)
         self.pGPS_speed = rospy.Publisher('GPS_speed', Vector3, queue_size=10)
         self.invSpeed_pub = rospy.Publisher('/motor_speed', Float32, queue_size=10)
         
         self.bus0 = can.interface.Bus(channel='can0', bustype='socketcan')
         self.bus1 = can.interface.Bus(channel='can1', bustype='socketcan')
+        self.bus0.set_filters([{"can_id": 0x181, "can_mask": 0x7FF, "extended": False},
+                               {"can_id": 0x18b, "can_mask": 0x7FF, "extended": False}])
+        self.bus1.set_filters([{"can_id": 0x182, "can_mask": 0x7FF, "extended": False},
+                               {"can_id": 0x380, "can_mask": 0x7FF, "extended": False},
+                               {"can_id": 0x394, "can_mask": 0x7FF, "extended": False},
+                               {"can_id": 0x392, "can_mask": 0x7FF, "extended": False},
+                               {"can_id": 0x384, "can_mask": 0x7FF, "extended": False},
+                               {"can_id": 0x382, "can_mask": 0x7FF, "extended": False},
+                               {"can_id": 0x185, "can_mask": 0x7FF, "extended": False},
+                               {"can_id": 0x205, "can_mask": 0x7FF, "extended": False},
+                               {"can_id": 0x187, "can_mask": 0x7FF, "extended": False},
+                               {"can_id": 0x334, "can_mask": 0x7FF, "extended": False}])
         #--------------------------------------------------------
 
         rospy.Timer(rospy.Duration(1/500), self.publish_IMU)
@@ -37,7 +49,25 @@ class CanReader:
 
             message = self.bus1.recv()
 
-            if message.arbitration_id == 0x380:
+            if message.arbitration_id == 0x182:
+                sub_id = int(message.data[0])
+                if sub_id == 0x00:
+                    self.parse_AS_HB(message)
+                elif sub_id == 0x01:
+                    #rospy.loginfo("AS")
+                    self.parse_as_status(message)
+                elif sub_id == 0x02:
+                    self.parse_fault_code(message)
+                elif sub_id == 0x03:
+                    self.parse_apps(message)
+                elif sub_id == 0x04:
+                    self.parse_brake_pressure(message)
+                elif sub_id == 0x05:
+                    self.parse_pneumatic_pressure(message)
+                elif sub_id == 0x06:
+                    self.parse_valves_state(message)
+
+            elif message.arbitration_id == 0x380:
                #IMU acc
                 self.parse_acc(message)
 
@@ -55,24 +85,6 @@ class CanReader:
             
             elif message.arbitration_id == 0x382:
                 self.parse_angular_velocity(message)
-
-            elif message.arbitration_id == 0x182:
-                sub_id = int(message.data[0])
-                if sub_id == 0x00:
-                    self.parse_AS_HB(message)
-                elif sub_id == 0x01:
-                    rospy.loginfo("AS")
-                    self.parse_as_status(message)
-                elif sub_id == 0x02:
-                    self.parse_fault_code(message)
-                elif sub_id == 0x03:
-                    self.parse_apps(message)
-                elif sub_id == 0x04:
-                    self.parse_brake_pressure(message)
-                elif sub_id == 0x05:
-                    self.parse_pneumatic_pressure(message)
-                elif sub_id == 0x06:
-                    self.parse_valves_state(message)
             
             elif message.arbitration_id == 0x185:
                 sub_id = int(message.data[0])
@@ -108,7 +120,9 @@ class CanReader:
             if message.arbitration_id == 0x181 and int(message.data[0]) == 0x30:
                 #Inv speed
                 self.parse_inv_speed(message)
-   
+
+            #elif message.arbitration_id == 0x18b:
+                #rospy.logwarn(message.data)
    
     #Parsers --------------------------------------------------------
     #################################################### ACQUISITION ########################################################
@@ -274,11 +288,7 @@ class CanReader:
 
 ########################################################### BUZZER ########################################################
     def parse_buzzer(self, message):
-        rospy.sleep(2)
-        self.as_status = 2
-        msg = Int16()
-        msg.data = self.as_status
-        self.AS_status_pub.publish(msg)
+        pass
 
     #Publishers ------------------------------------------------------------------------------------------
 

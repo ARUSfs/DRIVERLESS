@@ -1,7 +1,6 @@
 import rospy
 from geometry_msgs.msg import Point
-from common_msgs.msg import Trajectory
-from fssim_common.msg import State
+from common_msgs.msg import Trajectory, CarState
 from visualization_msgs.msg import Marker,MarkerArray
 from common_msgs.srv import MPCCurrentState, MPCCurrentStateResponse
 import numpy as np
@@ -32,7 +31,7 @@ class MPCHandle():
         self.pub_curva = rospy.Publisher('/mpc/curva', MarkerArray, queue_size=1)
 
         rospy.Subscriber('/delaunay/global_route',Trajectory,self.set_mpc_route,queue_size=1)
-        rospy.Subscriber('/fssim/base_pose_ground_truth', State, self.update_mpc_state, queue_size=1)
+        rospy.Subscriber('/car_state/state', CarState, self.update_mpc_state, queue_size=1)
 
         rospy.Service('get_x_msg', MPCCurrentState, self.get_x_msg)
 
@@ -44,7 +43,7 @@ class MPCHandle():
         return m
     
 
-    def update_mpc_state(self, msg:State):
+    def update_mpc_state(self, msg:CarState):
         if (not self.FIRST_LAP):
             x = self.x
             y = self.y

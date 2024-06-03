@@ -72,6 +72,7 @@ class EPOSHandle:
         if not self._is_connected:
             rospy.logerr(f'EPOS4 not connected. Cannot enable')
         elif not self._is_enabled:
+            #ret = self.epos.VCS_ClearFault(self.keyhandle, self.NodeId, byref(pErrorCode))
             return_code = self.epos.VCS_SetEnableState(self.keyhandle, self.NodeID, byref(pErrorCode))
             if return_code == 0:
                 rospy.logerr(f'Couldn\'t enable EPOS4 with error code {pErrorCode.value}')
