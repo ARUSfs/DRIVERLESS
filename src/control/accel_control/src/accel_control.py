@@ -74,7 +74,6 @@ class AccelControl():
                 braking_msg = Bool()
                 braking_msg.data = True
                 self.braking_publisher.publish(braking_msg)
-                self.steer=0
                 self.acc=0
                 self.publish_cmd()
             else:

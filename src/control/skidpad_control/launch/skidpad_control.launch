@@ -1,0 +1,6 @@
+<launch>
+  <node pkg="skidpad_control" name="skidpad_control" type="main.py" output="screen">
+  <rosparam command="load" file="$(find skidpad_control)/config/skidpad_control.yaml"/>
+  </node>
+
+</launch>

@@ -1,5 +1,5 @@
 global_frame: "map"
-car_frame: "rslidar"
+car_frame: "body"
 global_mode: true
 LAD: 3
 TARGET_VEL: 4
