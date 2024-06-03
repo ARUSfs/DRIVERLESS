@@ -1,8 +1,5 @@
 <launch>
 
-  <node pkg="slam_marrano" name="slam_marrano" type="main" output="screen">
-  </node>
-  
   <node pkg="controller" name="controller" type="main.py" output='screen'>
     <rosparam command="load" file="$(find controller)/config/controller.yaml"/>
     <rosparam>

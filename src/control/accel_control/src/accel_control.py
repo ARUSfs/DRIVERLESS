@@ -35,8 +35,7 @@ class AccelControl():
     def __init__(self):
         
         self.accel_localizator = AccelLocalization()
-        self.buffer = tf2_ros.Buffer()
-        self.listener = tf2_ros.TransformListener(self.buffer)
+        
         ### Inicializaciones ###
         self.prev_time = 0
         self.prev_yaw = 0
@@ -48,16 +47,16 @@ class AccelControl():
         self.i = 0
         self.braking = False
         self.AS_status = 0
+        self.a_media = 0
+        self.b_media = 0
 
+        ### Publicadores y suscriptores ###
         self.cmd_publisher = rospy.Publisher('/controls_pp', Controls, queue_size=1) 
         self.braking_publisher = rospy.Publisher('/braking', Bool, queue_size=10)
         self.recta_publisher = rospy.Publisher("/recta", Point, queue_size=10)
-
-        rospy.Subscriber('/mapa_icp', PointCloud2, self.update_route, queue_size=10)
+        rospy.Subscriber('/perception_map', PointCloud2, self.update_route, queue_size=10)
         rospy.Subscriber('/car_state/state', CarState, self.update_speed, queue_size=1)
         rospy.Subscriber('/can/AS_status', Int16, self.update_AS_status, queue_size=1)
-
-
 
 
     def update_speed(self, msg):
@@ -87,38 +86,29 @@ class AccelControl():
 
     def update_route(self, msg: PointCloud2):
         a,b = self.accel_localizator.get_route(msg)
-        self.steer = self.get_steer(a,b)
+        # rospy.logwarn(f"Recta: y = {a}x + {b}")
+        if abs(a) < 0.5 and abs(b) < 1 and self.AS_status==0x02:
+            self.a_media = self.a_media*0.2 + a*0.8
+            self.b_media = self.b_media*0.2 + b*0.8
+        else:
+            a,b = self.a_media, self.b_media
+        # rospy.logwarn(f"{a} {b}")
+
+        self.steer = self.get_steer(a, b)
         msg = Point()
         msg.x = a
         msg.y = b
         self.recta_publisher.publish(msg)
-
-
+    
     def update_AS_status(self, msg):
         self.AS_status = msg.data
 
 
     def get_steer(self, a, b):
-        trans = self.buffer.lookup_transform("map", "body", rospy.Time(0))
-        x = trans.transform.translation.x
-        y = trans.transform.translation.y
-        x_rot = trans.transform.rotation.x
-        y_rot = trans.transform.rotation.y
-        z_rot = trans.transform.rotation.z
-        w_rot = trans.transform.rotation.w
-
-        _, _, yaw_car = tf.euler_from_quaternion([x_rot, y_rot, z_rot, w_rot])
-        
-        dist = -(a*x-y+b)/np.sqrt(a**2 + 1)   # Distancia del coche a la trayectoria
-        yaw = yaw_car - math.atan(a)             # Ángulo entre la trayectoria y el coche
+        dist = -b/np.sqrt(a**2 + 1)      # Distancia del coche a la trayectoria
+        yaw = - math.atan(a)             # Ángulo entre la trayectoria y el coche
         beta = 0
         r = (yaw-self.prev_yaw)/(time.time()-self.prev_time)
-
-        
-        if abs(yaw)>math.pi/6:
-            rospy.logwarn(yaw)
-            self.prev_time=time.time()
-            return self.steer
 
         self.prev_yaw = yaw
         self.prev_time = time.time()
