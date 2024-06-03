@@ -50,13 +50,12 @@
 	</node>
 
 
-  <node pkg="control_pure_pursuit" name="control_pure_pursuit" type="main.py" output="screen">
-    <rosparam command="load" file="$(find control_pure_pursuit)/config/pure_pursuit.yaml"/>
+  <node pkg="pure_pursuit" name="pure_pursuit" type="main.py" output="screen">
+    <rosparam command="load" file="$(find pure_pursuit)/config/pure_pursuit.yaml"/>
     <rosparam>
-      LFC: 4
+      LAD: 4
       TARGET_SPEED: 3
-      simulation: false
-      min_vel: 0.3
+      global_mode: false
     </rosparam>
   </node>
 

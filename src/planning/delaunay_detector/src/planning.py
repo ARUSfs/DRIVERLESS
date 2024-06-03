@@ -14,6 +14,7 @@ from scipy.interpolate import BSpline
 
 from common_msgs.msg import Simplex, Triangulation
 from geometry_msgs.msg import Point
+import math
 
 
 MAX_DISTANCE = 8
@@ -67,7 +68,7 @@ class PlanningSystem():
                     for p1, p2 in combinations(simplex, 2):  # TODO Could be optimized.
                         if not self.colours[p1] == self.colours[p2]:
                             m = (self.cones[p1] + self.cones[p2])/2
-                            if m[0] not in midpoints_x and m[0]>0:
+                            if m[0] not in midpoints_x:
                                 midpoints.append(m)
                                 midpoints_x.append(m[0])
                             preproc_simplices.append(simplex)
@@ -108,7 +109,7 @@ class PlanningSystem():
             for (i,j) in dict.keys():
                 if dict[(i,j)]>=2:
                     m = (self.cones[i] + self.cones[j])/2
-                    if m[0] not in midpoints_x and m[0]>0:
+                    if m[0] not in midpoints_x:
                         midpoints.append(m)
                         midpoints_x.append(m[0])
                         midpoints_index.append((i,j))
@@ -130,7 +131,7 @@ class PlanningSystem():
             vectors[non_used_midpoints] = midpoints[non_used_midpoints] - last_element
             distances[non_used_midpoints] = np.linalg.norm(vectors[non_used_midpoints], axis=1)
             angles[non_used_midpoints] = np.abs(np.arctan2(vectors[non_used_midpoints, 1], vectors[non_used_midpoints, 0])-last_angle)
-
+            angles = np.minimum(angles,np.abs(angles-2*math.pi))
 
             weights = W_DISTANCE*distances + W_ANGLE*angles
 

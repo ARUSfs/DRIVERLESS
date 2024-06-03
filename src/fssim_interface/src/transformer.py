@@ -48,7 +48,6 @@ class transformerFssim():
                          self.send_state)
         rospy.Subscriber('/controls', Controls, self.send_controllers)
         rospy.Subscriber('/fssim/GO_marker',Marker,self.GOsignal_callback,queue_size=1)
-        
 
     def send_cones(self, msg):
 
@@ -73,7 +72,7 @@ class transformerFssim():
                 # cone.color = 'y'
                 # cone.confidence = prob[1]
             if maxp == 2:  # orange
-                points.append([c[0],c[1],c[2],2,prob[1]])
+                points.append([c[0],c[1],c[2],2,prob[2]])
 
         fields = [
         PointField(name="x", offset=0, datatype=PointField.FLOAT32, count=1),
