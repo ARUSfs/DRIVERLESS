@@ -1,12 +1,12 @@
 <launch>
 
-  <node pkg="slam_marrano" name="slam_marrano" type="main" output="screen">
-  </node>
+  <!-- <node pkg="slam_marrano" name="slam_marrano" type="main" output="screen">
+  </node> -->
 
   <node pkg="delaunay_detector" name="delaunay_detector" type="main.py" output="screen">
     <rosparam command="load" file="$(find delaunay_detector)/config/delaunay.yaml"/>
     <rosparam>
-      topic_perception_map: '/mapa_icp'
+      topic_perception_map: '/perception_map'
       color_enabled: false
     </rosparam>
   </node>
@@ -17,7 +17,7 @@
   <node name="interface" pkg="visualization" type="main_interface.py">
 	  <rosparam command="load" file="$(find visualization)/config/interface.yaml"/>
     <rosparam>
-      frame: 'map'
+      frame: 'fssim/vehicle/cog'
     </rosparam>
 	</node>
 	<node name="car_broadcaster" pkg="visualization" type="car_broadcaster.py">
@@ -43,7 +43,7 @@
     <rosparam>
       LAD: 6
       TARGET_SPEED: 4
-      global_mode: true
+      global_mode: false
     </rosparam>
   </node>
 

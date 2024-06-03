@@ -12,6 +12,9 @@
 
 ControlHandle::ControlHandle(){
 
+    nh.getParam("/pure_pursuit/TARGET_VEL", TARGET_VEL);
+    nh.getParam("/pure_pursuit/KP", KP);
+
     velocity_sub = nh.subscribe("/car_state/state", 10, &ControlHandle::speed_callback, this);
 
     path_sub = nh.subscribe("/route", 1, &ControlHandle::path_callback, this);
@@ -26,11 +29,9 @@ ControlHandle::ControlHandle(){
 
 void ControlHandle::control_timer_callback(const ros::TimerEvent& event) {
     // TODO PONER CON PARAMETROS POR DIOS ESTO ES PARA PROBAR TODO
-    const float TARGET_VEL = 3;
-    const float Kp = 1;
 
     const float v_error = TARGET_VEL - velocity;
-    const float accelerator_control = v_error*Kp;
+    const float accelerator_control = v_error*KP;
 
     const float angle = pPursuit.get_steering_angle();
 

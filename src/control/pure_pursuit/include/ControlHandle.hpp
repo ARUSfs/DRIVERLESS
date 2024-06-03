@@ -8,6 +8,8 @@
 class ControlHandle {
     private:
         float velocity = 0;
+        float TARGET_VEL;
+        float KP;
 
         ros::NodeHandle nh;
         ros::Publisher control_publisher;

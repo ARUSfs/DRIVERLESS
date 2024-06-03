@@ -22,6 +22,7 @@ class ICP_handle {
 		bool has_map = false;
 		int callback_iteration = 0;
 		void send_position();
+		ros::Time hola;
 	public:
 		ros::NodeHandle nh;
 		ros::Subscriber sub;
@@ -38,5 +39,4 @@ class ICP_handle {
 
 		ICP_handle();
 		void map_callback(sensor_msgs::PointCloud2);
-
 };

@@ -92,35 +92,39 @@ PointXY PurePursuit::search_pursuit_point(const float look_ahead_distance, const
 }
 
 float PurePursuit::get_steering_angle() {
-
-    geometry_msgs::TransformStamped transform;
     pcl::PointXY car_position;
-    try {
-        transform = tfBuffer.lookupTransform("map", "rslidar" , ros::Time(0));
-        car_position.x = transform.transform.translation.x;
-        car_position.y = transform.transform.translation.y;
-    } catch(tf2::TransformException &ex) {
-        ROS_ERROR("%s", ex.what());
-        return 0.0f;
-    }
-
-    pcl::PointXY pPoint = search_pursuit_point(3, car_position);
-    //para evitar volantazos cuando no hay ruta
-    if(pPoint.x*pPoint.x + pPoint.y*pPoint.y < 0.5){
-        return 0.0f;
-    }
-
-
-    tf2::Quaternion quaternion;
-    tf2::fromMsg(transform.transform.rotation, quaternion);
-    tf2::Matrix3x3 rotationMatrix(quaternion);
     double roll, pitch, yaw;
-    rotationMatrix.getRPY(roll, pitch, yaw);
+
+    if(global_mode){
+        geometry_msgs::TransformStamped transform;
+        try {
+            transform = tfBuffer.lookupTransform(global_frame, car_frame , ros::Time(0));
+            car_position.x = transform.transform.translation.x;
+            car_position.y = transform.transform.translation.y;
+        } catch(tf2::TransformException &ex) {
+            ROS_ERROR("%s", ex.what());
+            return 0.0f;
+        }
+
+        tf2::Quaternion quaternion;
+        tf2::fromMsg(transform.transform.rotation, quaternion);
+        tf2::Matrix3x3 rotationMatrix(quaternion);
+        
+        rotationMatrix.getRPY(roll, pitch, yaw);
+    } else {
+        car_position.x = 0;
+        car_position.y = 0;
+        yaw = 0;
+    }
+
+    pcl::PointXY pPoint = search_pursuit_point(LAD, car_position);
+
+    
 
 
     float alpha = atan2((pPoint.y - car_position.y),(pPoint.x - car_position.x))-yaw;
 
-    float delta = atan2((2.0 * 1.5 * sin(alpha))/3,1.0);
+    float delta = atan2((2.0 * 1.535 * sin(alpha))/LAD,1.0);
 
     delta = max(-19.9,min(180*delta/M_PI,19.9));
 
@@ -129,5 +133,8 @@ float PurePursuit::get_steering_angle() {
 }
 
 PurePursuit::PurePursuit(){
-    
+    nh.getParam("/pure_pursuit/global_frame", global_frame);
+    nh.getParam("/pure_pursuit/car_frame", car_frame);
+    nh.getParam("/pure_pursuit/global_mode", global_mode);
+    nh.getParam("/pure_pursuit/LAD", LAD);
 }
