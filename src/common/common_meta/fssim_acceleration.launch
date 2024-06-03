@@ -15,9 +15,13 @@
   <node pkg="fssim_interface" name="fssim_interface" type="main.py">
   </node>
 
+  <node pkg="car_state" name="car_state" type="main.py">
+  <rosparam command="load" file="$(find car_state)/config/car_state.yaml"/>
+  </node>
+
 
   <node name="accel_control" pkg="accel_control" type="main.py"  output="screen">
-  <rosparam command="load" file="$(find accel_control)/config/accel_control.yaml"/>
+    <rosparam command="load" file="$(find accel_control)/config/accel_control.yaml"/>
     <rosparam>
       sim_mode: true
       kp: 0.5
@@ -30,6 +34,5 @@
       lqr_r: 3.0
     </rosparam>
   </node>
-
 
 </launch>

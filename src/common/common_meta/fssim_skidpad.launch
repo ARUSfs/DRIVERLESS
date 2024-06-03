@@ -15,11 +15,15 @@
   <node pkg="fssim_interface" name="fssim_interface" type="main.py">
   </node>
 
+  <node pkg="car_state" name="car_state" type="main.py">
+  <rosparam command="load" file="$(find car_state)/config/car_state.yaml"/>
+  </node>
+
 
   <node name="skidpad_control" pkg="skidpad_control" type="main.py"  output="screen">
   <rosparam command="load" file="$(find skidpad_control)/config/skidpad_control.yaml"/>
     <rosparam>
-      target: 3
+      target: 8
       kp: 0.5
     </rosparam>
   </node>

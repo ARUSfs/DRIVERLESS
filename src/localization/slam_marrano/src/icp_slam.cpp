@@ -28,9 +28,12 @@ ICP_handle::ICP_handle(){
 
 	map_publisher = nh.advertise<sensor_msgs::PointCloud2>("/mapa_icp", 10);
 
+	ros::Time hola = ros::Time::now();
+
 }
 
 void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
+	hola = ros::Time::now();
 	callback_iteration++;
 
 	pcl::PointCloud<PointXYZColorScore>::Ptr new_map(new pcl::PointCloud<PointXYZColorScore>);
@@ -55,9 +58,9 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
             icp.setInputTarget(previous_map);
         else
             icp.setInputTarget(allp_clustered);
-	icp.setMaximumIterations(9000);
+	icp.setMaximumIterations(5);
 	icp.setEuclideanFitnessEpsilon (0.005);
-	//icp.setTransformationEpsilon(1e-5);
+	icp.setTransformationEpsilon(1e-5);
 
 	pcl::PointCloud<PointXYZColorScore> registered_map;
 	icp.setMaxCorrespondenceDistance (1.0);
@@ -103,8 +106,8 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 			centro.z = 0;
 
 		}
-		centro.x /= cluster.size);
-		centro.y /= cluster.size();
+		centro.x /= cluster.indices.size();
+		centro.y /= cluster.indices.size();
 		for (const auto& idx : cluster.indices) {
 			(*previous_map)[idx].x = centro.x;
 			(*previous_map)[idx].y = centro.y;
@@ -143,7 +146,7 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
                                 // This is a botch that works but should be changed. PCL ICP doesn't sopport weighted points,
                                 // so the more reliable we consider a point to be, the more that are placed on the exact same
                                 // coordinates (limited in this case to 50).
-				if(j < 50)
+				if(j < 10)
 					clustered_points->push_back((*previous_map)[idx]);
 				else
 					break;
@@ -160,6 +163,8 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 
 		*previous_map = *clustered_points;
 	}
+	cout << ros::Time::now() - hola << endl;
+	hola = ros::Time::now();
 
 }
 
@@ -168,7 +173,6 @@ void ICP_handle::send_position() {
 	transformSt.header.stamp = ros::Time::now();
 	transformSt.header.frame_id = "map";
 	transformSt.child_frame_id = "body";
-
 	transformSt.transform.translation.x = position.coeff(12);
 	transformSt.transform.translation.y = position.coeff(13);
 	tf2::Quaternion q;

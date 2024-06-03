@@ -10,16 +10,6 @@ import math
 from mpc_handle import MPCHandle
 
 # for braking
-BRAKING_KP=0.5
-DECELERATION = 5
-MIN_BRAKING_CMD = -0.2 
-
-# for accelerating
-MAX_CMD = 1 
-MIN_CMD = 0
-
-
-# for braking
 BRAKING_KP = rospy.get_param('/controller/braking_kp')
 DECELERATION = rospy.get_param('/controller/deceleration')
 MIN_BRAKING_CMD = rospy.get_param('/controller/min_braking_cmd') 

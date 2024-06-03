@@ -12,6 +12,10 @@
   <node name="can" pkg="can" type="main.py">
 	</node>
 
+  <node pkg="car_state" name="car_state" type="main.py">
+  <rosparam command="load" file="$(find car_state)/config/car_state.yaml"/>
+  </node>
+
   <node pkg="controller" name="controller" type="main.py" output='screen'>
     <rosparam command="load" file="$(find controller)/config/controller.yaml"/>
     <rosparam>
@@ -46,13 +50,12 @@
 	</node>
 
 
-  <node pkg="control_pure_pursuit" name="control_pure_pursuit" type="main.py" output="screen">
-    <rosparam command="load" file="$(find control_pure_pursuit)/config/pure_pursuit.yaml"/>
+  <node pkg="pure_pursuit" name="pure_pursuit" type="main.py" output="screen">
+    <rosparam command="load" file="$(find pure_pursuit)/config/pure_pursuit.yaml"/>
     <rosparam>
-      LFC: 4
+      LAD: 4
       TARGET_SPEED: 3
-      simulation: false
-      min_vel: 0.3
+      global_mode: false
     </rosparam>
   </node>
 

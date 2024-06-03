@@ -19,7 +19,7 @@ class CanReader:
         #--------------------------------------------------------
         self.steering_extensometer = rospy.Publisher('/can/extensometer', Float32, queue_size=10)
         self.AS_status_pub = rospy.Publisher('/can/AS_status', Int16, queue_size=10)
-        self.IMU_pub = rospy.Publisher('/IMU', Imu, queue_size=10)
+        self.IMU_pub = rospy.Publisher('/can/IMU', Imu, queue_size=10)
         self.pGPS_loc = rospy.Publisher('GPS_location', NavSatFix, queue_size=10)
         self.pGPS_speed = rospy.Publisher('GPS_speed', Vector3, queue_size=10)
         self.invSpeed_pub = rospy.Publisher('/motor_speed', Float32, queue_size=10)

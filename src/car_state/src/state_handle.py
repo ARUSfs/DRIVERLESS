@@ -1,6 +1,15 @@
 import rospy
 from std_msgs.msg import Float32
 from common_msgs.msg import CarState
+import tf2_ros
+import tf.transformations
+from geometry_msgs.msg import TransformStamped
+from fssim_common.msg import State
+
+global_frame = rospy.get_param('/car_state/global_frame')
+car_frame = rospy.get_param('/car_state/car_frame')
+get_base_pose_position = rospy.get_param('/car_state/get_base_pose_position')
+SLAM = rospy.get_param('/car_state/SLAM')
 
 class StateClass:
 
@@ -18,21 +27,48 @@ class StateClass:
         self.pub_state = None
         
         # Initialize subscribers and publishers
-        self.subscribe_topics()
-        self.publish_topics()
+        self.pub_state = rospy.Publisher('/car_state/state', CarState, queue_size=10)
+        rospy.Subscriber('/motor_speed', Float32, self.motorspeed_callback)
+        rospy.Subscriber('fssim/base_pose_ground_truth', State, self.base_pose_callback)
         
+        # Timer to periodically update global position
+        self.tf_buffer = tf2_ros.Buffer()
+        tf_listener = tf2_ros.TransformListener(self.tf_buffer)
+        rospy.Timer(rospy.Duration(0.01), self.update_position)
         # Timer to periodically publish state
         rospy.Timer(rospy.Duration(0.01), self.publish_state)
 
     def motorspeed_callback(self, msg):
         self.vx = msg.data
+    
+    def base_pose_callback(self,msg: State):
+        self.vx = msg.vx
+        self.vy = msg.vy
+        if get_base_pose_position:
+            self.x = msg.x
+            self.y = msg.y
+            self.yaw = msg.yaw
+            self.r = msg.r
 
 
-    def subscribe_topics(self):
-        rospy.Subscriber('/motor_speed', Float32, self.motorspeed_callback)
+    def update_position(self, event):
 
-    def publish_topics(self):
-        self.pub_state = rospy.Publisher('/state/car_state', CarState, queue_size=10)
+        try:
+            transform = self.tf_buffer.lookup_transform(global_frame, car_frame, rospy.Time(0), rospy.Duration(1.0))
+            orientation = transform.transform.rotation
+            euler = tf.transformations.euler_from_quaternion([orientation.x, orientation.y, orientation.z, orientation.w])
+            if SLAM == "marrano":
+                self.x = transform.transform.translation.x
+                self.y = transform.transform.translation.y
+                self.z = transform.transform.translation.z
+                self.yaw = euler[2]
+            elif SLAM == "limovelo":
+                self.x = transform.transform.translation.x
+                self.y = -transform.transform.translation.y
+                self.z = -transform.transform.translation.z
+                self.yaw = euler[2]
+        except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
+            rospy.logwarn("Transform not available")
      
     def publish_state(self, event):
         state = CarState()

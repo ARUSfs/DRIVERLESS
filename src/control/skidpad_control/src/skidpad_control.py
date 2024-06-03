@@ -74,7 +74,7 @@ class SkidpadControl():
 
     def update_state(self, msg: CarState):
         self.speed = math.hypot(msg.vx,msg.vy)
-        self.pos = np.array([msg.x+16.5,msg.y])
+        self.pos = np.array([msg.x,msg.y])
 
         if self.AS_status==2 and self.calibrated:
             self.acc = self.get_acc()
