@@ -10,19 +10,31 @@ from sensor_msgs.msg import PointCloud2
 class AccelLocalization():
 
     def __init__(self):
-        self.ransac_threshold = 0.5
+        self.ransac_threshold = 0.2
 
     def get_route(self, msg: PointCloud2):
         cones_all = point_cloud2.read_points(msg, field_names=("x", "y", "z","color", "score"), skip_nans=True)
         cones = [[c[0],c[1]] for c in cones_all]
-        if len(cones)<3:
-            return [0,0]
+        if len(cones)<2:
+            raise ValueError("1 cono")
+        elif len(cones)==2:
+            # x1,y1 = cones[0]
+            # x2,y2 = cones[1]
+            # try:
+            #     a = -(x2-x1)/(y2-y1)
+            #     b = -a*(x1+x2)/2 + (y1+y2)/2
+            #     return a,b
+            # except ZeroDivisionError:
+            #     raise ValueError("2 conos")
+            raise ValueError("2 conos")
+            
+
         conos_parejas = itertools.combinations(cones,2)
         conos_trios = [[c1,c2,c3] for c3 in cones for c1,c2 in conos_parejas if c3 not in [c1,c2]]
         #rospy.loginfo(cones)
 
         max_inliers = 0
-        best_coef = [0,0]
+        best_coef = None
         # generators=None
         for c1,c2,c3 in conos_trios:
             if abs(c1[0]-c2[0])<0.1: # checkea que los conos estén en x distintas
@@ -48,4 +60,4 @@ class AccelLocalization():
                 max_inliers=inliers
         # rospy.loginfo(max_inliers)
         # rospy.loginfo(best_coef)
-        return best_coef
+        return best_coef 

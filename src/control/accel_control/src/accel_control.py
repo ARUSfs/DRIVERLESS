@@ -85,13 +85,18 @@ class AccelControl():
 
 
     def update_route(self, msg: PointCloud2):
-        a,b = self.accel_localizator.get_route(msg)
-        # rospy.logwarn(f"Recta: y = {a}x + {b}")
-        if abs(a) < 0.5 and abs(b) < 1 and self.AS_status==0x02:
-            self.a_media = self.a_media*0.2 + a*0.8
-            self.b_media = self.b_media*0.2 + b*0.8
-        else:
+        try:
+            a,b = self.accel_localizator.get_route(msg)
+            if abs(a) < 0.4 and abs(b) < 1 and self.AS_status==0x02:
+                self.a_media = self.a_media*0.2 + a*0.8
+                self.b_media = self.b_media*0.2 + b*0.8
+            else:
+                a,b = self.a_media, self.b_media
+        except Exception as e:
             a,b = self.a_media, self.b_media
+            rospy.logwarn(e)
+        # rospy.logwarn(f"Recta: y = {a}x + {b}")
+        
         # rospy.logwarn(f"{a} {b}")
 
         self.steer = self.get_steer(a, b)
