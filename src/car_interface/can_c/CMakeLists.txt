@@ -22,10 +22,10 @@ include_directories(
 )
 
 ## Declare the C++ executable
-add_executable(can_c_node src/main.cpp src/can_handle.cpp)
+add_executable(main src/main.cpp src/can_handle.cpp)
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(can_c_node
+target_link_libraries(main
   ${catkin_LIBRARIES}
   /usr/lib/libcanlib.so # Asegúrate de que la ruta a la biblioteca canlib es correcta
 )
