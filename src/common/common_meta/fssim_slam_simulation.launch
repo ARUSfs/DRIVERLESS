@@ -14,13 +14,15 @@
   <node pkg="fssim_interface" name="fssim_interface" type="main.py">
   </node>
 
+  <node pkg="car_state" name="car_state" type="main.py">
+  <rosparam command="load" file="$(find car_state)/config/car_state.yaml"/>
+  </node>
+
   <node name="interface" pkg="visualization" type="main_interface.py">
 	  <rosparam command="load" file="$(find visualization)/config/interface.yaml"/>
     <rosparam>
       frame: 'map'
     </rosparam>
-	</node>
-	<node name="car_broadcaster" pkg="visualization" type="car_broadcaster.py">
 	</node>
 
   

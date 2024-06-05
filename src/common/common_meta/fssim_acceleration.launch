@@ -22,8 +22,9 @@
 	  <rosparam command="load" file="$(find visualization)/config/interface.yaml"/>
 	</node>
 
+
   <node name="accel_control" pkg="accel_control" type="main.py"  output="screen">
-  <rosparam command="load" file="$(find accel_control)/config/accel_control.yaml"/>
+    <rosparam command="load" file="$(find accel_control)/config/accel_control.yaml"/>
     <rosparam>
       kp: 0.5
       target: 10
