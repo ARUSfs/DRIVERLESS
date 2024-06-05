@@ -53,7 +53,7 @@ class AccelControl():
         ### Publicadores y suscriptores ###
         self.cmd_publisher = rospy.Publisher('/controls_pp', Controls, queue_size=1) 
         self.braking_publisher = rospy.Publisher('/braking', Bool, queue_size=10)
-        self.recta_publisher = rospy.Publisher("/recta", Point, queue_size=10)
+        self.recta_publisher = rospy.Publisher("/accel_control/recta", Point, queue_size=10)
         rospy.Subscriber('/perception_map', PointCloud2, self.update_route, queue_size=10)
         rospy.Subscriber('/car_state/state', CarState, self.update_speed, queue_size=1)
         rospy.Subscriber('/can/AS_status', Int16, self.update_AS_status, queue_size=1)
@@ -76,7 +76,6 @@ class AccelControl():
                 braking_msg = Bool()
                 braking_msg.data = True
                 self.braking_publisher.publish(braking_msg)
-                self.steer=0
                 self.acc=0
                 self.publish_cmd()
             else:
@@ -88,8 +87,8 @@ class AccelControl():
         try:
             a,b = self.accel_localizator.get_route(msg)
             if abs(a) < 0.4 and abs(b) < 1 and self.AS_status==0x02:
-                self.a_media = self.a_media*0.2 + a*0.8
-                self.b_media = self.b_media*0.2 + b*0.8
+                self.a_media = self.a_media*0.7 + a*0.3
+                self.b_media = self.b_media*0.7 + b*0.3
             else:
                 a,b = self.a_media, self.b_media
         except Exception as e:

@@ -32,7 +32,6 @@
    <node name="accel_control" pkg="accel_control" type="main.py"  output="screen">
    <rosparam command="load" file="$(find accel_control)/config/accel_control.yaml"/>
     <rosparam>
-      sim_mode: false
       kp: 0.5
       target: 5
       track_length: 50

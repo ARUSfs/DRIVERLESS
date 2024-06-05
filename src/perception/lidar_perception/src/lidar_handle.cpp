@@ -112,7 +112,7 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg)
     // Condición de filtro de puntos
     auto condition = [Mx, My, Mz, H](const pcl::PointXYZI &p)
     {
-        return !(p.x < Mx && abs(p.y) < My && p.z < Mz && abs(atan2(p.y, p.x)) < H / 2 && (p.x * p.x + p.y * p.y) > 4);
+        return !(p.x < Mx && abs(p.y) < My && p.z < Mz && abs(atan2(p.y, p.x)) < H / 2 && (abs(p.y) > 0.8 || p.x > 2));
     };
 
     // Aplicamos el filtro

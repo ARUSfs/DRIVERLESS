@@ -38,35 +38,35 @@ class InterfaceHandle():
         topic_delaunay = rospy.get_param("/interface/topic_delaunay")
         rospy.Subscriber(topic_delaunay, Triangulation, self.delaunay_callback)
 
+        topic_accel = rospy.get_param("/interface/topic_accel")
+        rospy.Subscriber(topic_accel,Point,callback=self.accel_callback,queue_size=10)
+
     def publish_topics(self):
         # self.pub = rospy.Publisher("visualization_cones", MarkerArray, queue_size=1)
         self.pub2 = rospy.Publisher("visualization_path", Marker, queue_size=1)
         self.pub3 = rospy.Publisher("visualization_pursuit", Marker, queue_size=1)
         self.delaunay_pub = rospy.Publisher("visualization_delaunay", Marker, queue_size=1)
+        self.pub_accel = rospy.Publisher('visualization_accel',Marker,queue_size=10)
 
 
 
-    # def read_map(self, msg):
-    #     data = msg.cones  # List of cones
-    #     cones = list()
-    #     for c in data:
-    #         cone = (c.position.x, c.position.y, c.color, c.confidence)
-    #         cones.append(cone)
+    def accel_callback(self, msg: Point):
+        a = msg.x
+        b = msg.y
+        ruta = [[0,b],[10,10*a+b]]
 
-    #     self.cones = cones
-    #     self.draw(cones)
 
-    # def draw(self, cones):
-    #     markerarray = MarkerArray()
-    #     m1 = Marker()
-    #     m1.action = Marker.DELETEALL
-    #     markerarray.markers.append(m1)
-    #     for i, p in enumerate(cones):
-    #         px, py, c, prob = p
-    #         marker = self.create_marker(px, py, c, i)
-    #         markerarray.markers.append(marker)
-
-    #     self.pub.publish(markerarray)
+        marker = Marker()
+        marker.header.frame_id = self.frame
+        marker.header.stamp = rospy.Time().now()
+        marker.id = 102
+        marker.type = Marker.LINE_STRIP
+        marker.action = Marker.ADD
+        marker.scale.x = 0.2
+        marker.color.r = 1
+        marker.color.a = 1.0
+        marker.points = [Point(p[0], p[1], 0.0) for p in ruta]
+        self.pub_accel.publish(marker)
 
     def create_marker(self, px, py, c, i):
         marker = Marker()
