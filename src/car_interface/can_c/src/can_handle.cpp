@@ -27,7 +27,7 @@ float transmissionRatio = 11/45;
 //################################################# PARSE FUNCTIONS #################################################
 
 //--------------------------------------------- INV SPEED -------------------------------------------------------------
-void CanInterface::parseInvSpeed(unsigned char msg[8])
+void CanInterface::parseInvSpeed(uint8_t msg[8])
 {
     int16_t val = (msg[2] << 8) | msg[1];
     float angV = val / pow(2, 15) * velMax;
@@ -39,7 +39,7 @@ void CanInterface::parseInvSpeed(unsigned char msg[8])
 }
 
 //-------------------------------------------- AS -------------------------------------------------------------------------
-void CanInterface::parseASStatus(unsigned char msg[8])
+void CanInterface::parseASStatus(uint8_t msg[8])
 {
     int16_t val = (msg[2]);
     std_msgs::Int16 x;
@@ -48,7 +48,7 @@ void CanInterface::parseASStatus(unsigned char msg[8])
 }
 
 //-------------------------------------------- IMU -----------------------------------------------------------------------
-void CanInterface::parseAcc(unsigned char msg[8])
+void CanInterface::parseAcc(uint8_t msg[8])
 {
     int16_t intX = (msg[1] << 8) | msg[0];
     float accX = intX/100;
@@ -65,7 +65,7 @@ void CanInterface::parseAcc(unsigned char msg[8])
     CanInterface::IMUData.header.stamp = ros::Time::now();    
 }
 
-void CanInterface::parseEulerAngles(unsigned char msg[8])
+void CanInterface::parseEulerAngles(uint8_t msg[8])
 {
     int16_t intRoll = (msg[1] << 8) | msg[0];
     float roll = intRoll/10000;
@@ -88,7 +88,7 @@ void CanInterface::parseEulerAngles(unsigned char msg[8])
     CanInterface::IMUData.header.stamp = ros::Time::now();    
 }
 
-void CanInterface::parseAngularVelocity(unsigned char msg[8])
+void CanInterface::parseAngularVelocity(uint8_t msg[8])
 {
     int16_t intX = (msg[1] << 8) | msg[0];
     float angVelX = intX/1000;
@@ -105,7 +105,7 @@ void CanInterface::parseAngularVelocity(unsigned char msg[8])
     CanInterface::IMUData.header.stamp = ros::Time::now();    
 }
 
-void CanInterface::parseGPS(unsigned char msg[8])
+void CanInterface::parseGPS(uint8_t msg[8])
 {
     int32_t lat = (msg[3] << 24) | (msg[2] << 16) | (msg[1] << 8) | msg[0];
     int32_t lon = (msg[7] << 24) | (msg[6] << 16) | (msg[5] << 8) | msg[4];
@@ -116,7 +116,7 @@ void CanInterface::parseGPS(unsigned char msg[8])
     GPSPub.publish(x);
 }
 
-void CanInterface::parseGPSVel(unsigned char msg[8])
+void CanInterface::parseGPSVel(uint8_t msg[8])
 {
     int16_t inxN = (msg[1] << 8) | msg[0];
     float velN = inxN/100;
@@ -135,7 +135,7 @@ void CanInterface::parseGPSVel(unsigned char msg[8])
 }
 
 //-------------------------------------------------------- ACQUISITION -------------------------------------------------
-void CanInterface::parseSteeringAngle(unsigned char msg[8])
+void CanInterface::parseSteeringAngle(uint8_t msg[8])
 {
     int16_t val = (msg[2] << 8) | msg[1];
 
@@ -144,7 +144,7 @@ void CanInterface::parseSteeringAngle(unsigned char msg[8])
     steeringAnglePub.publish(x);
 }
 
-void CanInterface::parseFrontWheelSpeed(unsigned char msg[8])
+void CanInterface::parseFrontWheelSpeed(uint8_t msg[8])
 {
     int16_t intLeft = (msg[2] << 8) | msg[1];
 
@@ -157,7 +157,7 @@ void CanInterface::parseFrontWheelSpeed(unsigned char msg[8])
     frontWheelSpeedPub.publish(x);
 }
 
-void CanInterface::parseRearWheelSpeed(unsigned char msg[8])
+void CanInterface::parseRearWheelSpeed(uint8_t msg[8])
 {
     int16_t intLeft = (msg[2] << 8) | msg[1];
 
@@ -194,18 +194,17 @@ void CanInterface::readCan0()
     if (stat < 0){
         printf("canSetAcceptanceFilter() failed, %d\n", stat);    
     }
-
     stat = canBusOn(hndR0);
 
     //Read
     while (true){
         long id;
-        unsigned char msg[8];
+        uint8_t msg[8];
         unsigned int dlc;
         unsigned int flag;
         unsigned long time;
-        stat = canRead(hndR0, &id, &msg, &dlc, &flag, &time);
-        unsigned char subId = msg[0];
+        stat = canReadWait(hndR0, &id, &msg, &dlc, &flag, &time, 300);
+        uint8_t subId = msg[0];
 
         if(stat == canOK){
             switch(id){
@@ -229,6 +228,11 @@ void CanInterface::readCan0()
                 default:
             break;
             }
+        }
+
+        else if(stat = canERR_NOMSG){
+            uint8_t data[3] = {0x01, 0x01, 0x04};
+            canWrite(hndR0, 0x202, data, 3, canMSG_STD);
         }
     }
 
@@ -273,12 +277,12 @@ void CanInterface::readCan1()
     //Read
     while (true){
         long id;
-        unsigned char msg[8];
+        uint8_t msg[8];
         unsigned int dlc;
         unsigned int flag;
         unsigned long time;
-        stat = canRead(hndR1, &id, &msg, &dlc, &flag, &time);
-        unsigned char subId = msg[0];
+        stat = canReadWait(hndR1, &id, &msg, &dlc, &flag, &time, 300);
+        uint8_t subId = msg[0];
 
 
         if (stat == canOK){  
@@ -311,6 +315,11 @@ void CanInterface::readCan1()
                     break;
             }
         }
+
+        else if(stat = canERR_NOMSG){
+            uint8_t data[3] = {0x01, 0x01, 0x04};
+            canWrite(hndR1, 0x202, data, 3, canMSG_STD);
+        }
     }
 
     stat = canBusOff(hndR1);
@@ -331,9 +340,9 @@ void CanInterface::controlsCallback(common_msgs::Controls msg)
 
     int8_t bytesCMD[2];
     intToBytes(intValue, bytesCMD);
-    char cabecera = 0x90;
+    int8_t cabecera = 0x90;
 
-    signed char data[3] = {cabecera, bytesCMD[0], bytesCMD[1]};
+    int8_t data[3] = {cabecera, bytesCMD[0], bytesCMD[1]};
 
     canWrite(hndW0, 0x201, data, 3, canMSG_STD);
 }
@@ -341,14 +350,14 @@ void CanInterface::controlsCallback(common_msgs::Controls msg)
 void CanInterface::ASStatusCallback(std_msgs::Int16 msg)
 {
     if(msg.data == 3){
-        char data[3] = {0x01, 0x01, 0x03};
+        uint8_t data[3] = {0x01, 0x01, 0x03};
         canWrite(hndW1, 0x202, data, 8, canMSG_STD);
     }
 }
 
 void CanInterface::steeringInfoCallback(std_msgs::Int32MultiArray msg)
 {
-    char pMovementState = msg.data[0];
+    uint8_t pMovementState = msg.data[0];
 
     int16_t pPosition = msg.data[1]*100;
     int8_t pPositionBytes[3];
@@ -358,7 +367,7 @@ void CanInterface::steeringInfoCallback(std_msgs::Int32MultiArray msg)
     int8_t pTargetPositionBytes[3];
     intToBytes(pTargetPosition, pTargetPositionBytes);
 
-    char msgEposState[8]= {0x02, pMovementState, pPositionBytes[0], pPositionBytes[1], pPositionBytes[2], pTargetPositionBytes[0], pTargetPositionBytes[1], pTargetPositionBytes[2]};
+    uint8_t msgEposState[8]= {0x02, pMovementState, pPositionBytes[0], pPositionBytes[1], pPositionBytes[2], pTargetPositionBytes[0], pTargetPositionBytes[1], pTargetPositionBytes[2]};
     canWrite(hndW1, 0x183, msgEposState, 8, canMSG_STD);
 
     int16_t pVelocity = msg.data[3]*100;
@@ -369,14 +378,14 @@ void CanInterface::steeringInfoCallback(std_msgs::Int32MultiArray msg)
     int8_t pVelocityAvgBytes[3];
     intToBytes(pVelocityAvg, pVelocityAvgBytes);
 
-    char msgEposVelocity[7]= {0x03, pVelocityBytes[0], pVelocityBytes[1], pVelocityBytes[2], pVelocityAvgBytes[0], pVelocityAvgBytes[1], pVelocityAvgBytes[2]};
+    uint8_t msgEposVelocity[7]= {0x03, pVelocityBytes[0], pVelocityBytes[1], pVelocityBytes[2], pVelocityAvgBytes[0], pVelocityAvgBytes[1], pVelocityAvgBytes[2]};
     canWrite(hndW1, 0x183, msgEposVelocity, 7, canMSG_STD);
 
     int16_t pTorque = msg.data[5]*100;
     int8_t pTorqueBytes[2];
     intToBytes(pTorque, pTorqueBytes);
     
-    char msgEposTorque[3]= {0x04, pTorqueBytes[0], pTorqueBytes[1]};
+    uint8_t msgEposTorque[3]= {0x04, pTorqueBytes[0], pTorqueBytes[1]};
     canWrite(hndW1, 0x183, msgEposTorque, 3, canMSG_STD);
 }
 
@@ -387,7 +396,7 @@ void CanInterface::pubIMU(const ros::TimerEvent&)
 
 void CanInterface::pubHeartBeat(const ros::TimerEvent&)
 {
-    char data[1] = {0x01};
+    uint8_t data[1] = {0x01};
     canWrite(hndW1, 0x183, data, 1, canMSG_STD);
 }
 //################################################# CAN HANDLE ############################################################
