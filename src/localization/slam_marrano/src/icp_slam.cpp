@@ -33,7 +33,6 @@ ICP_handle::ICP_handle(){
 }
 
 void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
-	hola = ros::Time::now();
 	callback_iteration++;
 
 	pcl::PointCloud<PointXYZColorScore>::Ptr new_map(new pcl::PointCloud<PointXYZColorScore>);
@@ -163,8 +162,6 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 
 		*previous_map = *clustered_points;
 	}
-	cout << ros::Time::now() - hola << endl;
-	hola = ros::Time::now();
 
 }
 

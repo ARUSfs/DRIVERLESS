@@ -15,12 +15,14 @@ from scipy.interpolate import BSpline
 from common_msgs.msg import Simplex, Triangulation
 from geometry_msgs.msg import Point
 import math
+import time
 
 
-MAX_DISTANCE = 8
-W_DISTANCE = 1
-W_ANGLE = 4
-W_THRESH = 8
+MAX_DISTANCE = rospy.get_param('/delaunay_detector/MAX_DISTANCE')
+W_DISTANCE = rospy.get_param('/delaunay_detector/W_DISTANCE')
+W_ANGLE = rospy.get_param('/delaunay_detector/W_ANGLE')
+W_THRESH = rospy.get_param('/delaunay_detector/W_THRESH')
+NUM_POINTS = rospy.get_param('/delaunay_detector/NUM_POINTS')
 PREV_ANGLE = 0
 
 
@@ -37,6 +39,8 @@ class PlanningSystem():
         self.path = None
         self.distances = None
 
+        self.previous_perceptions = []
+
     def update_tracklimits(self, cones):
         self.colours = list()
         cone_points = list()
@@ -46,6 +50,7 @@ class PlanningSystem():
                 self.colours.append(c[3])
         self.cones = np.array(cone_points)
         self.distances = dict()
+
 
     def calculate_path(self):
 
@@ -152,7 +157,7 @@ class PlanningSystem():
 
         route=[]
         for i in range(len(path)-1):
-            route.extend([[(1-a)*path[i][0] + a*path[i+1][0],(1-a)*path[i][1] + a*path[i+1][1]] for a in np.linspace(0,1, num=10)])
+            route.extend([[(1-a)*path[i][0] + a*path[i+1][0],(1-a)*path[i][1] + a*path[i+1][1]] for a in np.linspace(0,1, num=NUM_POINTS)])
         route = np.array(route)
 
         triang = Triangulation()
