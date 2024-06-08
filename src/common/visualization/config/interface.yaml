@@ -5,4 +5,4 @@ topic_pursuit: "pursuit_point"
 topic_state: "state"
 topic_delaunay: "/delaunay_detector/simplices"
 topic_accel: "/accel_control/recta"
-frame: 'rslidar'
+frame: 'fssim/vehicle/cog'
