@@ -60,7 +60,7 @@ void recostruccion(const pcl::PointCloud<pcl::PointXYZI>::Ptr& cloud, const pcl:
     kdtree.setInputCloud(cloud_f);
 
     // Definir el radio de búsqueda
-    float search_radius = 0.20; // Puedes ajustar este valor segun sea necesario
+    float search_radius = 0.15; // Puedes ajustar este valor segun sea necesario
 
     // Desenrollar el bucle externo
     for (size_t idx = 0; idx < punto.size(); ++idx) // Incrementar en 2 en cada iteración
@@ -161,7 +161,7 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg)
 
     std::vector<pcl::PointIndices> cluster_indices;
     pcl::EuclideanClusterExtraction<pcl::PointXYZI> ec;
-    ec.setClusterTolerance(0.5); // 2cm
+    ec.setClusterTolerance(0.4); // 2cm
     ec.setMinClusterSize(4);
     ec.setMaxClusterSize(200);
     ec.setSearchMethod(tree);

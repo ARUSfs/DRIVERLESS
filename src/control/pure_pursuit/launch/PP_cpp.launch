@@ -1,6 +1,0 @@
-<launch>
-  <node pkg="PP_cpp" name="PP_cpp" type="main" output="screen">
-  <rosparam command="load" file="$(find PP_cpp)/config/PP_cpp.yaml"/>
-  </node>
-
-</launch>

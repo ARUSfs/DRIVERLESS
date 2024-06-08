@@ -32,9 +32,10 @@ class StateClass:
         rospy.Subscriber('fssim/base_pose_ground_truth', State, self.base_pose_callback)
         
         # Timer to periodically update global position
-        self.tf_buffer = tf2_ros.Buffer()
-        tf_listener = tf2_ros.TransformListener(self.tf_buffer)
-        rospy.Timer(rospy.Duration(0.01), self.update_position)
+        if SLAM != "none":
+            self.tf_buffer = tf2_ros.Buffer()
+            tf_listener = tf2_ros.TransformListener(self.tf_buffer)
+            rospy.Timer(rospy.Duration(0.01), self.update_position)
         # Timer to periodically publish state
         rospy.Timer(rospy.Duration(0.01), self.publish_state)
 

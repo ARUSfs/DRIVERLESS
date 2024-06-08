@@ -1,6 +1,6 @@
 global_frame: "map"
 car_frame: "body"
-global_mode: true
+global_mode: false
 LAD: 3
 TARGET_VEL: 4
 KP: 0.5
