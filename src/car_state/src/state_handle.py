@@ -1,10 +1,11 @@
 import rospy
-from std_msgs.msg import Float32
+from std_msgs.msg import Float32, Float32MultiArray
 from common_msgs.msg import CarState
 import tf2_ros
 import tf.transformations
 from geometry_msgs.msg import TransformStamped
 from fssim_common.msg import State
+import numpy as np
 
 global_frame = rospy.get_param('/car_state/global_frame')
 car_frame = rospy.get_param('/car_state/car_frame')
@@ -25,6 +26,8 @@ class StateClass:
         self.pitch = 0
         self.yaw = 0
         self.pub_state = None
+
+        self.limovelo_rotation = np.array([[1,0,0],[0,1,0],[0,0,1]])
         
         # Initialize subscribers and publishers
         self.pub_state = rospy.Publisher('/car_state/state', CarState, queue_size=10)
@@ -36,6 +39,9 @@ class StateClass:
             self.tf_buffer = tf2_ros.Buffer()
             tf_listener = tf2_ros.TransformListener(self.tf_buffer)
             rospy.Timer(rospy.Duration(0.01), self.update_position)
+            if SLAM == "limovelo":
+                rospy.Subscriber('/limovelo/rotation', Float32MultiArray, self.update_limovelo_rotation)
+                
         # Timer to periodically publish state
         rospy.Timer(rospy.Duration(0.01), self.publish_state)
 
@@ -51,6 +57,11 @@ class StateClass:
             self.yaw = msg.yaw
             self.r = msg.r
 
+    def update_limovelo_rotation(self, msg: Float32MultiArray):
+        self.limovelo_rotation = np.array([[msg.data[0],msg.data[1],msg.data[2]],
+                                           [msg.data[3],msg.data[4],msg.data[5]],
+                                           [msg.data[6],msg.data[7],msg.data[8]]])
+
 
     def update_position(self, event):
 
@@ -64,9 +75,13 @@ class StateClass:
                 self.z = transform.transform.translation.z
                 self.yaw = euler[2]
             elif SLAM == "limovelo":
-                self.x = transform.transform.translation.x
-                self.y = -transform.transform.translation.y
-                self.z = -transform.transform.translation.z
+                trans = np.array([transform.transform.translation.x,
+                                  transform.transform.translation.y,
+                                  transform.transform.translation.z])
+                pos = self.limovelo_rotation@trans
+                self.x = pos[0]
+                self.y = -pos[1]
+                self.z = -pos[2]
                 self.yaw = euler[2]
         except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
             rospy.logwarn("Transform not available")
