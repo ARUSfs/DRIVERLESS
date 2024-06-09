@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="lidar_perception" name="lidar_perception" type="limovelo_interface" output="screen"/>
+
+</launch>
