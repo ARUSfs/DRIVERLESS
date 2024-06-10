@@ -14,14 +14,59 @@
 #include <sensor_msgs/NavSatFix.h>
 #include <common_msgs/Controls.h>
 
-#include "can_handle.hpp"
+#include "canInterface.hpp"
 
-using namespace std;
 
 
 int velMax = 5500;
 float wheelRadius = 0.2;
 float transmissionRatio = 11/45;
+
+//################################################# CAN HANDLE ############################################################
+CanInterface::CanInterface()
+{
+    std::cout << "tusmuerto" << std::endl;
+    canInitializeLibrary(); // Initialize the library
+    std::thread thread_0(&CanInterface::readCan0, this);
+    std::thread thread_1(&CanInterface::readCan1, this);
+
+    hndW0 = canOpenChannel(0, canOPEN_ACCEPT_VIRTUAL);
+    if (hndW0 < 0){
+        printf("canOpenChannel() failed, %d\n", hndW0);
+        return;
+    }
+
+    hndW1 = canOpenChannel(1, canOPEN_ACCEPT_VIRTUAL);
+    if (hndW1 < 0){
+        printf("canOpenChannel() failed, %d\n", hndW1);
+        return;
+    }
+
+    canBusOn(hndW0);
+    canBusOn(hndW1);
+    std::cout << "tusmuerto2" << std::endl;
+
+    // Publishers
+    motorSpeedPub = nh.advertise<std_msgs::Float32>("/motor_speed", 100);
+    ASStatusPub = nh.advertise<std_msgs::Int16>("/can/AS_status", 100);
+    GPSPub = nh.advertise<sensor_msgs::NavSatFix>("can/gps", 100);
+    GPSSpeedPub = nh.advertise<geometry_msgs::Vector3>("can/gps_speed", 100);
+    IMUPub = nh.advertise<sensor_msgs::Imu>("can/IMU", 100);
+    steeringAnglePub = nh.advertise<std_msgs::Float32>("can/steering_angle", 100);
+    rearWheelSpeedPub = nh.advertise<geometry_msgs::Vector3>("can/rear_wheel_speed", 100);
+    frontWheelSpeedPub = nh.advertise<geometry_msgs::Vector3>("can/front_wheel_speed", 100);
+
+    // Subscribers
+    controlsSub = nh.subscribe<common_msgs::Controls>("/controls", 100, &CanInterface::controlsCallback, this);    
+    ASStatusSub = nh.subscribe<std_msgs::Int16>("can/AS_status", 100, &CanInterface::ASStatusCallback, this);
+    steeringInfoSub = nh.subscribe<std_msgs::Int32MultiArray>("/steering/epos_info", 100, &CanInterface::steeringInfoCallback, this);
+
+    //Timers
+    IMUTimer = nh.createTimer(ros::Duration(1/500), &CanInterface::pubIMU, this);
+    heartBeatTimer = nh.createTimer(ros::Duration(1/500), &CanInterface::pubHeartBeat, this);
+
+    cout << "tusmuerto3" << endl;
+}
 
 
 //################################################# PARSE FUNCTIONS #################################################
@@ -399,45 +444,5 @@ void CanInterface::pubHeartBeat(const ros::TimerEvent&)
     uint8_t data[1] = {0x01};
     canWrite(hndW1, 0x183, data, 1, canMSG_STD);
 }
-//################################################# CAN HANDLE ############################################################
-CanInterface::CanInterface()
-{
-    canInitializeLibrary(); // Initialize the library
-    std::thread thread_0(&CanInterface::readCan0, this);
-    std::thread thread_1(&CanInterface::readCan1, this);
 
-    hndW0 = canOpenChannel(0, canOPEN_ACCEPT_VIRTUAL);
-    if (hndW0 < 0){
-        printf("canOpenChannel() failed, %d\n", hndW0);
-        return;
-    }
-
-    hndW1 = canOpenChannel(1, canOPEN_ACCEPT_VIRTUAL);
-    if (hndW1 < 0){
-        printf("canOpenChannel() failed, %d\n", hndW1);
-        return;
-    }
-
-    canBusOn(hndW0);
-    canBusOn(hndW1);
-
-    // Publishers
-    motorSpeedPub = nh.advertise<std_msgs::Float32>("/motor_speed", 100);
-    ASStatusPub = nh.advertise<std_msgs::Int16>("/can/AS_status", 100);
-    GPSPub = nh.advertise<sensor_msgs::NavSatFix>("can/gps", 100);
-    GPSSpeedPub = nh.advertise<geometry_msgs::Vector3>("can/gps_speed", 100);
-    IMUPub = nh.advertise<sensor_msgs::Imu>("can/IMU", 100);
-    steeringAnglePub = nh.advertise<std_msgs::Float32>("can/steering_angle", 100);
-    rearWheelSpeedPub = nh.advertise<geometry_msgs::Vector3>("can/rear_wheel_speed", 100);
-    frontWheelSpeedPub = nh.advertise<geometry_msgs::Vector3>("can/front_wheel_speed", 100);
-
-    // Subscribers
-    controlsSub = nh.subscribe<common_msgs::Controls>("/controls", 100, &CanInterface::controlsCallback, this);    
-    ASStatusSub = nh.subscribe<std_msgs::Int16>("can/AS_status", 100, &CanInterface::ASStatusCallback, this);
-    steeringInfoSub = nh.subscribe<std_msgs::Int32MultiArray>("/steering/epos_info", 100, &CanInterface::steeringInfoCallback, this);
-
-    //Timers
-    IMUTimer = nh.createTimer(ros::Duration(1/500), &CanInterface::pubIMU, this);
-    heartBeatTimer = nh.createTimer(ros::Duration(1/500), &CanInterface::pubHeartBeat, this);
-}
 

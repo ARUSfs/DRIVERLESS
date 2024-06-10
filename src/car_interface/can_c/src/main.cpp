@@ -1,10 +1,11 @@
 #include <ros/ros.h>
-#include "can_handle.hpp"
+#include "canInterface.hpp"
 
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "can_c");
-    CanHandle canHandle;
+    std::cout << "shgshgfs" << std::endl;
+    CanInterface canInterface;
     ros::spin();
     return 0;
 }

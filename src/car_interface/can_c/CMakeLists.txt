@@ -22,7 +22,7 @@ include_directories(
 )
 
 ## Declare the C++ executable
-add_executable(main src/main.cpp src/can_handle.cpp)
+add_executable(main src/main.cpp src/canInterface.cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(main
