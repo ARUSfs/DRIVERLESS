@@ -10,16 +10,6 @@ import math
 from mpc_handle import MPCHandle
 
 # for braking
-BRAKING_KP=0.5
-DECELERATION = 5
-MIN_BRAKING_CMD = -0.2 
-
-# for accelerating
-MAX_CMD = 1 
-MIN_CMD = 0
-
-
-# for braking
 BRAKING_KP = rospy.get_param('/controller/braking_kp')
 DECELERATION = rospy.get_param('/controller/deceleration')
 MIN_BRAKING_CMD = rospy.get_param('/controller/min_braking_cmd') 
@@ -52,6 +42,7 @@ class Controller():
 
 
     def send_controllers_pp(self, msg):
+        self.steer = msg.steering
         if self.controller_mode=='PP' or (self.MPC_handler.FIRST_LAP and self.controller_mode=='PP-MPC'):
             #limit command
             msg.accelerator = min(max(msg.accelerator,MIN_CMD),MAX_CMD)
@@ -64,6 +55,7 @@ class Controller():
             self.pub_cmd.publish(msg)
 
     def send_controllers_mpc(self, msg):
+        self.steer = msg.steering
         if (self.controller_mode=='PP-MPC' and not self.MPC_handler.FIRST_LAP):
             # limit command
             msg.accelerator = min(max(msg.accelerator,MIN_CMD),MAX_CMD)
@@ -97,14 +89,14 @@ class Controller():
     
             control_msg = Controls()
             control_msg.accelerator = min(max(cmd,MIN_BRAKING_CMD),0)
-            control_msg.steering = 0
+            control_msg.steering = self.steer
 
             self.pub_cmd.publish(control_msg)
         
         else:
             control_msg = Controls()
             control_msg.accelerator = 0
-            control_msg.steering = 0
+            control_msg.steering = self.steer
 
             self.pub_cmd.publish(control_msg)
 

@@ -6,15 +6,14 @@ topic_simplices: '/delaunay_detector/simplices'
 send_simplices_marker: true
 
 # Hiperparameters of delaunay detector
-W_DISTANCE: 1
-W_ANGLE: 5
-MAX_COST1: 5
-MAX_COST2 : -0.75
 MAX_DISTANCE: 8
+W_DISTANCE: 1
+W_ANGLE: 4
+W_THRESH: 8
+PREV_ANGLE: 0
 
 # Parameters of spline aproximation of path
-NUM_POINTS: 30
-DEGREE: 3
+NUM_POINTS: 10
 
 # Color detection enabled
 color_enabled: false

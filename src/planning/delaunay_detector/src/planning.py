@@ -14,12 +14,15 @@ from scipy.interpolate import BSpline
 
 from common_msgs.msg import Simplex, Triangulation
 from geometry_msgs.msg import Point
+import math
+import time
 
 
-MAX_DISTANCE = 8
-W_DISTANCE = 1
-W_ANGLE = 4
-W_THRESH = 8
+MAX_DISTANCE = rospy.get_param('/delaunay_detector/MAX_DISTANCE')
+W_DISTANCE = rospy.get_param('/delaunay_detector/W_DISTANCE')
+W_ANGLE = rospy.get_param('/delaunay_detector/W_ANGLE')
+W_THRESH = rospy.get_param('/delaunay_detector/W_THRESH')
+NUM_POINTS = rospy.get_param('/delaunay_detector/NUM_POINTS')
 PREV_ANGLE = 0
 
 
@@ -36,6 +39,8 @@ class PlanningSystem():
         self.path = None
         self.distances = None
 
+        self.previous_perceptions = []
+
     def update_tracklimits(self, cones):
         self.colours = list()
         cone_points = list()
@@ -45,6 +50,7 @@ class PlanningSystem():
                 self.colours.append(c[3])
         self.cones = np.array(cone_points)
         self.distances = dict()
+
 
     def calculate_path(self):
 
@@ -67,7 +73,7 @@ class PlanningSystem():
                     for p1, p2 in combinations(simplex, 2):  # TODO Could be optimized.
                         if not self.colours[p1] == self.colours[p2]:
                             m = (self.cones[p1] + self.cones[p2])/2
-                            if m[0] not in midpoints_x and m[0]>0:
+                            if m[0] not in midpoints_x:
                                 midpoints.append(m)
                                 midpoints_x.append(m[0])
                             preproc_simplices.append(simplex)
@@ -108,7 +114,7 @@ class PlanningSystem():
             for (i,j) in dict.keys():
                 if dict[(i,j)]>=2:
                     m = (self.cones[i] + self.cones[j])/2
-                    if m[0] not in midpoints_x and m[0]>0:
+                    if m[0] not in midpoints_x:
                         midpoints.append(m)
                         midpoints_x.append(m[0])
                         midpoints_index.append((i,j))
@@ -130,7 +136,7 @@ class PlanningSystem():
             vectors[non_used_midpoints] = midpoints[non_used_midpoints] - last_element
             distances[non_used_midpoints] = np.linalg.norm(vectors[non_used_midpoints], axis=1)
             angles[non_used_midpoints] = np.abs(np.arctan2(vectors[non_used_midpoints, 1], vectors[non_used_midpoints, 0])-last_angle)
-
+            angles = np.minimum(angles,np.abs(angles-2*math.pi))
 
             weights = W_DISTANCE*distances + W_ANGLE*angles
 
@@ -151,7 +157,7 @@ class PlanningSystem():
 
         route=[]
         for i in range(len(path)-1):
-            route.extend([[(1-a)*path[i][0] + a*path[i+1][0],(1-a)*path[i][1] + a*path[i+1][1]] for a in np.linspace(0,1, num=10)])
+            route.extend([[(1-a)*path[i][0] + a*path[i+1][0],(1-a)*path[i][1] + a*path[i+1][1]] for a in np.linspace(0,1, num=NUM_POINTS)])
         route = np.array(route)
 
         triang = Triangulation()

@@ -1,10 +1,18 @@
 <launch>
+  <node pkg="rslidar_sdk" name="rslidar_sdk_node" type="rslidar_sdk_node" output="screen">
+    <param name="config_path" value=""/>
+  </node>
+    
 
   <node name="steering" pkg="steering" type="main.py" output="screen">
 	</node>
 
   <node name="can" pkg="can" type="main.py">
 	</node>
+
+  <node pkg="car_state" name="car_state" type="main.py">
+  <rosparam command="load" file="$(find car_state)/config/car_state.yaml"/>
+  </node>
 
   <node pkg="controller" name="controller" type="main.py" output='screen'>
     <rosparam command="load" file="$(find controller)/config/controller.yaml"/>
@@ -21,8 +29,6 @@
     <rosparam command="load" file="$(find lidar_perception)/config/lidar_cpp.yaml"/>
   </node>
 
-  <!-- <node name="fssim_rviz" pkg="rviz" type="rviz" args="-d $(find lidar_perception)/config/lidar_rviz.rviz"/> -->
-
 
   <node pkg="delaunay_detector" name="delaunay_detector" type="main.py" output="screen">
     <rosparam command="load" file="$(find delaunay_detector)/config/delaunay.yaml"/>
@@ -32,26 +38,18 @@
     </rosparam>
   </node>
 
-  <node name="interface" pkg="visualization" type="main_interface.py">
-	  <rosparam command="load" file="$(find visualization)/config/interface.yaml"/>
-    <rosparam>
-      frame: 'velodyne'
-    </rosparam>
-	</node>
 
-
-  <node pkg="control_pure_pursuit" name="control_pure_pursuit" type="main.py" output="screen">
-    <rosparam command="load" file="$(find control_pure_pursuit)/config/pure_pursuit.yaml"/>
+  <node pkg="pure_pursuit" name="pure_pursuit" type="main.py" output="screen">
+    <rosparam command="load" file="$(find pure_pursuit)/config/pure_pursuit.yaml"/>
     <rosparam>
-      LFC: 2.5
-      TARGET_SPEED: 2
-      simulation: false
-      min_vel: 0.5
+      LAD: 4
+      TARGET_SPEED: 3
+      global_mode: false
     </rosparam>
   </node>
 
   <!-- Se guardan en $HOME/.ros/ -->
-  <node pkg="rosbag" type="record" name="rosbag_record" args="record -o pure_pursuit -a"/>
+  <node pkg="rosbag" type="record" name="rosbag_record" args="record -o pp -a"/>
 
 
 </launch>

@@ -22,5 +22,7 @@ catkin_package(
 
 
 add_executable(main src/main.cpp src/lidar_handle.cpp)
+add_executable(limovelo_interface src/limovelo_interface.cpp)
 target_link_libraries(main ${catkin_LIBRARIES})
+target_link_libraries(limovelo_interface ${catkin_LIBRARIES})
 

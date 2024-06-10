@@ -1,6 +1,5 @@
 <launch>
 
-
   <node pkg="controller" name="controller" type="main.py" output='screen'>
     <rosparam command="load" file="$(find controller)/config/controller.yaml"/>
     <rosparam>
@@ -12,19 +11,21 @@
     </rosparam>
   </node>
 
+  <node pkg="car_state" name="car_state" type="main.py">
+  <rosparam command="load" file="$(find car_state)/config/car_state.yaml"/>
+  </node>
+
   <node pkg="fssim_interface" name="fssim_interface" type="main.py">
   </node>
 
   <node name="interface" pkg="visualization" type="main_interface.py">
 	  <rosparam command="load" file="$(find visualization)/config/interface.yaml"/>
 	</node>
-	<node name="car_broadcaster" pkg="visualization" type="car_broadcaster.py">
-	</node>
+
 
   <node name="accel_control" pkg="accel_control" type="main.py"  output="screen">
-  <rosparam command="load" file="$(find accel_control)/config/accel_control.yaml"/>
+    <rosparam command="load" file="$(find accel_control)/config/accel_control.yaml"/>
     <rosparam>
-      sim_mode: true
       kp: 0.5
       target: 10
       track_length: 75
@@ -35,18 +36,5 @@
       lqr_r: 3.0
     </rosparam>
   </node>
-
-  <node pkg="control_pure_pursuit" name="control_pure_pursuit" type="main.py" output="screen">
-    <rosparam command="load" file="$(find control_pure_pursuit)/config/pure_pursuit.yaml"/>
-    <rosparam>
-      LFC: 6
-      TARGET_SPEED: 4
-      simulation: true
-      max_cmd: 0.2
-    </rosparam>
-  </node>
-
-
-
 
 </launch>

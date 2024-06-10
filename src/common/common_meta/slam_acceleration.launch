@@ -2,6 +2,7 @@
   <node pkg="rslidar_sdk" name="rslidar_sdk_node" type="rslidar_sdk_node" output="screen">
     <param name="config_path" value=""/>
 	</node>
+  
 
   <node name="steering" pkg="steering" type="main.py" output="screen">
   </node>
@@ -11,6 +12,9 @@
 
   <node pkg="car_state" name="car_state" type="main.py">
   <rosparam command="load" file="$(find car_state)/config/car_state.yaml"/>
+  <rosparam>
+    SLAM: "limovelo"
+  </rosparam>
   </node>
 
   <node pkg="controller" name="controller" type="main.py" output='screen'>
@@ -24,8 +28,12 @@
     </rosparam>
   </node>
 
-  <node pkg="lidar_perception" name="lidar_perception" type="main" output="screen">
-    <rosparam command="load" file="$(find lidar_perception)/config/lidar_cpp.yaml"/>
+    
+  <node pkg="limovelo" type="limovelo" name="limovelo" output="screen">
+    <rosparam command="load" file="$(find limovelo)/config/params.yaml"/>
+  </node>
+
+  <node pkg="lidar_perception" name="lidar_perception" type="limovelo_interface" output="screen">
   </node>
 
    <node name="accel_control" pkg="accel_control" type="main.py"  output="screen">
@@ -39,12 +47,14 @@
       lqr_yaw: 25.0
       lqr_beta: 0.0
       lqr_r: 3.0
+
+      perception_map: "/limovelo_map"
     </rosparam>
   </node>
 
 
   <!-- Se guardan en $HOME/.ros/ -->
-  <node pkg="rosbag" type="record" name="rosbag_record" args="record -o acceleration -a"/>
+  <node pkg="rosbag" type="record" name="rosbag_record" args="record -o slam_acceleration -a"/>
 
 
 </launch>

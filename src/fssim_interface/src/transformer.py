@@ -18,6 +18,7 @@ import numpy as np
 import math
 
 
+
 class transformerFssim():
     """
     Listen topics from Fssim and transform them to
@@ -44,11 +45,8 @@ class transformerFssim():
     def subscribe_topics(self):
 
         rospy.Subscriber('/lidar/cones', PointCloud2, self.send_cones)
-        rospy.Subscriber('fssim/base_pose_ground_truth', State,
-                         self.send_state)
         rospy.Subscriber('/controls', Controls, self.send_controllers)
-        rospy.Subscriber('/fssim/GO_marker',Marker,self.GOsignal_callback,queue_size=1)
-        
+        rospy.Timer(rospy.Duration(1), self.GOsignal_callback)
 
     def send_cones(self, msg):
 
@@ -70,10 +68,8 @@ class transformerFssim():
                 points.append([c[0],c[1],c[2],0,prob[0]])
             elif maxp == 1:  # yellow
                 points.append([c[0],c[1],c[2],1,prob[1]])
-                # cone.color = 'y'
-                # cone.confidence = prob[1]
             if maxp == 2:  # orange
-                points.append([c[0],c[1],c[2],2,prob[1]])
+                points.append([c[0],c[1],c[2],2,prob[2]])
 
         fields = [
         PointField(name="x", offset=0, datatype=PointField.FLOAT32, count=1),
@@ -83,25 +79,10 @@ class transformerFssim():
         PointField(name="score", offset=16, datatype=PointField.FLOAT32, count=1)
         ]
         new_cloud = point_cloud2.create_cloud(header=msg.header, fields=fields,points=points)
+        new_cloud.is_dense = True
         
         self.pub_map.publish(new_cloud)
 
-    def send_state(self, msg: CarState):
-
-        state = CarState()
-        state.x = msg.x
-        state.y = msg.y
-        state.z = 0
-        state.yaw = msg.yaw
-        state.roll = 0
-        state.pitch = 0
-        state.r = msg.r
-        state.vx = msg.vx
-        state.vy = msg.vy
-        state.vz = 0
-
-       
-        self.pub_state.publish(state)
 
     def send_controllers(self, msg):
 
