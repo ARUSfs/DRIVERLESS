@@ -27,6 +27,12 @@ from skidpad_localization import SkidpadLocalization
 KP = rospy.get_param('/skidpad_control/kp')
 TARGET = rospy.get_param('/skidpad_control/target')
 
+k_mu = rospy.get_param('/skidpad_control/k_mu')
+k_phi = rospy.get_param('/skidpad_control/k_phi')
+k_r = rospy.get_param('/skidpad_control/k_r')
+delta_correction = rospy.get_param('/skidpad_control/delta_correction')
+
+
 class SkidpadControl():
 
     def __init__(self):
@@ -210,13 +216,11 @@ class SkidpadControl():
 
         print(self.i, '; ', self.dist)
 
-        k_mu = 5.5
-        k_phi = 10
-        k_r = 0
+
 
         r_target = self.vx*self.k
 
-        delta = 1.07*math.degrees(np.arctan(self.k*1.535)) - k_mu*((self.dist**3+0.1*self.dist)) - k_phi*self.phi + k_r*(r_target - self.r)
+        delta = delta_correction*math.degrees(np.arctan(self.k*1.535)) - k_mu*((self.dist**3+0.1*self.dist)) - k_phi*self.phi + k_r*(r_target - self.r)
         delta = max(-20,min(20,delta))
 
         return delta

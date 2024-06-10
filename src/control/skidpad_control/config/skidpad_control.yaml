@@ -1,10 +1,9 @@
 sim_mode: false
 kp: 0.5
-target: 10
-track_length: 50
+target: 8
 
-lqr_dist: 3.1623
-lqr_yaw: 36.0
-lqr_beta: 0.0
-lqr_r: 0.0
+k_mu: 5.5
+k_phi: 10
+k_r: 0
+delta_correction: 1.07
 
