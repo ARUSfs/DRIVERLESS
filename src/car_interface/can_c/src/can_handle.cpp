@@ -357,7 +357,7 @@ void CanInterface::ASStatusCallback(std_msgs::Int16 msg)
 
 void CanInterface::steeringInfoCallback(std_msgs::Int32MultiArray msg)
 {
-    uint8_t pMovementState = msg.data[0];
+    int8_t pMovementState = msg.data[0];
 
     int16_t pPosition = msg.data[1]*100;
     int8_t pPositionBytes[3];
@@ -367,7 +367,7 @@ void CanInterface::steeringInfoCallback(std_msgs::Int32MultiArray msg)
     int8_t pTargetPositionBytes[3];
     intToBytes(pTargetPosition, pTargetPositionBytes);
 
-    uint8_t msgEposState[8]= {0x02, pMovementState, pPositionBytes[0], pPositionBytes[1], pPositionBytes[2], pTargetPositionBytes[0], pTargetPositionBytes[1], pTargetPositionBytes[2]};
+    int8_t msgEposState[8]= {0x02, pMovementState, pPositionBytes[0], pPositionBytes[1], pPositionBytes[2], pTargetPositionBytes[0], pTargetPositionBytes[1], pTargetPositionBytes[2]};
     canWrite(hndW1, 0x183, msgEposState, 8, canMSG_STD);
 
     int16_t pVelocity = msg.data[3]*100;
@@ -378,14 +378,14 @@ void CanInterface::steeringInfoCallback(std_msgs::Int32MultiArray msg)
     int8_t pVelocityAvgBytes[3];
     intToBytes(pVelocityAvg, pVelocityAvgBytes);
 
-    uint8_t msgEposVelocity[7]= {0x03, pVelocityBytes[0], pVelocityBytes[1], pVelocityBytes[2], pVelocityAvgBytes[0], pVelocityAvgBytes[1], pVelocityAvgBytes[2]};
+    int8_t msgEposVelocity[7]= {0x03, pVelocityBytes[0], pVelocityBytes[1], pVelocityBytes[2], pVelocityAvgBytes[0], pVelocityAvgBytes[1], pVelocityAvgBytes[2]};
     canWrite(hndW1, 0x183, msgEposVelocity, 7, canMSG_STD);
 
     int16_t pTorque = msg.data[5]*100;
     int8_t pTorqueBytes[2];
     intToBytes(pTorque, pTorqueBytes);
     
-    uint8_t msgEposTorque[3]= {0x04, pTorqueBytes[0], pTorqueBytes[1]};
+    int8_t msgEposTorque[3]= {0x04, pTorqueBytes[0], pTorqueBytes[1]};
     canWrite(hndW1, 0x183, msgEposTorque, 3, canMSG_STD);
 }
 
