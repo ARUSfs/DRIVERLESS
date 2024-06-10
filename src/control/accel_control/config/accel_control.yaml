@@ -8,3 +8,5 @@ lqr_yaw: 36.0
 lqr_beta: 0.0
 lqr_r: 0.0
 
+perception_topic: "/perception_map"
+

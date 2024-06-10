@@ -5,12 +5,14 @@ import numpy as np
 from sensor_msgs import point_cloud2
 import itertools
 from sensor_msgs.msg import PointCloud2
+import random
 
 
 class AccelLocalization():
 
     def __init__(self):
         self.ransac_threshold = 0.2
+        self.max_iterations = 500
 
     def get_route(self, msg: PointCloud2):
         cones_all = point_cloud2.read_points(msg, field_names=("x", "y", "z","color", "score"), skip_nans=True)
@@ -18,25 +20,17 @@ class AccelLocalization():
         if len(cones)<2:
             raise ValueError("1 cono")
         elif len(cones)==2:
-            # x1,y1 = cones[0]
-            # x2,y2 = cones[1]
-            # try:
-            #     a = -(x2-x1)/(y2-y1)
-            #     b = -a*(x1+x2)/2 + (y1+y2)/2
-            #     return a,b
-            # except ZeroDivisionError:
-            #     raise ValueError("2 conos")
             raise ValueError("2 conos")
             
-
-        conos_parejas = itertools.combinations(cones,2)
-        conos_trios = [[c1,c2,c3] for c3 in cones for c1,c2 in conos_parejas if c3 not in [c1,c2]]
-        #rospy.loginfo(cones)
-
         max_inliers = 0
         best_coef = None
-        # generators=None
-        for c1,c2,c3 in conos_trios:
+        
+        for _ in range(self.max_iterations):
+            i,j,k = random.choices(range(len(cones)),k=3)
+            c1=cones[i]
+            c2=cones[j]
+            c3=cones[k]
+
             if abs(c1[0]-c2[0])<0.1: # checkea que los conos estén en x distintas
                 continue
 

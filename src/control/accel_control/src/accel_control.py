@@ -29,6 +29,8 @@ LQR_PARAMS = np.array([rospy.get_param('/accel_control/lqr_dist'),
                        rospy.get_param('/accel_control/lqr_yaw'),
                        rospy.get_param('/accel_control/lqr_beta'),
                        rospy.get_param('/accel_control/lqr_r')],np.float64) 
+perception_topic = rospy.get_param('/accel_control/perception_topic')
+
 
 class AccelControl():
 
@@ -43,6 +45,9 @@ class AccelControl():
         self.steer = 0
         self.acc = 0
         self.speed = 0
+        self.x = 0
+        self.y = 0
+        self.yaw_car = 0
         self.avg_speed = 0.0001
         self.i = 0
         self.braking = False
@@ -54,13 +59,16 @@ class AccelControl():
         self.cmd_publisher = rospy.Publisher('/controls_pp', Controls, queue_size=1) 
         self.braking_publisher = rospy.Publisher('/braking', Bool, queue_size=10)
         self.recta_publisher = rospy.Publisher("/accel_control/recta", Point, queue_size=10)
-        rospy.Subscriber('/perception_map', PointCloud2, self.update_route, queue_size=10)
-        rospy.Subscriber('/car_state/state', CarState, self.update_speed, queue_size=1)
+        rospy.Subscriber(perception_topic, PointCloud2, self.update_route, queue_size=10)
+        rospy.Subscriber('/car_state/state', CarState, self.update_state, queue_size=1)
         rospy.Subscriber('/can/AS_status', Int16, self.update_AS_status, queue_size=1)
 
 
-    def update_speed(self, msg):
+    def update_state(self, msg: CarState):
         self.speed = math.hypot(msg.vx,msg.vy)
+        self.x = msg.x
+        self.y = msg.y
+        self.yaw_car = msg.yaw
         
         if self.AS_status == 0x02:
             if self.start_time == 0 and self.speed > 0.1:
@@ -109,8 +117,8 @@ class AccelControl():
 
 
     def get_steer(self, a, b):
-        dist = -b/np.sqrt(a**2 + 1)      # Distancia del coche a la trayectoria
-        yaw = - math.atan(a)             # Ángulo entre la trayectoria y el coche
+        dist = -(a*self.x-self.y+b)/np.sqrt(a**2 + 1)   # Distancia del coche a la trayectoria
+        yaw = self.yaw_car - math.atan(a)               # Ángulo entre la trayectoria y el coche
         beta = 0
         r = (yaw-self.prev_yaw)/(time.time()-self.prev_time)
 

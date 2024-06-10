@@ -3,8 +3,6 @@
     <param name="config_path" value=""/>
   </node>
     
-  <!-- <node pkg="rslidar_sdk" name="velodyne_transformer" type="velodyne_transformer.py"/>
-  <node pkg="rslidar_sdk" name="imu_transformer" type="imu_transformer.py"/> -->
 
   <node name="steering" pkg="steering" type="main.py" output="screen">
 	</node>
@@ -13,7 +11,10 @@
 	</node>
 
   <node pkg="car_state" name="car_state" type="main.py">
-  <rosparam command="load" file="$(find car_state)/config/car_state.yaml"/>
+    <rosparam command="load" file="$(find car_state)/config/car_state.yaml"/>
+    <rosparam>
+      SLAM: "marrano"
+    </rosparam>
   </node>
 
   <node pkg="controller" name="controller" type="main.py" output='screen'>
@@ -31,23 +32,16 @@
     <rosparam command="load" file="$(find lidar_perception)/config/lidar_cpp.yaml"/>
   </node>
 
-  <!-- <node name="fssim_rviz" pkg="rviz" type="rviz" args="-d $(find lidar_perception)/config/lidar_rviz.rviz"/> -->
-
+  <node pkg="slam_marrano" name="slam_marrano" type="main" output="screen">
+  </node>
 
   <node pkg="delaunay_detector" name="delaunay_detector" type="main.py" output="screen">
     <rosparam command="load" file="$(find delaunay_detector)/config/delaunay.yaml"/>
     <rosparam>
-      topic_map: 'perception_map'
+      topic_map: 'mapa_icp'
       color_enabled: false
     </rosparam>
   </node>
-
-  <node name="interface" pkg="visualization" type="main_interface.py">
-	  <rosparam command="load" file="$(find visualization)/config/interface.yaml"/>
-    <rosparam>
-      frame: 'velodyne'
-    </rosparam>
-	</node>
 
 
   <node pkg="pure_pursuit" name="pure_pursuit" type="main.py" output="screen">
@@ -55,12 +49,12 @@
     <rosparam>
       LAD: 4
       TARGET_SPEED: 3
-      global_mode: false
+      global_mode: true
     </rosparam>
   </node>
 
   <!-- Se guardan en $HOME/.ros/ -->
-  <node pkg="rosbag" type="record" name="rosbag_record" args="record -o pure_pursuit -a"/>
+  <node pkg="rosbag" type="record" name="rosbag_record" args="record -o slam_pp -a"/>
 
 
 </launch>
