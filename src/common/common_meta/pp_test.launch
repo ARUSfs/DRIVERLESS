@@ -25,7 +25,7 @@
     </rosparam>
   </node>
 
-  <node pkg="lidar_perception" name="lidar_perception" type="main" output="screen">
+  <node pkg="lidar_perception" name="lidar_perception" type="main">
     <rosparam command="load" file="$(find lidar_perception)/config/lidar_cpp.yaml"/>
   </node>
 
@@ -39,11 +39,11 @@
   </node>
 
 
-  <node pkg="pure_pursuit" name="pure_pursuit" type="main.py" output="screen">
+  <node pkg="pure_pursuit" name="pure_pursuit" type="main" output="screen">
     <rosparam command="load" file="$(find pure_pursuit)/config/pure_pursuit.yaml"/>
     <rosparam>
-      LAD: 4
-      TARGET_SPEED: 3
+      LAD: 6
+      TARGET_SPEED: 6.66
       global_mode: false
     </rosparam>
   </node>
