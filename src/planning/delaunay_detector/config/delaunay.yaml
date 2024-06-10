@@ -6,7 +6,7 @@ topic_simplices: '/delaunay_detector/simplices'
 send_simplices_marker: true
 
 # Hiperparameters of delaunay detector
-MAX_DISTANCE: 7
+MAX_DISTANCE: 8
 W_DISTANCE: 1
 W_ANGLE: 4
 W_THRESH: 8
