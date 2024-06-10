@@ -1,5 +1,13 @@
 <launch>
+  <node pkg="rslidar_sdk" name="rslidar_sdk_node" type="rslidar_sdk_node" output="screen">
+    <param name="config_path" value=""/>
+	</node>
 
+  <node name="steering" pkg="steering" type="main.py" output="screen">
+  </node>
+
+  <node name="can" pkg="can" type="main.py" output="screen">
+  </node>
 
   <node pkg="controller" name="controller" type="main.py" output='screen'>
     <rosparam command="load" file="$(find controller)/config/controller.yaml"/>
@@ -12,8 +20,6 @@
     </rosparam>
   </node>
 
-  <node pkg="fssim_interface" name="fssim_interface" type="main.py">
-  </node>
 
   <node pkg="car_state" name="car_state" type="main.py">
     <rosparam command="load" file="$(find car_state)/config/car_state.yaml"/>
@@ -22,6 +28,9 @@
     </rosparam>
   </node>
 
+  <node pkg="lidar_perception" name="lidar_perception" type="main" output="screen">
+  <rosparam command="load" file="$(find lidar_perception)/config/lidar_cpp.yaml"/>
+  </node>
 
   <node name="skidpad_control" pkg="skidpad_control" type="main.py"  output="screen">
   <rosparam command="load" file="$(find skidpad_control)/config/skidpad_control.yaml"/>
@@ -33,6 +42,9 @@
 
   <node name="slam_marrano" pkg="slam_marrano" type="main">
   </node>
+
+  <!-- Se guardan en $HOME/.ros/ -->
+  <node pkg="rosbag" type="record" name="rosbag_record" args="record -o skidpad -a"/>
 
 
 </launch>

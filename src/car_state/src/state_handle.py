@@ -82,7 +82,7 @@ class StateClass:
                 self.x = pos[0]
                 self.y = -pos[1]
                 self.z = -pos[2]
-                self.yaw = euler[2]
+                self.yaw = - euler[2]
         except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
             rospy.logwarn("Transform not available")
      
