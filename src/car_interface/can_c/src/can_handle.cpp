@@ -426,7 +426,7 @@ CanInterface::CanInterface()
     ASStatusPub = nh.advertise<std_msgs::Int16>("can/AS_status", 100);
     GPSPub = nh.advertise<sensor_msgs::NavSatFix>("can/gps", 100);
     GPSSpeedPub = nh.advertise<geometry_msgs::Vector3>("can/gps_speed", 100);
-    IMUPub = nh.advertise<sensor_msgs::Imu>("can/imu", 100);
+    IMUPub = nh.advertise<sensor_msgs::Imu>("can/IMU", 100);
     steeringAnglePub = nh.advertise<std_msgs::Float32>("can/steering_angle", 100);
     rearWheelSpeedPub = nh.advertise<geometry_msgs::Vector3>("can/rear_wheel_speed", 100);
     frontWheelSpeedPub = nh.advertise<geometry_msgs::Vector3>("can/front_wheel_speed", 100);
