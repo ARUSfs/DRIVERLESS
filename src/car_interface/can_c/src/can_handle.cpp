@@ -422,8 +422,8 @@ CanInterface::CanInterface()
     canBusOn(hndW1);
 
     // Publishers
-    motorSpeedPub = nh.advertise<std_msgs::Float32>("can/motor_speed", 100);
-    ASStatusPub = nh.advertise<std_msgs::Int16>("can/AS_status", 100);
+    motorSpeedPub = nh.advertise<std_msgs::Float32>("/motor_speed", 100);
+    ASStatusPub = nh.advertise<std_msgs::Int16>("/can/AS_status", 100);
     GPSPub = nh.advertise<sensor_msgs::NavSatFix>("can/gps", 100);
     GPSSpeedPub = nh.advertise<geometry_msgs::Vector3>("can/gps_speed", 100);
     IMUPub = nh.advertise<sensor_msgs::Imu>("can/IMU", 100);
@@ -434,7 +434,7 @@ CanInterface::CanInterface()
     // Subscribers
     controlsSub = nh.subscribe<common_msgs::Controls>("/controls", 100, &CanInterface::controlsCallback, this);    
     ASStatusSub = nh.subscribe<std_msgs::Int16>("can/AS_status", 100, &CanInterface::ASStatusCallback, this);
-    steeringInfoSub = nh.subscribe<std_msgs::Int32MultiArray>("can/steering_info", 100, &CanInterface::steeringInfoCallback, this);
+    steeringInfoSub = nh.subscribe<std_msgs::Int32MultiArray>("/steering/epos_info", 100, &CanInterface::steeringInfoCallback, this);
 
     //Timers
     IMUTimer = nh.createTimer(ros::Duration(1/500), &CanInterface::pubIMU, this);
