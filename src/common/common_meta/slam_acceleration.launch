@@ -41,7 +41,7 @@
     <rosparam>
       kp: 0.5
       target: 5
-      track_length: 75
+      track_length: 50
 
       lqr_dist: 1.0
       lqr_yaw: 25.0

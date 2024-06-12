@@ -27,6 +27,12 @@ from skidpad_localization import SkidpadLocalization
 KP = rospy.get_param('/skidpad_control/kp')
 TARGET = rospy.get_param('/skidpad_control/target')
 
+k_mu = rospy.get_param('/skidpad_control/k_mu')
+k_phi = rospy.get_param('/skidpad_control/k_phi')
+k_r = rospy.get_param('/skidpad_control/k_r')
+delta_correction = rospy.get_param('/skidpad_control/delta_correction')
+
+
 class SkidpadControl():
 
     def __init__(self):
@@ -56,7 +62,7 @@ class SkidpadControl():
         r=9.125
         d = 2*math.pi*r/self.N
 
-        self.plantilla = np.array([[-15 + d*i,0] for i in range(int(15/d)+1)]+2*[[r * np.sin(2 * np.pi * i / self.N), -9.125+r * np.cos(2 * np.pi * i / self.N)] for i in range(self.N)]+2*[[r * np.sin(2 * np.pi * i / self.N), 9.125-r * np.cos(2 * np.pi * i / self.N)] for i in range(self.N)]+[[d*i,0] for i in range(int(15/d)+1)])
+        self.plantilla = np.array([[-20 + d*i,0] for i in range(int(20/d)+1)]+2*[[r * np.sin(2 * np.pi * i / self.N), -9.125+r * np.cos(2 * np.pi * i / self.N)] for i in range(self.N)]+2*[[r * np.sin(2 * np.pi * i / self.N), 9.125-r * np.cos(2 * np.pi * i / self.N)] for i in range(self.N)]+[[d*i,0] for i in range(int(15/d)+1)])
 
         
     
@@ -197,7 +203,7 @@ class SkidpadControl():
         d = 2*math.pi*9.125/self.N
 
 
-        if self.i > 4*self.N+int(20/d):
+        if self.i > 4*self.N+int(25/d):
             self.braking=True
             braking_msg = Bool()
             braking_msg.data = True
@@ -205,18 +211,13 @@ class SkidpadControl():
             return self.steer
 
         self.si = self.i*d
-        self.k = 0 if self.i <= int(15/d) else (-1/9.125 if self.i <= int(15/d)+2*self.N else (1/9.125 if self.i <= int(15/d)+4*self.N else 0))
+        self.k = 0 if self.i <= int(20/d) else (-1/9.125 if self.i <= int(19/d)+2*self.N else (1/9.125 if self.i <= int(19/d)+4*self.N else 0))
 
 
-        print(self.i, '; ', self.dist)
-
-        k_mu = 5.5
-        k_phi = 10
-        k_r = 0
 
         r_target = self.vx*self.k
 
-        delta = 1.07*math.degrees(np.arctan(self.k*1.535)) - k_mu*((self.dist**3+0.1*self.dist)) - k_phi*self.phi + k_r*(r_target - self.r)
+        delta = delta_correction*math.degrees(np.arctan(self.k*1.535)) - k_mu*((self.dist**3+0.1*self.dist)) - k_phi*self.phi + k_r*(r_target - self.r)
         delta = max(-20,min(20,delta))
 
         return delta

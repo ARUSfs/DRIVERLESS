@@ -6,7 +6,7 @@ from std_msgs.msg import Float32MultiArray,Float32
 
 MAX_ACCELERATION = 6000
 MAX_DECELERATION = 6000
-PROFILE_VELOCITY = 1500
+PROFILE_VELOCITY = 6000
 
 class SteeringHandle:
     def __init__(self):
