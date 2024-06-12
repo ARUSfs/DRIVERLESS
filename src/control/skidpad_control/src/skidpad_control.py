@@ -45,7 +45,6 @@ class SkidpadControl():
         self.acc = 0
         self.speed = 0
         self.braking = False
-        self.AS_status = 0
 
         self.tfBuffer = tf2_ros.Buffer()
         self.listener = tf2_ros.TransformListener(self.tfBuffer)
@@ -73,8 +72,6 @@ class SkidpadControl():
 
         rospy.Subscriber('/perception_map', PointCloud2, self.update_route, queue_size=10)
         rospy.Subscriber('/car_state/state', CarState, self.update_state, queue_size=1)
-        rospy.Subscriber('/can/AS_status', Int16, self.update_AS_status, queue_size=1)
-
 
 
 
@@ -82,7 +79,7 @@ class SkidpadControl():
         self.speed = math.hypot(msg.vx,msg.vy)
         self.pos = np.array([msg.x,msg.y])
 
-        if self.AS_status==2 and self.calibrated:
+        if self.calibrated:
             self.acc = self.get_acc()
             self.steer = self.get_steer(msg)
             self.publish_cmd()
@@ -146,10 +143,6 @@ class SkidpadControl():
 
         # rospy.loginfo(time.time()-t)
 
-
-
-    def update_AS_status(self, msg):
-        self.AS_status = msg.data
 
 
     def get_acc(self):
