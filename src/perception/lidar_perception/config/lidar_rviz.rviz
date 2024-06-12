@@ -8,6 +8,7 @@ Panels:
         - /Point Cloud1
         - /Grid1
         - /PointCloud21
+        - /Axes2
       Splitter Ratio: 0.5
     Tree Height: 487
   - Class: rviz/Selection
@@ -122,7 +123,7 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.5
       Style: Flat Squares
-      Topic: /perception_map
+      Topic: /mapa_icp
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
@@ -132,7 +133,7 @@ Visualization Manager:
       Marker Topic: /visualization_delaunay
       Name: Marker
       Namespaces:
-        delaunay: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -140,14 +141,23 @@ Visualization Manager:
       Marker Topic: /visualization_path
       Name: Marker
       Namespaces:
-        delaunay: true
+        {}
       Queue Size: 100
+      Value: true
+    - Alpha: 1
+      Class: rviz/Axes
+      Enabled: true
+      Length: 5
+      Name: Axes
+      Radius: 1
+      Reference Frame: body
+      Show Trail: false
       Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
     Default Light: true
-    Fixed Frame: rslidar
+    Fixed Frame: map
     Frame Rate: 30
   Name: root
   Tools:
@@ -171,7 +181,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 9.589695930480957
+      Distance: 37.481285095214844
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -179,17 +189,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 0.9720302820205688
-        Y: -1.5479023456573486
-        Z: 0.712153434753418
+        X: 6.560021877288818
+        Y: -2.024920701980591
+        Z: 6.437105178833008
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.6447965502738953
+      Pitch: 0.7697964310646057
       Target Frame: <Fixed Frame>
-      Yaw: 3.53499174118042
+      Yaw: 3.179990291595459
     Saved: ~
 Window Geometry:
   Displays:
@@ -208,4 +218,4 @@ Window Geometry:
     collapsed: false
   Width: 1374
   X: 513
-  Y: 105
+  Y: 68
