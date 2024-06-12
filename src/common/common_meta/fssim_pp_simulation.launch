@@ -47,8 +47,8 @@
   <node pkg="pure_pursuit" name="pure_pursuit" type="main" output="screen">
   <rosparam command="load" file="$(find pure_pursuit)/config/pure_pursuit.yaml"/>
     <rosparam>
-      LAD: 6
-      TARGET_SPEED: 4
+      LAD: 8
+      TARGET_SPEED: 6
       global_mode: false
     </rosparam>
   </node>
