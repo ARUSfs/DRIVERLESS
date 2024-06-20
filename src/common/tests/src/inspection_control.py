@@ -72,15 +72,16 @@ def accelerator_control(current: float, target: float):
 if __name__ == '__main__':
     rospy.init_node('sinusoidal_control_node')
 
-    start_time = 0
+    start_time = time.time()
     target_reached_time = 0
-    AS_status = 0
+    AS_status = 2
+
 
     braking = False
 
     control_publisher = rospy.Publisher('/controls_pp', Controls, queue_size=1)
     braking_publisher = rospy.Publisher('/braking', Bool, queue_size=10)
     rospy.Subscriber('/car_state/state', CarState, speed_callback,queue_size=1)
-    rospy.Subscriber('/can/AS_status', Int16, AS_status_callback,queue_size=1)
+    #rospy.Subscriber('/can/AS_status', Int16, AS_status_callback,queue_size=1)
 
     rospy.spin()
