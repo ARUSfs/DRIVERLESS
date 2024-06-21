@@ -27,6 +27,8 @@ public:
     canHandle hndW0;
     canHandle hndW1;
 
+    ros::NodeHandle nh;
+
     ros::Publisher extensometerPub;
     ros::Publisher ASStatusPub;
     ros::Publisher IMUPub;
@@ -48,8 +50,8 @@ private :
     void parseSteeringAngle(unsigned char []);
     void parseRearWheelSpeed(unsigned char []);
     void parseFrontWheelSpeed(unsigned char []);
+    void initialize_timer();
 
-    ros::NodeHandle nh;
 
     ros::Subscriber controlsSub;
     ros::Subscriber steeringInfoSub;
@@ -60,4 +62,5 @@ private :
 
     std::thread thread_0;
     std::thread thread_1;
+    std::thread thread_timer;
 };
