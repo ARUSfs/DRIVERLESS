@@ -20,13 +20,34 @@
 
 int velMax = 5500;
 float wheelRadius = 0.2;
-float transmissionRatio = 11/45;
+float transmissionRatio = 0.24444444444444444;//11/45;
 
 //################################################# CAN HANDLE ############################################################
 CanInterface::CanInterface()
-{
-    std::cout << "tusmuerto" << std::endl;
+{    
+
+     // Subscribers
+    controlsSub = nh.subscribe<common_msgs::Controls>("/controls", 100, &CanInterface::controlsCallback, this);    
+    ASStatusSub = nh.subscribe<std_msgs::Int16>("can/AS_status", 100, &CanInterface::ASStatusCallback, this);
+    steeringInfoSub = nh.subscribe<std_msgs::Int32MultiArray>("/steering/epos_info", 100, &CanInterface::steeringInfoCallback, this);
+
+    // Publishers
+    motorSpeedPub = nh.advertise<std_msgs::Float32>("/motor_speed", 100);
+    ASStatusPub = nh.advertise<std_msgs::Int16>("/can/AS_status", 100);
+    GPSPub = nh.advertise<sensor_msgs::NavSatFix>("can/gps", 100);
+    GPSSpeedPub = nh.advertise<geometry_msgs::Vector3>("can/gps_speed", 100);
+    IMUPub = nh.advertise<sensor_msgs::Imu>("can/IMU", 100);
+    steeringAnglePub = nh.advertise<std_msgs::Float32>("can/steering_angle", 100);
+    rearWheelSpeedPub = nh.advertise<geometry_msgs::Vector3>("can/rear_wheel_speed", 100);
+    frontWheelSpeedPub = nh.advertise<geometry_msgs::Vector3>("can/front_wheel_speed", 100);
+
+    //Timers
+    IMUTimer = nh.createTimer(ros::Duration(1/500), &CanInterface::pubIMU, this);
+
+    // heartBeatTimer = nh.createTimer(ros::Duration(1/500), &CanInterface::pubHeartBeat, this);
+
     canInitializeLibrary(); // Initialize the library
+    std::cout << "Librería inicializada" << std::endl;
     std::thread thread_0(&CanInterface::readCan0, this);
     std::thread thread_1(&CanInterface::readCan1, this);
 
@@ -44,28 +65,12 @@ CanInterface::CanInterface()
 
     canBusOn(hndW0);
     canBusOn(hndW1);
-    std::cout << "tusmuerto2" << std::endl;
 
-    // Publishers
-    motorSpeedPub = nh.advertise<std_msgs::Float32>("/motor_speed", 100);
-    ASStatusPub = nh.advertise<std_msgs::Int16>("/can/AS_status", 100);
-    GPSPub = nh.advertise<sensor_msgs::NavSatFix>("can/gps", 100);
-    GPSSpeedPub = nh.advertise<geometry_msgs::Vector3>("can/gps_speed", 100);
-    IMUPub = nh.advertise<sensor_msgs::Imu>("can/IMU", 100);
-    steeringAnglePub = nh.advertise<std_msgs::Float32>("can/steering_angle", 100);
-    rearWheelSpeedPub = nh.advertise<geometry_msgs::Vector3>("can/rear_wheel_speed", 100);
-    frontWheelSpeedPub = nh.advertise<geometry_msgs::Vector3>("can/front_wheel_speed", 100);
+   
 
-    // Subscribers
-    controlsSub = nh.subscribe<common_msgs::Controls>("/controls", 100, &CanInterface::controlsCallback, this);    
-    ASStatusSub = nh.subscribe<std_msgs::Int16>("can/AS_status", 100, &CanInterface::ASStatusCallback, this);
-    steeringInfoSub = nh.subscribe<std_msgs::Int32MultiArray>("/steering/epos_info", 100, &CanInterface::steeringInfoCallback, this);
+    thread_0.join();
+    thread_1.join();
 
-    //Timers
-    IMUTimer = nh.createTimer(ros::Duration(1/500), &CanInterface::pubIMU, this);
-    heartBeatTimer = nh.createTimer(ros::Duration(1/500), &CanInterface::pubHeartBeat, this);
-
-    cout << "tusmuerto3" << endl;
 }
 
 
@@ -74,13 +79,19 @@ CanInterface::CanInterface()
 //--------------------------------------------- INV SPEED -------------------------------------------------------------
 void CanInterface::parseInvSpeed(uint8_t msg[8])
 {
+      
     int16_t val = (msg[2] << 8) | msg[1];
-    float angV = val / pow(2, 15) * velMax;
-    float invSpeed = -angV * 2 * M_PI * wheelRadius * transmissionRatio / 60;
+    long val2 = msg[2];
+    long val1 = msg[1];
 
+    float angV = val / pow(2, 15) * velMax;
+    
+
+    float invSpeed = -angV * 2 * M_PI * wheelRadius * transmissionRatio / 60;
+    std::cout << val << " " << angV << " " << invSpeed << std::endl; 
     std_msgs::Float32 x;
     x.data = invSpeed;
-    motorSpeedPub.publish(x);
+    this->motorSpeedPub.publish(x);
 }
 
 //-------------------------------------------- AS -------------------------------------------------------------------------
@@ -89,7 +100,7 @@ void CanInterface::parseASStatus(uint8_t msg[8])
     int16_t val = (msg[2]);
     std_msgs::Int16 x;
     x.data = val;
-    ASStatusPub.publish(x);
+    this->ASStatusPub.publish(x);
 }
 
 //-------------------------------------------- IMU -----------------------------------------------------------------------
@@ -104,10 +115,11 @@ void CanInterface::parseAcc(uint8_t msg[8])
     int16_t intZ = (msg[5] << 8) | msg[4];
     float accZ = intZ/100;
 
-    CanInterface::IMUData.linear_acceleration.x = accX;
-    CanInterface::IMUData.linear_acceleration.y = accY;
-    CanInterface::IMUData.linear_acceleration.z = accZ;
-    CanInterface::IMUData.header.stamp = ros::Time::now();    
+
+    IMUData.linear_acceleration.x = accX;
+    IMUData.linear_acceleration.y = accY;
+    IMUData.linear_acceleration.z = accZ;
+    IMUData.header.stamp = ros::Time::now();    
 }
 
 void CanInterface::parseEulerAngles(uint8_t msg[8])
@@ -126,11 +138,11 @@ void CanInterface::parseEulerAngles(uint8_t msg[8])
     float qz = cos(roll/2) * cos(pitch/2) * sin(yaw/2) - sin(roll/2) * sin(pitch/2) * cos(yaw/2);
     float qw = cos(roll/2) * cos(pitch/2) * cos(yaw/2) + sin(roll/2) * sin(pitch/2) * sin(yaw/2);
 
-    CanInterface::IMUData.orientation.x = qx;
-    CanInterface::IMUData.orientation.y = qy;
-    CanInterface::IMUData.orientation.z = qz;
-    CanInterface::IMUData.orientation.w = qw;
-    CanInterface::IMUData.header.stamp = ros::Time::now();    
+    IMUData.orientation.x = qx;
+    IMUData.orientation.y = qy;
+    IMUData.orientation.z = qz;
+    IMUData.orientation.w = qw;
+    IMUData.header.stamp = ros::Time::now();    
 }
 
 void CanInterface::parseAngularVelocity(uint8_t msg[8])
@@ -144,10 +156,10 @@ void CanInterface::parseAngularVelocity(uint8_t msg[8])
     int16_t intZ = (msg[5] << 8) | msg[4];
     float angVelZ = intZ/1000;
 
-    CanInterface::IMUData.angular_velocity.x = angVelX;
-    CanInterface::IMUData.angular_velocity.y = angVelY;
-    CanInterface::IMUData.angular_velocity.z = angVelZ;
-    CanInterface::IMUData.header.stamp = ros::Time::now();    
+    IMUData.angular_velocity.x = angVelX;
+    IMUData.angular_velocity.y = angVelY;
+    IMUData.angular_velocity.z = angVelZ;
+    IMUData.header.stamp = ros::Time::now();    
 }
 
 void CanInterface::parseGPS(uint8_t msg[8])
@@ -158,7 +170,7 @@ void CanInterface::parseGPS(uint8_t msg[8])
     sensor_msgs::NavSatFix x;
     x.latitude = lat;
     x.longitude = lon;
-    GPSPub.publish(x);
+    this->GPSPub.publish(x);
 }
 
 void CanInterface::parseGPSVel(uint8_t msg[8])
@@ -176,7 +188,7 @@ void CanInterface::parseGPSVel(uint8_t msg[8])
     x.x = velN;
     x.y = velE;
     x.z = velD;
-    GPSSpeedPub.publish(x);
+    this->GPSSpeedPub.publish(x);
 }
 
 //-------------------------------------------------------- ACQUISITION -------------------------------------------------
@@ -186,7 +198,7 @@ void CanInterface::parseSteeringAngle(uint8_t msg[8])
 
     std_msgs::Float32 x;
     x.data = val;
-    steeringAnglePub.publish(x);
+    this->steeringAnglePub.publish(x);
 }
 
 void CanInterface::parseFrontWheelSpeed(uint8_t msg[8])
@@ -199,7 +211,7 @@ void CanInterface::parseFrontWheelSpeed(uint8_t msg[8])
     x.x = intLeft;
     x.y = intRight;
 
-    frontWheelSpeedPub.publish(x);
+    this->frontWheelSpeedPub.publish(x);
 }
 
 void CanInterface::parseRearWheelSpeed(uint8_t msg[8])
@@ -212,7 +224,7 @@ void CanInterface::parseRearWheelSpeed(uint8_t msg[8])
     x.x = intLeft;
     x.y = intRight;
 
-    rearWheelSpeedPub.publish(x);
+    this->rearWheelSpeedPub.publish(x);
 }
 
 //################################################# READ FUNCTIONS #################################################
@@ -220,56 +232,61 @@ void CanInterface::parseRearWheelSpeed(uint8_t msg[8])
 //--------------------------------------------- CAN 0 -------------------------------------------------------------------   
 void CanInterface::readCan0()
 {   
+    
     canStatus stat;
 
     // Open handle to channel 0
     CanHandle hndR0 = canOpenChannel(0, canOPEN_ACCEPT_VIRTUAL);
-    if (hndR0 < 0){
-        printf("canOpenChannel() failed, %d\n", hndR0);
-        return;
-    }
+    // if (hndR0 < 0){
+    //     printf("canOpenChannel() failed, %d\n", hndR0);
+    //     return;
+    // }
 
-    // Set the channel parameters
-    stat = canSetAcceptanceFilter(hndR0, 0x181, 0x7FF, 0);
-    if (stat < 0){
-        printf("canSetAcceptanceFilter() failed, %d\n", stat);    
-    }
+    // // Set the channel parameters
+    // stat = canSetAcceptanceFilter(hndR0, 0x181, 0x7FF, 0);
+    // if (stat < 0){
+    //     printf("canSetAcceptanceFilter() failed, %d\n", stat);    
+    // }
 
-    stat = canSetAcceptanceFilter(hndR0, 0x18b, 0x7FF, 0);
-    if (stat < 0){
-        printf("canSetAcceptanceFilter() failed, %d\n", stat);    
-    }
+    // stat = canSetAcceptanceFilter(hndR0, 0x18b, 0x7FF, 0);
+    // if (stat < 0){
+    //     printf("canSetAcceptanceFilter() failed, %d\n", stat);    
+    // }
     stat = canBusOn(hndR0);
 
     //Read
     while (true){
+
         long id;
         uint8_t msg[8];
         unsigned int dlc;
         unsigned int flag;
         unsigned long time;
         stat = canReadWait(hndR0, &id, &msg, &dlc, &flag, &time, 300);
-        uint8_t subId = msg[0];
+        int8_t subId = msg[0];
+
+        
 
         if(stat == canOK){
             switch(id){
                 case 0x181:
-                    if(subId == 0x30) parseInvSpeed(msg);
+                    
+                    if(subId == 0x30) parseInvSpeed(msg);  
                     break;
-                case 0x182:
-                    switch(subId){
-                        case 0x01:
-                            parseASStatus(msg);
-                            break;
-                        case 0x04:
-                            parseFrontWheelSpeed(msg);
-                            break;
-                        case 0x05:
-                            parseRearWheelSpeed(msg);
-                            break;
-                        default:
-                            break;
-                    }
+                // case 0x182:
+                //     switch(subId){
+                //         case 0x01:
+                //             parseASStatus(msg);
+                //             break;
+                //         case 0x04:
+                //             parseFrontWheelSpeed(msg);
+                //             break;
+                //         case 0x05:
+                //             parseRearWheelSpeed(msg);
+                //             break;
+                //         default:
+                //             break;
+                //     }
                 default:
             break;
             }
@@ -296,7 +313,8 @@ void setFilter(CanHandle hnd, int code){
 }
 
 void CanInterface::readCan1()
-{
+{   
+
     canStatus stat;
 
     // Open handle to channel 1
@@ -307,20 +325,21 @@ void CanInterface::readCan1()
     }
 
     // Set the channel parameters
-    setFilter(hndR1, 0x182);
-    setFilter(hndR1, 0x380);
-    setFilter(hndR1, 0x394);
-    setFilter(hndR1, 0x392);
-    setFilter(hndR1, 0x384);
-    setFilter(hndR1, 0x382);
-    setFilter(hndR1, 0x185);
-    setFilter(hndR1, 0x205);
-    setFilter(hndR1, 0x334);
-    setFilter(hndR1, 0x187);
+    // setFilter(hndR1, 0x182);
+    // setFilter(hndR1, 0x380);
+    // setFilter(hndR1, 0x394);
+    // setFilter(hndR1, 0x392);
+    // setFilter(hndR1, 0x384);
+    // setFilter(hndR1, 0x382);
+    // setFilter(hndR1, 0x185);
+    // setFilter(hndR1, 0x205);
+    // setFilter(hndR1, 0x334);
+    // setFilter(hndR1, 0x187);
 
     stat = canBusOn(hndR1);
     //Read
     while (true){
+
         long id;
         uint8_t msg[8];
         unsigned int dlc;
@@ -336,26 +355,26 @@ void CanInterface::readCan1()
                 case 0x380:
                     parseAcc(msg);
                     break;
-                case 0x394:
-                    parseGPS(msg);
-                    break;
-                case 0x392:
-                    parseGPSVel(msg);
-                    break;
-                case 0x384:
-                    parseEulerAngles(msg);
-                    break;
-                case 0x382:
-                    parseAngularVelocity(msg);
-                    break;
-                case 0x187:
-                    switch(subId)
-                    {
-                        case 0x01:
-                            parseSteeringAngle(msg);
-                            break;
-                    }
-                    break;
+                // case 0x394:
+                //     parseGPS(msg);
+                //     break;
+                // case 0x392:
+                //     parseGPSVel(msg);
+                //     break;
+                // case 0x384:
+                //     parseEulerAngles(msg);
+                //     break;
+                // case 0x382:
+                //     parseAngularVelocity(msg);
+                //     break;
+                // case 0x187:
+                //     switch(subId)
+                //     {
+                //         case 0x01:
+                //             parseSteeringAngle(msg);
+                //             break;
+                //     }
+                //     break;
                 default:
                     break;
             }
@@ -435,8 +454,10 @@ void CanInterface::steeringInfoCallback(std_msgs::Int32MultiArray msg)
 }
 
 void CanInterface::pubIMU(const ros::TimerEvent&)
-{
-    IMUPub.publish(IMUData);
+{  
+    std::cout << "Timer" << std::endl;
+
+    this->IMUPub.publish(IMUData);
 }
 
 void CanInterface::pubHeartBeat(const ros::TimerEvent&)
@@ -444,5 +465,3 @@ void CanInterface::pubHeartBeat(const ros::TimerEvent&)
     uint8_t data[1] = {0x01};
     canWrite(hndW1, 0x183, data, 1, canMSG_STD);
 }
-
-

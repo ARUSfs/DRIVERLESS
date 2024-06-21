@@ -27,6 +27,16 @@ public:
     canHandle hndW0;
     canHandle hndW1;
 
+    ros::Publisher extensometerPub;
+    ros::Publisher ASStatusPub;
+    ros::Publisher IMUPub;
+    ros::Publisher GPSPub;
+    ros::Publisher GPSSpeedPub;
+    ros::Publisher motorSpeedPub;
+    ros::Publisher steeringAnglePub;
+    ros::Publisher rearWheelSpeedPub;
+    ros::Publisher frontWheelSpeedPub;
+
 private :
     void parseInvSpeed(unsigned char []);
     void parseASStatus(unsigned char []);
@@ -44,16 +54,6 @@ private :
     ros::Subscriber controlsSub;
     ros::Subscriber steeringInfoSub;
     ros::Subscriber ASStatusSub;
-
-    ros::Publisher extensometerPub;
-    ros::Publisher ASStatusPub;
-    ros::Publisher IMUPub;
-    ros::Publisher GPSPub;
-    ros::Publisher GPSSpeedPub;
-    ros::Publisher motorSpeedPub;
-    ros::Publisher steeringAnglePub;
-    ros::Publisher rearWheelSpeedPub;
-    ros::Publisher frontWheelSpeedPub;
 
     ros::Timer heartBeatTimer;
     ros::Timer IMUTimer;
