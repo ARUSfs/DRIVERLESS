@@ -3,10 +3,10 @@
 #include "sensor_msgs/PointCloud2.h"
 #include <sensor_msgs/PointCloud.h>
 #include <sensor_msgs/point_cloud_conversion.h>
+#include <sensor_msgs/point_cloud2_iterator.h>
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <iostream>
-
 #include <cstdint>
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/common/transforms.h>
@@ -24,8 +24,9 @@
 #include <pcl/segmentation/extract_clusters.h>
 #include <iomanip>
 #include <sensor_msgs/PointCloud2.h>
+#include <common_msgs/CarState.h>
 #include <pcl/point_cloud.h>
-
+#include "pointRT.h"
 using namespace std;
 
 #include "lidar_handle.hpp"
@@ -43,36 +44,32 @@ LidarHandle::LidarHandle()
     nh.getParam("/lidar_perception/MAX_Y_FOV", MAX_Y_FOV);
     nh.getParam("/lidar_perception/MAX_Z_FOV", MAX_Z_FOV);
     nh.getParam("/lidar_perception/H_FOV", H_FOV);
-    H_FOV = H_FOV * (M_PI / 180);
 
+    nh.getParam("/lidar_perception/TIMESTAMP_MAX", TIMESTAMP_MAX);
+    nh.getParam("/lidar_perception/R", R);
+    nh.getParam("/lidar_perception/GLOBAL_VX", GLOBAL_VX);
+
+    H_FOV = H_FOV * (M_PI / 180);
     nh.getParam("/lidar_perception/inverted", inverted);
 
     sub = nh.subscribe<sensor_msgs::PointCloud2>(lidar_topic, 1, &LidarHandle::callback, this);
+    car_state_sub = nh.subscribe<common_msgs::CarState>(car_state_topic, 1, &LidarHandle::CarStateCallback, this);
 
     map_pub = nh.advertise<sensor_msgs::PointCloud2>(map_topic, 1000);
     filtered_cloud_pub = nh.advertise<sensor_msgs::PointCloud2>(filtered_cloud_topic, 1000);
 };
 
-void recostruccion(const pcl::PointCloud<pcl::PointXYZI>::Ptr& cloud, const pcl::PointCloud<pcl::PointXYZI>::Ptr& cloud_f, std::vector<pcl::PointXYZI> punto)
+void recostruccion(const pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud, const pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud_f, std::vector<pcl::PointXYZI> punto)
 {
-    // Crear el objeto KdTreeFLANN una sola vez fuera del bucle
     pcl::KdTreeFLANN<pcl::PointXYZI> kdtree;
     kdtree.setInputCloud(cloud_f);
-
-    // Definir el radio de búsqueda
-    float search_radius = 0.15; // Puedes ajustar este valor segun sea necesario
-
-    // Desenrollar el bucle externo
-    for (size_t idx = 0; idx < punto.size(); ++idx) // Incrementar en 2 en cada iteración
+    float search_radius = 0.15;
+    for (size_t idx = 0; idx < punto.size(); ++idx)
     {
-        // Buscar los puntos cercanos a los puntos medio y siguiente
         std::vector<int> point_indices;
         std::vector<float> point_distances;
-
-        // Verificar si se encuentran puntos dentro del radio de búsqueda alrededor de los puntos medio y siguiente
         if (kdtree.radiusSearch(punto[idx], search_radius, point_indices, point_distances) > 0)
         {
-            // Iterar sobre los índices de los puntos encontrados
             for (size_t i = 0; i < point_indices.size(); ++i)
             {
                 int point_index = point_indices[i];
@@ -82,7 +79,7 @@ void recostruccion(const pcl::PointCloud<pcl::PointXYZI>::Ptr& cloud, const pcl:
     }
 }
 
-void obtenerPuntosDeClusters(std::vector<pcl::PointXYZI>& puntos, const std::vector<pcl::PointIndices> &chosen_clusters, const pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud)
+void obtenerPuntosDeClusters(std::vector<pcl::PointXYZI> &puntos, const std::vector<pcl::PointIndices> &chosen_clusters, const pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud)
 {
 
     for (const auto &cluster : chosen_clusters)
@@ -94,6 +91,12 @@ void obtenerPuntosDeClusters(std::vector<pcl::PointXYZI>& puntos, const std::vec
             puntos.push_back(punto);
         }
     }
+}
+
+void LidarHandle::CarStateCallback(common_msgs::CarState msg)
+{
+    GLOBAL_VX = msg.vx;
+    R = msg.r;
 }
 
 void LidarHandle::callback(sensor_msgs::PointCloud2 msg)
@@ -118,9 +121,15 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg)
     // Aplicamos el filtro
     cloud->erase(std::remove_if(cloud->points.begin(), cloud->points.end(), condition), cloud->points.end());
 
+    // TIMESTAMP_MAX = cloud->points[cloud->points.size() - 1].time;
+
+    float TIMEOFFSET = 0.0;
+    ros::Duration TIME_RANSAC(0.0);
+
     // Create the segmentation object for the planar model and set all the parameters
     pcl::SACSegmentation<pcl::PointXYZI> seg;
     pcl::PointIndices::Ptr inliers(new pcl::PointIndices);
+    pcl::PointIndices::Ptr outliers(new pcl::PointIndices);
     pcl::ModelCoefficients::Ptr coefficients(new pcl::ModelCoefficients);
     pcl::PointCloud<pcl::PointXYZI>::Ptr cloud_plane(new pcl::PointCloud<pcl::PointXYZI>());
     seg.setOptimizeCoefficients(true);
@@ -128,10 +137,6 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg)
     seg.setMethodType(pcl::SAC_RANSAC);
     seg.setMaxIterations(50);
     seg.setDistanceThreshold(0.05);
-
-    // int nr_points = (int) cloud->size ();
-    // while (cloud->size () > 0.3 * nr_points){
-    // Segment the largest planar component from the remaining cloud
     seg.setInputCloud(cloud);
     seg.segment(*inliers, *coefficients);
     if (inliers->indices.size() == 0)
@@ -144,16 +149,49 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg)
     pcl::ExtractIndices<pcl::PointXYZI> extract;
     extract.setInputCloud(cloud);
     extract.setIndices(inliers);
-    extract.setNegative(false);
-
-    // Get the points associated with the planar surface
-    extract.filter(*cloud_plane);
-
-    // Remove the planar inliers, extract the rest
     extract.setNegative(true);
     extract.filter(*cloud_f);
-    *cloud = *cloud_f;
-    // }
+    extract.filter(outliers->indices);
+
+    extract.setNegative(false); // Configurar para mantener los inliers como plano dominante
+    extract.filter(*cloud_plane);
+    ros::Time fin_r = ros::Time::now();
+    TIME_RANSAC = fin_r - ini;
+
+    sensor_msgs::PointCloud2Iterator<float> iter_timestamp(msg, "time");
+
+    for (size_t i = 0; i < outliers->indices.size(); ++i)
+    {
+        if (i == 0)
+        {
+            iter_timestamp += outliers->indices[i];
+        }
+        else
+        {
+            iter_timestamp += (outliers->indices[i] - outliers->indices[i - 1]);
+        }
+
+        float time = *iter_timestamp;
+
+        auto &point = cloud_f->points[i];
+        TIMEOFFSET = time + /*0.01*/ +TIME_RANSAC.toSec();
+        point.x -= GLOBAL_VX * TIMEOFFSET /*abs(TIMESTAMP_MAX - point.time)*/;
+        float yaw = 0.0;
+        yaw = R * TIMEOFFSET;
+
+        double rotationMatrix[3][3] = {
+            {cos(-yaw), -sin(-yaw), 0},
+            {sin(-yaw), cos(-yaw), 0},
+            {0, 0, 1}};
+
+        float x = point.x;
+        float y = point.y;
+        float z = point.z;
+
+        point.x = rotationMatrix[0][0] * x + rotationMatrix[0][1] * y + rotationMatrix[0][2] * z;
+        point.y = rotationMatrix[1][0] * x + rotationMatrix[1][1] * y + rotationMatrix[1][2] * z;
+        point.z = rotationMatrix[2][0] * x + rotationMatrix[2][1] * y + rotationMatrix[2][2] * z;
+    }
 
     // Creating the KdTree object for the search method of the extraction
     pcl::search::KdTree<pcl::PointXYZI>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZI>);
@@ -165,27 +203,25 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg)
     ec.setMinClusterSize(4);
     ec.setMaxClusterSize(200);
     ec.setSearchMethod(tree);
-    ec.setInputCloud(cloud);
+    ec.setInputCloud(cloud_f);
     ec.extract(cluster_indices);
-
 
     //****OPCIONAL****
     std::vector<pcl::PointXYZI> puntos;
-    obtenerPuntosDeClusters(puntos, cluster_indices, cloud);
-    
-    recostruccion(cloud, cloud_plane, puntos);
+    obtenerPuntosDeClusters(puntos, cluster_indices, cloud_f);
 
+    recostruccion(cloud_f, cloud_plane, puntos);
 
     int i = 0;
     // pcl::PointCloud<pcl::PointXYZI>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZI>);
-    pcl::PointCloud<PointXYZColorScore>::Ptr map_cloud (new pcl::PointCloud<PointXYZColorScore>);
-    
+    pcl::PointCloud<PointXYZColorScore>::Ptr map_cloud(new pcl::PointCloud<PointXYZColorScore>);
+
     // common_msgs::Map map;
     for (const auto &cluster : cluster_indices)
     {
         // Crear una nube temporal para el cluster actual
         pcl::PointCloud<pcl::PointXYZI>::Ptr cluster_cloud(new pcl::PointCloud<pcl::PointXYZI>);
-        pcl::copyPointCloud(*cloud, cluster, *cluster_cloud);
+        pcl::copyPointCloud(*cloud_f, cluster, *cluster_cloud);
 
         // Obtener la caja delimitadora (bounding box) del cluster
         pcl::PointXYZI min_pt, max_pt;
@@ -205,8 +241,8 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg)
             //     cloud_cluster->push_back(p);
             // }
             PointXYZColorScore cone;
-            cone.x = (max_x+min_x)/2;
-            cone.y = (max_y+min_y)/2;
+            cone.x = (max_x + min_x) / 2;
+            cone.y = (max_y + min_y) / 2;
             cone.z = 0;
             cone.color = 0;
             cone.score = 1;
@@ -215,9 +251,8 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg)
 
         i++;
     }
-    
     sensor_msgs::PointCloud2 msg2;
-    pcl::toROSMsg(*cloud, msg2);
+    pcl::toROSMsg(*cloud_f, msg2);
     msg2.header.frame_id = frame_id;
     filtered_cloud_pub.publish(msg2);
 
@@ -225,7 +260,7 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg)
     pcl::toROSMsg(*map_cloud,map_msg);
     map_msg.header.frame_id=frame_id;
     map_pub.publish(map_msg);
-
+    
     ros::Time fin = ros::Time::now();
     std::cout << (fin - ini) << endl;
 }
