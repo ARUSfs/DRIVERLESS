@@ -13,7 +13,6 @@
 #include <geometry_msgs/Vector3.h>
 #include <sensor_msgs/NavSatFix.h>
 #include <common_msgs/Controls.h>
-
 #include "canInterface.hpp"
 
 
@@ -22,6 +21,16 @@ int velMax = 5500;
 float wheelRadius = 0.2;
 float transmissionRatio = 0.24444444444444444;//11/45;
 
+
+CanInterface::check(canStatus stat)
+{
+    if(stat != canOK){
+        char buf[50];
+        buf[0] = '\0';
+        canGetErrorText(stat, buf, sizeof(buf));
+        printf("failed, stat=%d (%s)\n", (int)stat, buf);
+    }
+}
 
 //################################################# CAN HANDLE ############################################################
 CanInterface::CanInterface()
@@ -43,7 +52,6 @@ CanInterface::CanInterface()
     frontWheelSpeedPub = nh.advertise<geometry_msgs::Vector3>("can/front_wheel_speed", 100);
 
     //Timers
-
     canInitializeLibrary(); // Initialize the library
     std::cout << "Librería inicializada" << std::endl;
     std::thread thread_0(&CanInterface::readCan0, this);
@@ -64,7 +72,6 @@ CanInterface::CanInterface()
     canBusOn(hndW0);
     canBusOn(hndW1);
 
-   
 
     thread_0.join();
     thread_1.join();
@@ -75,8 +82,7 @@ CanInterface::CanInterface()
 
 //--------------------------------------------- INV SPEED -------------------------------------------------------------
 void CanInterface::parseInvSpeed(uint8_t msg[8])
-{
-      
+{      
     int16_t val = (msg[2] << 8) | msg[1];
     float angV = val / pow(2, 15) * velMax;
     float invSpeed = -angV * 2 * M_PI * wheelRadius * transmissionRatio / 60;
@@ -225,28 +231,24 @@ void CanInterface::parseRearWheelSpeed(uint8_t msg[8])
 //--------------------------------------------- CAN 0 -------------------------------------------------------------------   
 void CanInterface::readCan0()
 {   
-
-
     canStatus stat;
 
     // Open handle to channel 0
     CanHandle hndR0 = canOpenChannel(0, canOPEN_ACCEPT_VIRTUAL);
-    // if (hndR0 < 0){
-    //     printf("canOpenChannel() failed, %d\n", hndR0);
-    //     return;
-    // }
+    if (hndR0 < 0){
+        printf("canOpenChannel() failed, %d\n", hndR0);
+        return;
+    }
 
     // // Set the channel parameters
-    // stat = canSetAcceptanceFilter(hndR0, 0x181, 0x7FF, 0);
-    // if (stat < 0){
-    //     printf("canSetAcceptanceFilter() failed, %d\n", stat);    
-    // }
+    stat = canSetAcceptanceFilter(hndR0, 0x181, 0x7FF, 0);
+    check(stat);
 
-    // stat = canSetAcceptanceFilter(hndR0, 0x18b, 0x7FF, 0);
-    // if (stat < 0){
-    //     printf("canSetAcceptanceFilter() failed, %d\n", stat);    
-    // }
+    stat = canSetAcceptanceFilter(hndR0, 0x18b, 0x7FF, 0);
+    check(stat);
+
     stat = canBusOn(hndR0);
+    check(stat);
 
     //Read
     while (true){
@@ -298,12 +300,10 @@ void CanInterface::readCan0()
 
 //--------------------------------------------- CAN 1 -------------------------------------------------------------------
 void setFilter(CanHandle hnd, int code){
-    canStatus stat;
 
+    canStatus stat;
     stat = canSetAcceptanceFilter(hnd, code, 0x7FF, 0);
-    if (stat < 0){
-        printf("canSetAcceptanceFilter() failed, %d\n", stat);    
-    }
+    check(stat);
 }
 
 void CanInterface::readCan1()
@@ -317,17 +317,17 @@ void CanInterface::readCan1()
         return;
     }
 
-    // Set the channel parameters
-    // setFilter(hndR1, 0x182);
-    // setFilter(hndR1, 0x380);
-    // setFilter(hndR1, 0x394);
-    // setFilter(hndR1, 0x392);
-    // setFilter(hndR1, 0x384);
-    // setFilter(hndR1, 0x382);
-    // setFilter(hndR1, 0x185);
-    // setFilter(hndR1, 0x205);
-    // setFilter(hndR1, 0x334);
-    // setFilter(hndR1, 0x187);
+    //Set the channel parameters
+    setFilter(hndR1, 0x182);
+    setFilter(hndR1, 0x380);
+    setFilter(hndR1, 0x394);
+    setFilter(hndR1, 0x392);
+    setFilter(hndR1, 0x384);
+    setFilter(hndR1, 0x382);
+    setFilter(hndR1, 0x185);
+    setFilter(hndR1, 0x205);
+    setFilter(hndR1, 0x334);
+    setFilter(hndR1, 0x187);
 
     stat = canBusOn(hndR1);
     //Read
@@ -453,4 +453,3 @@ void CanInterface::pubHeartBeat(const ros::TimerEvent&)
     uint8_t data[1] = {0x01};
     canWrite(hndW1, 0x183, data, 1, canMSG_STD);
 }
-
