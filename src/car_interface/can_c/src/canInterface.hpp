@@ -20,7 +20,7 @@ public:
     void controlsCallback(common_msgs::Controls);
     void steeringInfoCallback(std_msgs::Int32MultiArray);
     void ASStatusCallback(std_msgs::Int16);
-    void check(canStatus);
+    static void check_can(canStatus stat);
     void readCan1();
     void readCan0();
 

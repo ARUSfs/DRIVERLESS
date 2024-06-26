@@ -22,7 +22,7 @@ float wheelRadius = 0.2;
 float transmissionRatio = 0.24444444444444444;//11/45;
 
 
-CanInterface::check(canStatus stat)
+void CanInterface::check_can(canStatus stat)
 {
     if(stat != canOK){
         char buf[50];
@@ -242,13 +242,13 @@ void CanInterface::readCan0()
 
     // // Set the channel parameters
     stat = canSetAcceptanceFilter(hndR0, 0x181, 0x7FF, 0);
-    check(stat);
+    check_can(stat);
 
     stat = canSetAcceptanceFilter(hndR0, 0x18b, 0x7FF, 0);
-    check(stat);
+    CanInterface::check_can(stat);
 
     stat = canBusOn(hndR0);
-    check(stat);
+    CanInterface::check_can(stat);
 
     //Read
     while (true){
@@ -303,7 +303,7 @@ void setFilter(CanHandle hnd, int code){
 
     canStatus stat;
     stat = canSetAcceptanceFilter(hnd, code, 0x7FF, 0);
-    check(stat);
+    CanInterface::check_can(stat);
 }
 
 void CanInterface::readCan1()
