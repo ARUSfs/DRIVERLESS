@@ -4,7 +4,7 @@ frame_id: 'rslidar'
 map_topic: 'perception_map'
 filtered_cloud_topic: '/filtered_points'
 cones_marker_topic: 'lidar_markers'
-car_state_topic: '/car_state/state '
+car_state_topic: '/car_state/state'
 
 #FOV restrictions
 MAX_X_FOV: 25   # m

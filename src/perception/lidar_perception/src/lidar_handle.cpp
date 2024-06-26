@@ -35,6 +35,7 @@ LidarHandle::LidarHandle()
 {
 
     nh.getParam("/lidar_perception/lidar_topic", lidar_topic);
+    nh.getParam("/lidar_perception/car_state_topic", car_state_topic);
     nh.getParam("/lidar_perception/frame_id", frame_id);
     nh.getParam("/lidar_perception/map_topic", map_topic);
     nh.getParam("/lidar_perception/filtered_cloud_topic", filtered_cloud_topic);
@@ -46,8 +47,9 @@ LidarHandle::LidarHandle()
     nh.getParam("/lidar_perception/H_FOV", H_FOV);
 
     nh.getParam("/lidar_perception/TIMESTAMP_MAX", TIMESTAMP_MAX);
-    nh.getParam("/lidar_perception/R", R);
-    nh.getParam("/lidar_perception/GLOBAL_VX", GLOBAL_VX);
+
+    // nh.getParam("/lidar_perception/R", R);
+    // nh.getParam("/lidar_perception/GLOBAL_VX", GLOBAL_VX);
 
     H_FOV = H_FOV * (M_PI / 180);
     nh.getParam("/lidar_perception/inverted", inverted);
@@ -173,29 +175,27 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg)
 
         float time = *iter_timestamp;
 
-        auto &point = cloud_f->points[i];
-        TIMEOFFSET = time + /*0.01*/ +TIME_RANSAC.toSec();
-        point.x -= GLOBAL_VX * TIMEOFFSET /*abs(TIMESTAMP_MAX - point.time)*/;
+        TIMEOFFSET = (0.1-time) + /*0.01*/ +TIME_RANSAC.toSec();
+        cloud_f->points[i].x -= GLOBAL_VX * TIMEOFFSET /*abs(TIMESTAMP_MAX - point.time)*/;
+        std::cout << TIMEOFFSET << std::endl;
         float yaw = 0.0;
-        yaw = R * TIMEOFFSET;
+        yaw = - R * TIMEOFFSET;
 
-        double rotationMatrix[3][3] = {
-            {cos(-yaw), -sin(-yaw), 0},
-            {sin(-yaw), cos(-yaw), 0},
-            {0, 0, 1}};
-
+        double rotationMatrix[2][2] = {
+            {cos(yaw), -sin(yaw)},
+            {sin(yaw), cos(yaw)}};
+        
+        auto point = cloud_f->points[i];
         float x = point.x;
         float y = point.y;
-        float z = point.z;
 
-        point.x = rotationMatrix[0][0] * x + rotationMatrix[0][1] * y + rotationMatrix[0][2] * z;
-        point.y = rotationMatrix[1][0] * x + rotationMatrix[1][1] * y + rotationMatrix[1][2] * z;
-        point.z = rotationMatrix[2][0] * x + rotationMatrix[2][1] * y + rotationMatrix[2][2] * z;
+        cloud_f->points[i].x = rotationMatrix[0][0] * x + rotationMatrix[0][1] * y;
+        cloud_f->points[i].y = rotationMatrix[1][0] * x + rotationMatrix[1][1] * y;
     }
 
     // Creating the KdTree object for the search method of the extraction
     pcl::search::KdTree<pcl::PointXYZI>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZI>);
-    tree->setInputCloud(cloud);
+    tree->setInputCloud(cloud_f);
 
     std::vector<pcl::PointIndices> cluster_indices;
     pcl::EuclideanClusterExtraction<pcl::PointXYZI> ec;
@@ -262,5 +262,5 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg)
     map_pub.publish(map_msg);
     
     ros::Time fin = ros::Time::now();
-    std::cout << (fin - ini) << endl;
+    // std::cout << (fin - ini) << endl;
 }

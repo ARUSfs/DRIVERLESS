@@ -53,7 +53,7 @@ class InterfaceHandle():
     def accel_callback(self, msg: Point):
         a = msg.x
         b = msg.y
-        ruta = [[0,b],[10,10*a+b]]
+        ruta = [[0,b],[150,150*a+b]]
 
 
         marker = Marker()
