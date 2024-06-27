@@ -72,6 +72,7 @@ CanInterface::CanInterface()
     canBusOn(hndW0);
     canBusOn(hndW1);
 
+    ros::waitForShutdown();
 
     thread_0.join();
     thread_1.join();
@@ -391,7 +392,7 @@ void intToBytes(int16_t val, int8_t* bytes)
 
 void CanInterface::controlsCallback(common_msgs::Controls msg)
 {
-    std::cout << "llega" << std::endl;
+    // std::cout << "llega" << std::endl;
     float acc = msg.accelerator;
     int16_t intValue = static_cast<int16_t>(acc * (1<<15))-1;
 
