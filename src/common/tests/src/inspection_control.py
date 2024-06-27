@@ -44,7 +44,7 @@ def speed_callback(msg: CarState):
                 control_msg.accelerator = accelerator_control(v, TARGET_SPEED)
 
             control_publisher.publish(control_msg)
-            rospy.logerr(control_msg)
+            # rospy.logerr(control_msg)
 
 def generate_sinusoidal_steering(time):
     steering_angle = AMPLITUDE * math.sin(2*math.pi*FREQUENCY *time)
