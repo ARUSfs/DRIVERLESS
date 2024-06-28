@@ -1,5 +1,5 @@
 capture_device: 2
 capture_fps: 15.0
-capture_width: 2048
-capture_height: 1536
+capture_width: 854
+capture_height: 480
 frame: 'camera1'
