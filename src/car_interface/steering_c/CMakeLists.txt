@@ -17,6 +17,6 @@ include_directories(
   /usr/local/include
 )
 
-add_executable(main src/main.cpp src/steering.cpp)
+add_executable(main src/main.cpp src/eposHandle.cpp)
 
 target_link_libraries(main -lEposCmd)
