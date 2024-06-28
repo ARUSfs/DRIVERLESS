@@ -21,9 +21,9 @@ public:
     float MAX_Z_FOV;
     float H_FOV;
 
-    float TIMESTAMP_MAX;
-    float R;
-    float GLOBAL_VX;
+    float FRAMERATE;
+    float yaw_rate;
+    float vx;
 
     bool inverted;
 

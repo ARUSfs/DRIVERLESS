@@ -13,6 +13,4 @@ MAX_Z_FOV: 0   # m
 H_FOV: 180   # degrees
 
 #TIMEOFFSET
-TIMESTAMP_MAX : 0
-R: 0
-GLOBAL_VX: 0
+FRAMERATE : 0.1

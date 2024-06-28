@@ -31,8 +31,6 @@ class StateClass:
         self.pub_state = None
 
         self.yaw_ini = None
-        self.prev_yaw = 0
-        self.prev_imu_t = time.time()
 
         self.limovelo_rotation = np.array([[1,0,0],[0,1,0],[0,0,1]])
         
@@ -66,15 +64,11 @@ class StateClass:
         #roll, pitch, yaw = tf_transformations.euler_from_quaternion(q)
         #roll, pitch, yaw = tf.euler_from_quaternion(q)
 
-        roll, pitch, msg_yaw = self.quaternion_to_euler(q)
-        self.yaw = msg_yaw
+        roll, pitch, yaw = self.quaternion_to_euler(q)
         if self.yaw_ini == None:
-            self.yaw_ini = msg_yaw
-        else:
-            self.yaw=msg_yaw-self.yaw_ini
-        self.r = self.r*0.9 + 0.1*(self.yaw-self.prev_yaw)/(time.time()-self.prev_imu_t)
-        self.prev_yaw = self.yaw
-        self.prev_imu_t = time.time()
+            self.yaw_ini = - yaw
+        self.yaw = - yaw - self.yaw_ini
+        self.r = - msg.angular_velocity.z
 
     def quaternion_to_euler(self, q):
         x, y, z, w = q

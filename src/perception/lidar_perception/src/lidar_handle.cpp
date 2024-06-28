@@ -46,10 +46,7 @@ LidarHandle::LidarHandle()
     nh.getParam("/lidar_perception/MAX_Z_FOV", MAX_Z_FOV);
     nh.getParam("/lidar_perception/H_FOV", H_FOV);
 
-    nh.getParam("/lidar_perception/TIMESTAMP_MAX", TIMESTAMP_MAX);
-
-    // nh.getParam("/lidar_perception/R", R);
-    // nh.getParam("/lidar_perception/GLOBAL_VX", GLOBAL_VX);
+    nh.getParam("/lidar_perception/FRAMERATE", FRAMERATE);
 
     H_FOV = H_FOV * (M_PI / 180);
     nh.getParam("/lidar_perception/inverted", inverted);
@@ -97,8 +94,8 @@ void obtenerPuntosDeClusters(std::vector<pcl::PointXYZI> &puntos, const std::vec
 
 void LidarHandle::CarStateCallback(common_msgs::CarState msg)
 {
-    GLOBAL_VX = msg.vx;
-    R = msg.r;
+    vx = msg.vx;
+    yaw_rate = msg.r;
 }
 
 void LidarHandle::callback(sensor_msgs::PointCloud2 msg)
@@ -122,11 +119,6 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg)
 
     // Aplicamos el filtro
     cloud->erase(std::remove_if(cloud->points.begin(), cloud->points.end(), condition), cloud->points.end());
-
-    // TIMESTAMP_MAX = cloud->points[cloud->points.size() - 1].time;
-
-    float TIMEOFFSET = 0.0;
-    ros::Duration TIME_RANSAC(0.0);
 
     // Create the segmentation object for the planar model and set all the parameters
     pcl::SACSegmentation<pcl::PointXYZI> seg;
@@ -158,7 +150,7 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg)
     extract.setNegative(false); // Configurar para mantener los inliers como plano dominante
     extract.filter(*cloud_plane);
     ros::Time fin_r = ros::Time::now();
-    TIME_RANSAC = fin_r - ini;
+    ros::Duration t_ransac = fin_r - ini;
 
     sensor_msgs::PointCloud2Iterator<float> iter_timestamp(msg, "time");
 
@@ -173,13 +165,11 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg)
             iter_timestamp += (outliers->indices[i] - outliers->indices[i - 1]);
         }
 
-        float time = *iter_timestamp;
+        float point_time = *iter_timestamp;
 
-        TIMEOFFSET = (0.1-time) + /*0.01*/ +TIME_RANSAC.toSec();
-        cloud_f->points[i].x -= GLOBAL_VX * TIMEOFFSET /*abs(TIMESTAMP_MAX - point.time)*/;
-        std::cout << TIMEOFFSET << std::endl;
-        float yaw = 0.0;
-        yaw = - R * TIMEOFFSET;
+        float time_offset = (FRAMERATE-point_time) + /*0.01*/ +t_ransac.toSec();
+        cloud_f->points[i].x -= vx * time_offset;
+        float yaw = - yaw_rate * time_offset;
 
         double rotationMatrix[2][2] = {
             {cos(yaw), -sin(yaw)},
