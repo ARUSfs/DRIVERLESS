@@ -49,6 +49,7 @@ CanInterface::CanInterface()
     steeringAnglePub = nh.advertise<std_msgs::Float32>("can/steering_angle", 100);
     rearWheelSpeedPub = nh.advertise<geometry_msgs::Vector3>("can/rear_wheel_speed", 100);
     frontWheelSpeedPub = nh.advertise<geometry_msgs::Vector3>("can/front_wheel_speed", 100);
+    RESRangePub = nh.advertise<std_msgs::Float32>("/can/RESRange", 100);
 
     //Timers
     canInitializeLibrary(); // Initialize the library
@@ -226,6 +227,17 @@ void CanInterface::parseRearWheelSpeed(uint8_t msg[8])
     this->rearWheelSpeedPub.publish(x);
 }
 
+//---------------------------------------------RES---------------------------------------------------------------
+void CanInterface::parseRES(uint8_t msg[8])
+{
+    uint8_t val = msg[6];
+    float perc = (static_cast<float>(val) / 255.0) * 100.0;
+
+    std_msgs::Float32 x;
+    x.data = perc;
+    this->RESRangePub.publish(x);
+}
+
 //################################################# READ FUNCTIONS #################################################
 
 //--------------------------------------------- CAN 0 -------------------------------------------------------------------   
@@ -283,8 +295,11 @@ void CanInterface::readCan0()
                         default:
                             break;
                     }
+                case 0x18B:
+                    parseRES(msg);
+                    break;
                 default:
-            break;
+                    break;
             }
         }
 
