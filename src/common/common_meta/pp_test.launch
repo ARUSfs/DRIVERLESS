@@ -21,7 +21,7 @@
       braking_kp: 0.5
       deceleration:  5
       min_braking_cmd: -0.2 
-      max_cmd: 0.15
+      max_cmd: 0.5
       min_cmd: 0
     </rosparam>
   </node>

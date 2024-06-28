@@ -21,7 +21,7 @@ MIN_VEL=1
 def AS_status_callback(AS_status_msg: Int16):
         global AS_status, start_time
         AS_status = AS_status_msg.data
-        if AS_status == 2 and start_time==0:
+        if AS_status == 2 and start_time==None:
               start_time = time.time()
 
 
@@ -72,9 +72,9 @@ def accelerator_control(current: float, target: float):
 if __name__ == '__main__':
     rospy.init_node('sinusoidal_control_node')
 
-    start_time = time.time()
+    start_time = None
     target_reached_time = 0
-    AS_status = 2
+    AS_status = 0
 
 
     braking = False
@@ -82,6 +82,6 @@ if __name__ == '__main__':
     control_publisher = rospy.Publisher('/controls_pp', Controls, queue_size=1)
     braking_publisher = rospy.Publisher('/braking', Bool, queue_size=10)
     rospy.Subscriber('/car_state/state', CarState, speed_callback,queue_size=1)
-    #rospy.Subscriber('/can/AS_status', Int16, AS_status_callback,queue_size=1)
+    rospy.Subscriber('/can/AS_status', Int16, AS_status_callback,queue_size=1)
 
     rospy.spin()

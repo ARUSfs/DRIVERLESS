@@ -36,7 +36,7 @@ class Controller():
 
         self.braking_target = -1
         self.braking_ini = 0
-        self.AS_status = 2
+        self.AS_status = 0
         self.v = 0
 
         self.pub_cmd = rospy.Publisher(topic_controller_control, Controls, queue_size=1)
@@ -49,12 +49,11 @@ class Controller():
         rospy.Subscriber('/braking',Bool, self.start_braking, queue_size=10)  
 
     def update_AS_status(self, msg: Int16):
-        if msg.data==2:
-            self.AS_status = msg.data
+        self.AS_status = msg.data
 
     def send_controllers_pp(self, msg):
         self.steer = msg.steering
-        if self.AS_status == 2 and (self.controller_mode=='PP' or (self.MPC_handler.FIRST_LAP and self.controller_mode=='PP-MPC')):
+        if self.AS_status == 0x02 and (self.controller_mode=='PP' or (self.MPC_handler.FIRST_LAP and self.controller_mode=='PP-MPC')):
             #limit command
             msg.accelerator = min(max(msg.accelerator,MIN_CMD),MAX_CMD)
             self.MPC_handler.par = msg.accelerator
@@ -71,7 +70,7 @@ class Controller():
 
     def send_controllers_mpc(self, msg):
         self.steer = msg.steering
-        if self.AS_status == 2 and (self.controller_mode=='PP-MPC' and not self.MPC_handler.FIRST_LAP):
+        if self.AS_status == 0x02 and (self.controller_mode=='PP-MPC' and not self.MPC_handler.FIRST_LAP):
             # limit command
             msg.accelerator = min(max(msg.accelerator,MIN_CMD),MAX_CMD)
             self.MPC_handler.par = msg.accelerator

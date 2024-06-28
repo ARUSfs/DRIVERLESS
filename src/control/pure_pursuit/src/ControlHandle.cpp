@@ -51,8 +51,7 @@ void ControlHandle::control_timer_callback(const ros::TimerEvent& event) {
 }
 
 void ControlHandle::speed_callback(const common_msgs::CarState new_state) {
-    float vel = sqrt(new_state.vx*new_state.vx + new_state.vy*new_state.vy);
-    velocity = 0*velocity + 1*vel;
+    velocity = sqrt(new_state.vx*new_state.vx + new_state.vy*new_state.vy);
 }
 
 void ControlHandle::path_callback(const common_msgs::Trajectory path) {
