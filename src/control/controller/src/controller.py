@@ -66,7 +66,7 @@ class Controller():
                 self.MPC_handler.delta = math.radians(msg.steering)
 
             # rospy.logerr("PURE PURSUIT")
-            # self.pub_cmd.publish(msg)
+            self.pub_cmd.publish(msg)
 
     def send_controllers_mpc(self, msg):
         self.steer = msg.steering
