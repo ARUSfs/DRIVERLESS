@@ -98,7 +98,7 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 		centro.y = 0;
 		centro.z = 0;
 		centro.color = 0;
-		centro.score = 0;
+		centro.score = 1;
 		for (const auto& idx : cluster.indices) {
 			centro.x += (*previous_map)[idx].x;
 			centro.y += (*previous_map)[idx].y;
@@ -154,14 +154,20 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 			mapa_global->push_back(cono);
 		}
 
-		sensor_msgs::PointCloud2 map_msg;
+		// sensor_msgs::PointCloud2 map_msg;
 
-		pcl::toROSMsg(*mapa_global, map_msg);
-		map_msg.header.frame_id = "map";
-		map_publisher.publish(map_msg);
+		// pcl::toROSMsg(*mapa_global, map_msg);
+		// map_msg.header.frame_id = "map";
+		// map_publisher.publish(map_msg);
 
 		*previous_map = *clustered_points;
 	}
+
+	sensor_msgs::PointCloud2 new_map_msg;
+
+	pcl::toROSMsg(*allp_clustered, new_map_msg);
+	new_map_msg.header.frame_id = "map";
+	map_publisher.publish(new_map_msg);
 
 }
 
