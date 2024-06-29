@@ -24,8 +24,15 @@ include_directories(
 ## Declare the C++ executable
 add_executable(main src/main.cpp src/canInterface.cpp)
 
+add_executable(missionHandle src/missionHandle.cpp)
+
 ## Specify libraries to link a library or executable target against
 target_link_libraries(main
+  ${catkin_LIBRARIES}
+  /usr/lib/libcanlib.so # Asegúrate de que la ruta a la biblioteca canlib es correcta
+)
+
+target_link_libraries(missionHandle
   ${catkin_LIBRARIES}
   /usr/lib/libcanlib.so # Asegúrate de que la ruta a la biblioteca canlib es correcta
 )

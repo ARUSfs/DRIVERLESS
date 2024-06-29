@@ -39,6 +39,7 @@ public:
     ros::Publisher steeringAnglePub;
     ros::Publisher rearWheelSpeedPub;
     ros::Publisher frontWheelSpeedPub;
+    ros::Publisher RESRangePub;
 
 private :
     void parseInvSpeed(unsigned char []);
@@ -51,6 +52,7 @@ private :
     void parseSteeringAngle(unsigned char []);
     void parseRearWheelSpeed(unsigned char []);
     void parseFrontWheelSpeed(unsigned char []);
+    void parseRES(unsigned char []);
     void initialize_timer();
 
 

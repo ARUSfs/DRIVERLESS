@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <thread>
 #include <ros/ros.h>
-#include <thread>
 #include <std_msgs/Int16.h>
 #include <std_msgs/Float32.h>
 #include <std_msgs/Int32MultiArray.h>
@@ -50,6 +49,7 @@ CanInterface::CanInterface()
     steeringAnglePub = nh.advertise<std_msgs::Float32>("can/steering_angle", 100);
     rearWheelSpeedPub = nh.advertise<geometry_msgs::Vector3>("can/rear_wheel_speed", 100);
     frontWheelSpeedPub = nh.advertise<geometry_msgs::Vector3>("can/front_wheel_speed", 100);
+    RESRangePub = nh.advertise<std_msgs::Float32>("/can/RESRange", 100);
 
     //Timers
     canInitializeLibrary(); // Initialize the library
@@ -227,6 +227,17 @@ void CanInterface::parseRearWheelSpeed(uint8_t msg[8])
     this->rearWheelSpeedPub.publish(x);
 }
 
+//---------------------------------------------RES---------------------------------------------------------------
+void CanInterface::parseRES(uint8_t msg[8])
+{
+    uint8_t val = msg[6];
+    float perc = (static_cast<float>(val) / 255.0) * 100.0;
+
+    std_msgs::Float32 x;
+    x.data = perc;
+    this->RESRangePub.publish(x);
+}
+
 //################################################# READ FUNCTIONS #################################################
 
 //--------------------------------------------- CAN 0 -------------------------------------------------------------------   
@@ -284,8 +295,11 @@ void CanInterface::readCan0()
                         default:
                             break;
                     }
+                case 0x18B:
+                    parseRES(msg);
+                    break;
                 default:
-            break;
+                    break;
             }
         }
 
@@ -319,16 +333,16 @@ void CanInterface::readCan1()
     }
 
     //Set the channel parameters
-    setFilter(hndR1, 0x182);
-    setFilter(hndR1, 0x380);
-    setFilter(hndR1, 0x394);
-    setFilter(hndR1, 0x392);
-    setFilter(hndR1, 0x384);
-    setFilter(hndR1, 0x382);
-    setFilter(hndR1, 0x185);
-    setFilter(hndR1, 0x205);
-    setFilter(hndR1, 0x334);
-    setFilter(hndR1, 0x187);
+    // setFilter(hndR1, 0x182);
+    // setFilter(hndR1, 0x380);
+    // setFilter(hndR1, 0x394);
+    // setFilter(hndR1, 0x392);
+    // setFilter(hndR1, 0x384);
+    // setFilter(hndR1, 0x382);
+    // setFilter(hndR1, 0x185);
+    // setFilter(hndR1, 0x205);
+    // setFilter(hndR1, 0x334);
+    // setFilter(hndR1, 0x187);
 
     stat = canBusOn(hndR1);
     //Read
@@ -388,7 +402,7 @@ void CanInterface::readCan1()
 void intToBytes(int16_t val, int8_t* bytes)
 {
     std::memcpy(bytes, &val, sizeof(val));
-}
+}           
 
 void CanInterface::controlsCallback(common_msgs::Controls msg)
 {
