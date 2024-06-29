@@ -5,6 +5,7 @@
     
 
   <node name="steering" pkg="steering" type="main.py" output="screen">
+    <rosparam command="load" file="$(find steering)/config/steering.yaml"/>
 	</node>
 
   <node name="can_c" pkg="can_c" type="main" output="screen">
@@ -25,7 +26,7 @@
     </rosparam>
   </node>
 
-  <node pkg="lidar_perception" name="lidar_perception" type="main" output="screen">
+  <node pkg="lidar_perception" name="lidar_perception" type="main">
     <rosparam command="load" file="$(find lidar_perception)/config/lidar_cpp.yaml"/>
   </node>
 
@@ -39,7 +40,7 @@
   </node>
 
 
-  <node pkg="pure_pursuit" name="pure_pursuit" type="main.py" output="screen">
+  <node pkg="pure_pursuit" name="pure_pursuit" type="main" output="screen">
     <rosparam command="load" file="$(find pure_pursuit)/config/pure_pursuit.yaml"/>
     <rosparam>
       LAD: 4

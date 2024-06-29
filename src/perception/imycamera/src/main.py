@@ -43,7 +43,7 @@ if __name__ == '__main__':
             if image is not None:
                 header.stamp = rospy.get_rostime()
                 image_msg = bridge.cv2_to_imgmsg(image,
-                                                 encoding='passthrough',
+                                                 encoding='rgb8',
                                                  header=header)
 
                 pub.publish(image_msg)

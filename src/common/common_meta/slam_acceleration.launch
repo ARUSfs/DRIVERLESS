@@ -5,6 +5,7 @@
   
 
   <node name="steering" pkg="steering" type="main.py" output="screen">
+    <rosparam command="load" file="$(find steering)/config/steering.yaml"/>
   </node>
 
   <node name="can_c" pkg="can_c" type="main" output="screen">
@@ -41,7 +42,7 @@
     <rosparam>
       kp: 0.5
       target: 5
-      track_length: 75
+      track_length: 50
 
       lqr_dist: 1.0
       lqr_yaw: 25.0

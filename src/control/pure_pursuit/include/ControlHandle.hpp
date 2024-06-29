@@ -8,7 +8,7 @@
 class ControlHandle {
     private:
         float velocity = 0;
-        float TARGET_VEL;
+        float TARGET_SPEED;
         float KP;
 
         ros::NodeHandle nh;

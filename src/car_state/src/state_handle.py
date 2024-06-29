@@ -5,7 +5,10 @@ import tf2_ros
 import tf.transformations
 from geometry_msgs.msg import TransformStamped
 from fssim_common.msg import State
+from sensor_msgs.msg import Imu
 import numpy as np
+import time
+import math
 
 global_frame = rospy.get_param('/car_state/global_frame')
 car_frame = rospy.get_param('/car_state/car_frame')
@@ -27,12 +30,15 @@ class StateClass:
         self.yaw = 0
         self.pub_state = None
 
+        self.yaw_ini = None
+
         self.limovelo_rotation = np.array([[1,0,0],[0,1,0],[0,0,1]])
         
         # Initialize subscribers and publishers
         self.pub_state = rospy.Publisher('/car_state/state', CarState, queue_size=10)
         rospy.Subscriber('/motor_speed', Float32, self.motorspeed_callback)
         rospy.Subscriber('fssim/base_pose_ground_truth', State, self.base_pose_callback)
+        rospy.Subscriber('/can/IMU', Imu, self.imu_Callback)
         
         # Timer to periodically update global position
         if SLAM != "none":
@@ -44,6 +50,35 @@ class StateClass:
                 
         # Timer to periodically publish state
         rospy.Timer(rospy.Duration(0.01), self.publish_state)
+
+    def imu_Callback(self, msg: Imu):
+        # Extrae el cuaternión del mensaje IMU
+        q = (
+            msg.orientation.x,
+            msg.orientation.y,
+            msg.orientation.z,
+            msg.orientation.w
+        )
+
+        # Convierte el cuaternión a roll, pitch, yaw
+        #roll, pitch, yaw = tf_transformations.euler_from_quaternion(q)
+        #roll, pitch, yaw = tf.euler_from_quaternion(q)
+
+        roll, pitch, yaw = self.quaternion_to_euler(q)
+        if self.yaw_ini == None:
+            self.yaw_ini = - yaw
+        self.yaw = - yaw - self.yaw_ini
+        self.r = - msg.angular_velocity.z
+
+    def quaternion_to_euler(self, q):
+        x, y, z, w = q
+
+        # Conversión a ángulos de Euler (roll, pitch, yaw)
+        roll = math.atan2(2 * (w * x + y * z), 1 - 2 * (x**2 + y**2))
+        pitch = math.asin(2 * (w * y - z * x))
+        yaw = math.atan2(2 * (w * z + x * y), 1 - 2 * (y**2 + z**2))
+
+        return roll, pitch, yaw
 
     def motorspeed_callback(self, msg):
         self.vx = msg.data
@@ -99,3 +134,4 @@ class StateClass:
         state.pitch = self.pitch
         state.yaw = self.yaw
         self.pub_state.publish(state)
+

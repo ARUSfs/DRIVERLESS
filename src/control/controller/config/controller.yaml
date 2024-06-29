@@ -14,3 +14,5 @@ min_braking_cmd: -0.2
 # for accelerating
 max_cmd: 1 
 min_cmd: 0
+min_vel: 0.5
+amplitude: 20

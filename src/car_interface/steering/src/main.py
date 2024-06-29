@@ -10,7 +10,7 @@ from steering_handle import SteeringHandle
 
 
 if __name__ == '__main__':
-    rospy.init_node('car_interface', anonymous=False)
+    rospy.init_node('steering', anonymous=False)
     try:
         steering_h = SteeringHandle()
         rospy.on_shutdown(steering_h.clean_and_close)
