@@ -23,6 +23,7 @@ ICP_handle::ICP_handle(){
 	allp_clustered = pcl::PointCloud<PointXYZColorScore>::Ptr(new pcl::PointCloud<PointXYZColorScore>);
 
 	position = Eigen::Matrix4f::Identity(4, 4);
+	prev_transformation = Eigen::Matrix4f::Identity(4, 4);
 
 	sub = nh.subscribe<sensor_msgs::PointCloud2>("/perception_map", 1000, &ICP_handle::map_callback, this);
 
@@ -66,8 +67,12 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 	icp.align(registered_map);
 
 	Eigen::Matrix4f transformation = icp.getFinalTransformation();
+	
 
 	float ang = (float)-atan2(transformation.coeff(0, 1), transformation.coeff(0,0));
+	float dist = pow((transformation.coeff(0,3) - prev_transformation.coeff(0,3)),2) + pow((transformation.coeff(1,3) - prev_transformation.coeff(1,3)),2) + pow((transformation.coeff(2,3) - prev_transformation.coeff(2,3)),2);
+	std::cout << dist << std::endl;
+	prev_transformation = transformation;
 
         // TODO: Remove??
 	if(ang < -0.15 || ang > 0.15)

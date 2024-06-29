@@ -34,6 +34,7 @@ class ICP_handle {
 		pcl::PointCloud<PointXYZColorScore>::Ptr allp_clustered;
 
 		Eigen::Matrix4f position;
+		Eigen::Matrix4f prev_transformation;
 
 		float score = 1.0;
 
