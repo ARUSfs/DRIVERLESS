@@ -11,6 +11,7 @@ from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 from std_msgs.msg import Header
 import rospkg
+import datetime
 
 if __name__ == '__main__':
     rospy.init_node('imycamera', anonymous=True)
@@ -32,7 +33,7 @@ if __name__ == '__main__':
     capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
     bridge = CvBridge()
 
-    out = cv2.VideoWriter(path+'/vsv.mp4', cv2.VideoWriter_fourcc(*'mp4v'), capture_fps, (capture_width, capture_height))
+    out = cv2.VideoWriter(path+"/VSV_"+datetime.datetime.now().strftime("%H%M%S")+'.mp4', cv2.VideoWriter_fourcc(*'mp4v'), capture_fps, (capture_width, capture_height))
     rate = rospy.Rate(capture_fps)
     try:
         header = Header()

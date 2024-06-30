@@ -265,11 +265,11 @@ void CanInterface::readCan0()
     }
 
     //Set the channel parameters
-    stat = canSetAcceptanceFilter(hndR0, 0x181, 0x7FF, 0);
-    CanInterface::check_can(stat);
+    //stat = canSetAcceptanceFilter(hndR0, 0x181, 0x7FF, 0);
+    //CanInterface::check_can(stat);
 
-    stat = canSetAcceptanceFilter(hndR0, 0x18b, 0x7FF, 0);
-    CanInterface::check_can(stat);
+    //stat = canSetAcceptanceFilter(hndR0, 0x18b, 0x7FF, 0);
+    //CanInterface::check_can(stat);
 
     stat = canBusOn(hndR0);
     CanInterface::check_can(stat);
