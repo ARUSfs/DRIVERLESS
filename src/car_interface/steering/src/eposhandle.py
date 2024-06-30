@@ -27,6 +27,8 @@ class EPOSHandle:
     def connect_to_device(self):
         pErrorCode = c_uint()
         if not self._is_connected:
+            # self.keyhandle = self.epos.VCS_OpenDevice(b'EPOS4', b'MAXON SERIAL V2', b'USB',
+            #                                           b'USB0', byref(pErrorCode))
             self.keyhandle = self.epos.VCS_OpenDevice(b'EPOS4', b'CANopen', b'CAN_kvaser_usb 0',
                                                       b'CAN0', byref(pErrorCode))
             if self.keyhandle == 0:
@@ -83,6 +85,7 @@ class EPOSHandle:
             rospy.logwarn('EPOS already enabled')
 
     def disable(self):
+        return
         pErrorCode = c_uint()
         if not self._is_connected:
             rospy.logerr(f'EPOS4 not connected. Cannot disable')

@@ -15,7 +15,7 @@ FREQUENCY = 0.2 #s
 KP=0.5
 
 TARGET_SPEED = 3 #m/s
-MIN_VEL=1
+MIN_VEL=-1
 
 
 def AS_status_callback(AS_status_msg: Int16):

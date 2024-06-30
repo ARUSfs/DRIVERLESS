@@ -54,6 +54,12 @@ CanInterface::CanInterface()
     //Timers
     canInitializeLibrary(); // Initialize the library
     std::cout << "Librería inicializada" << std::endl;
+
+    canStatus stat;
+    int chanCount;
+    stat = canGetNumberOfChannels(&chanCount);
+    printf("%d channels.\n", chanCount);
+
     std::thread thread_0(&CanInterface::readCan0, this);
     std::thread thread_1(&CanInterface::readCan1, this);
 
@@ -61,12 +67,16 @@ CanInterface::CanInterface()
     if (hndW0 < 0){
         printf("canOpenChannel() failed, %d\n", hndW0);
         return;
+    } else{
+        printf("can0 enabled for writing");
     }
 
     hndW1 = canOpenChannel(1, canOPEN_ACCEPT_VIRTUAL);
     if (hndW1 < 0){
         printf("canOpenChannel() failed, %d\n", hndW1);
         return;
+    }else{
+        printf("can1 enabled for writing");
     }
 
     canBusOn(hndW0);
@@ -250,6 +260,8 @@ void CanInterface::readCan0()
     if (hndR0 < 0){
         printf("canOpenChannel() failed, %d\n", hndR0);
         return;
+    }else{
+        printf("can0 enabled for reading");
     }
 
     //Set the channel parameters
@@ -330,6 +342,8 @@ void CanInterface::readCan1()
     if (hndR1 < 0){
         printf("canOpenChannel() failed, %d\n", hndR1);
         return;
+    }else{
+        printf("can1 enabled for reading");
     }
 
     //Set the channel parameters
