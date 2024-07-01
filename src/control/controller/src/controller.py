@@ -49,8 +49,7 @@ class Controller():
         rospy.Subscriber('/braking',Bool, self.start_braking, queue_size=10)  
 
     def update_AS_status(self, msg: Int16):
-        if msg.data == 2:
-            self.AS_status = msg.data
+        self.AS_status = msg.data
 
     def send_controllers_pp(self, msg):
         self.steer = msg.steering
