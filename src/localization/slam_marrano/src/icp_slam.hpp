@@ -23,6 +23,7 @@ class ICP_handle {
 		int callback_iteration = 0;
 		void send_position();
 		ros::Time hola;
+		float dist_media=0;
 	public:
 		ros::NodeHandle nh;
 		ros::Subscriber sub;
