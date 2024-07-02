@@ -27,6 +27,7 @@
 #include <common_msgs/CarState.h>
 #include <pcl/point_cloud.h>
 #include "pointRT.h"
+#include <unordered_map>
 using namespace std;
 
 #include "lidar_handle.hpp"
@@ -78,6 +79,86 @@ void recostruccion(const pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud, const pcl:
     }
 }
 
+// Definición de pair_hash
+struct pair_hash
+{
+    template <class T1, class T2>
+    std::size_t operator()(const std::pair<T1, T2> &pair) const
+    {
+        auto hash1 = std::hash<T1>{}(pair.first);
+        auto hash2 = std::hash<T2>{}(pair.second);
+        return hash1 ^ hash2;
+    }
+};
+
+// Función para procesar los datos del LiDAR y separar en suelo y no suelo
+void processLidarData(const pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud,
+                      pcl::PointIndices::Ptr &inliers,
+                      pcl::PointIndices::Ptr &outliers,
+                      int n_segments)
+{
+    // Ajustar la longitud de los datos
+    cloud->points.resize(cloud->points.size() - (cloud->points.size() % n_segments));
+
+    // Dividir los datos en segmentos
+    std::vector<std::vector<pcl::PointXYZI>> separated_data;
+    for (int i = 0; i < n_segments; ++i)
+    {
+        separated_data.push_back(std::vector<pcl::PointXYZI>(cloud->points.begin() + i * (cloud->points.size() / n_segments),
+                                                             cloud->points.begin() + (i + 1) * (cloud->points.size() / n_segments)));
+    }
+
+    // Procesamiento de los datos por segmento
+    std::unordered_map<std::pair<int, int>, float, pair_hash> min_z;
+    std::vector<bool> is_ground;
+    for (int i = 0; i < n_segments; ++i)
+    {
+        for (const auto &p : separated_data[i])
+        {
+            int d = 0;
+            if (p.x > -100)
+            {
+                d = static_cast<int>(std::sqrt(p.x * p.x + p.y * p.y));
+            }
+            auto key = std::make_pair(i, d);
+            if (min_z.find(key) != min_z.end())
+            {
+                min_z[key] = std::min(p.z, min_z[key]);
+                if (p.z < min_z[key] + 0.07)
+                {
+                    is_ground.push_back(true);
+                }
+                else
+                {
+                    is_ground.push_back(false);
+                }
+            }
+            else
+            {
+                min_z[key] = p.z;
+                is_ground.push_back(true);
+            }
+        }
+    }
+
+    // Inicializar los índices para inliers y outliers
+    inliers.reset(new pcl::PointIndices);
+    outliers.reset(new pcl::PointIndices);
+
+    // Selección de los puntos del suelo y los puntos restantes
+    for (size_t i = 0; i < cloud->points.size(); ++i)
+    {
+        if (is_ground[i])
+        {
+            inliers->indices.push_back(i); // Agregar el índice al conjunto de inliers
+        }
+        else
+        {
+            outliers->indices.push_back(i); // Agregar el índice al conjunto de outliers
+        }
+    }
+}
+
 void obtenerPuntosDeClusters(std::vector<pcl::PointXYZI> &puntos, const std::vector<pcl::PointIndices> &chosen_clusters, const pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud)
 {
 
@@ -120,37 +201,77 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg)
     // Aplicamos el filtro
     cloud->erase(std::remove_if(cloud->points.begin(), cloud->points.end(), condition), cloud->points.end());
 
-    // Create the segmentation object for the planar model and set all the parameters
-    pcl::SACSegmentation<pcl::PointXYZI> seg;
-    pcl::PointIndices::Ptr inliers(new pcl::PointIndices);
-    pcl::PointIndices::Ptr outliers(new pcl::PointIndices);
-    pcl::ModelCoefficients::Ptr coefficients(new pcl::ModelCoefficients);
-    pcl::PointCloud<pcl::PointXYZI>::Ptr cloud_plane(new pcl::PointCloud<pcl::PointXYZI>());
-    seg.setOptimizeCoefficients(true);
-    seg.setModelType(pcl::SACMODEL_PLANE);
-    seg.setMethodType(pcl::SAC_RANSAC);
-    seg.setMaxIterations(50);
-    seg.setDistanceThreshold(0.05);
-    seg.setInputCloud(cloud);
-    seg.segment(*inliers, *coefficients);
-    if (inliers->indices.size() == 0)
+    //ESTO SERIA NECESARIO SI LIDAR NO ESTA CALIBRADO
+    /*
+    pcl::PointIndices::Ptr inliers1(new pcl::PointIndices);
+    pcl::ModelCoefficients::Ptr coefficients1(new pcl::ModelCoefficients);
+    pcl::SACSegmentation<pcl::PointXYZI> seg1;
+    seg1.setOptimizeCoefficients(true);
+    seg1.setModelType(pcl::SACMODEL_PLANE);
+    seg1.setMethodType(pcl::SAC_RANSAC);
+    seg1.setDistanceThreshold(0.01);
+
+    seg1.setInputCloud(cloud);
+    seg1.segment(*inliers1, *coefficients1);
+
+    if (inliers1->indices.size() == 0)
     {
         std::cout << "Could not estimate a planar model for the given dataset." << std::endl;
-        // break;
+        return;
     }
 
-    // Extract the planar inliers from the input cloud
+    // Coeficientes del plano (a, b, c, d) del modelo ax + by + cz + d = 0
+    Eigen::Vector3d plane_normal(coefficients1->values[0], coefficients1->values[1], coefficients1->values[2]);
+    plane_normal.normalize();
+
+    Eigen::Vector3d z_axis(0, 0, 1);
+    Eigen::Vector3d rotation_axis = plane_normal.cross(z_axis);
+    double cosTheta = plane_normal.dot(z_axis);
+    double theta = std::acos(cosTheta);
+
+    if (rotation_axis.norm() > 1e-6)
+    { // Verificar que el eje de rotación no sea cero
+        rotation_axis.normalize();
+        Eigen::AngleAxisd angleAxis(theta, rotation_axis);
+        Eigen::Matrix3d rotation_matrix = angleAxis.toRotationMatrix();
+
+        pcl::PointCloud<pcl::PointXYZI>::Ptr transformed_cloud(new pcl::PointCloud<pcl::PointXYZI>);
+        for (const auto &point : *cloud)
+        {
+            Eigen::Vector3d p(point.x, point.y, point.z);
+            Eigen::Vector3d p_transformed = rotation_matrix * p;
+            pcl::PointXYZI transformed_point;
+            transformed_point.x = p_transformed.x();
+            transformed_point.y = p_transformed.y();
+            transformed_point.z = p_transformed.z();
+            transformed_point.intensity = point.intensity;
+            transformed_cloud->points.push_back(transformed_point);
+        }
+
+        *cloud = *transformed_cloud; // Actualizar la nube de puntos original con la transformada
+    }
+    else
+    {
+        std::cout << "Plane is already aligned with the z-axis." << std::endl;
+    }
+    */
+   
+    pcl::PointCloud<pcl::PointXYZI>::Ptr ground_cloud(new pcl::PointCloud<pcl::PointXYZI>);
+    pcl::PointIndices::Ptr inliers(new pcl::PointIndices);
+    pcl::PointIndices::Ptr outliers(new pcl::PointIndices);
+
+    processLidarData(cloud, inliers, outliers, 12);
+
     pcl::ExtractIndices<pcl::PointXYZI> extract;
     extract.setInputCloud(cloud);
     extract.setIndices(inliers);
+    extract.filter(*ground_cloud);
+
     extract.setNegative(true);
     extract.filter(*cloud_f);
-    extract.filter(outliers->indices);
 
-    extract.setNegative(false); // Configurar para mantener los inliers como plano dominante
-    extract.filter(*cloud_plane);
     ros::Time fin_r = ros::Time::now();
-    ros::Duration t_ransac = fin_r - ini;
+    ros::Duration t_segment = fin_r - ini;
 
     sensor_msgs::PointCloud2Iterator<float> iter_timestamp(msg, "time");
 
@@ -167,14 +288,14 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg)
 
         float point_time = *iter_timestamp;
 
-        float time_offset = (FRAMERATE-point_time) + /*0.01*/ +t_ransac.toSec();
+        float time_offset = (FRAMERATE - point_time) + /*0.01*/ +t_segment.toSec();
         cloud_f->points[i].x -= vx * time_offset;
-        float yaw = - yaw_rate * time_offset;
+        float yaw = -yaw_rate * time_offset;
 
         double rotationMatrix[2][2] = {
             {cos(yaw), -sin(yaw)},
             {sin(yaw), cos(yaw)}};
-        
+
         auto point = cloud_f->points[i];
         float x = point.x;
         float y = point.y;
@@ -200,7 +321,7 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg)
     std::vector<pcl::PointXYZI> puntos;
     obtenerPuntosDeClusters(puntos, cluster_indices, cloud_f);
 
-    recostruccion(cloud_f, cloud_plane, puntos);
+    recostruccion(cloud_f, ground_cloud, puntos);
 
     int i = 0;
     // pcl::PointCloud<pcl::PointXYZI>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZI>);
@@ -247,10 +368,10 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg)
     filtered_cloud_pub.publish(msg2);
 
     sensor_msgs::PointCloud2 map_msg;
-    pcl::toROSMsg(*map_cloud,map_msg);
-    map_msg.header.frame_id=frame_id;
+    pcl::toROSMsg(*map_cloud, map_msg);
+    map_msg.header.frame_id = frame_id;
     map_pub.publish(map_msg);
-    
+
     ros::Time fin = ros::Time::now();
-    // std::cout << (fin - ini) << endl;
+    std::cout << (fin - ini) << endl;
 }
