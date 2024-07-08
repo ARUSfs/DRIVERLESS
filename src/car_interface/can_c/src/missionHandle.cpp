@@ -71,22 +71,23 @@ void launchMission()
             break;
         case 6:
             baseCommand += "inspection.launch";
+            baseCommand = "rosrun turtlesim turtlesim_node";
             break;
         default:
             break;
     }
 
-    baseCommand += " &";
+    //baseCommand += " &";
 
     int ret = system(baseCommand.c_str());
 
     if(ret == 0)
     {
-        printf("Mission launched successfully\n");
+        ROS_INFO("Mission launched successfully\n");
     }
     else
     {
-        printf("Mission failed to launch\n");
+        ROS_INFO("Mission failed to launch\n");
     }
 }
 
@@ -124,6 +125,7 @@ int main(int argc, char **argv)
                     mission = msg[1];
                     closeCan();
                     launchMission();
+                    while(true){}
                    break;
                 }
             }
