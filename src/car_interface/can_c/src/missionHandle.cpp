@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <cstdlib>
 #include <iostream>
+#include <ros/ros.h>
+
 
 bool HV_ON = false;
 canStatus stat;
@@ -86,8 +88,11 @@ void launchMission()
     }
 }
 
-int main()
+int main(int argc, char **argv)
 {   
+    ros::init(argc,argv,"carlos_mpc");
+    ros::NodeHandle n;
+
     initCan();
 
     while(1)
@@ -117,4 +122,6 @@ int main()
         }
     }
     closeCan();
+
+    ros::spin();
 }
