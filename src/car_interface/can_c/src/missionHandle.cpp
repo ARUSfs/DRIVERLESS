@@ -76,6 +76,8 @@ void launchMission()
             break;
     }
 
+    baseCommand += " &";
+
     int ret = system(baseCommand.c_str());
 
     if(ret == 0)
@@ -122,6 +124,5 @@ int main(int argc, char **argv)
         }
     }
     closeCan();
-
-    ros::spin();
+    launchMission();
 }
