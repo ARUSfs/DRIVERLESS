@@ -95,7 +95,7 @@ int main(int argc, char **argv)
 
     initCan();
 
-    while(1)
+    while(ros::ok())
     {
         long id;
         uint8_t msg[8];
