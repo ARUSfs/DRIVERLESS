@@ -71,13 +71,11 @@ void launchMission()
             break;
         case 6:
             baseCommand += "inspection.launch";
-            baseCommand = "rosrun turtlesim turtlesim_node";
             break;
         default:
             break;
     }
 
-    //baseCommand += " &";
 
     int ret = system(baseCommand.c_str());
 
