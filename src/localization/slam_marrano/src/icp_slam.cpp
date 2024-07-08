@@ -10,6 +10,8 @@
 #include <iostream>
 #include <pcl/common/io.h>
 #include <pcl/io/pcd_io.h>
+#include <algorithm>
+#include <common_msgs/CarState.h>
 
 
 #include <pcl/common/impl/centroid.hpp>
@@ -19,18 +21,25 @@
 using namespace std;
 
 ICP_handle::ICP_handle(){
+	prev_t = ros::Time::now();
+
 	previous_map = pcl::PointCloud<PointXYZColorScore>::Ptr(new pcl::PointCloud<PointXYZColorScore>);
 	allp_clustered = pcl::PointCloud<PointXYZColorScore>::Ptr(new pcl::PointCloud<PointXYZColorScore>);
 
 	position = Eigen::Matrix4f::Identity(4, 4);
 	prev_transformation = Eigen::Matrix4f::Identity(4, 4);
 
-	sub = nh.subscribe<sensor_msgs::PointCloud2>("/perception_map", 1000, &ICP_handle::map_callback, this);
+	perception_sub = nh.subscribe<sensor_msgs::PointCloud2>("/perception_map", 1000, &ICP_handle::map_callback, this);
+	state_sub = nh.subscribe<common_msgs::CarState>("/car_state/state", 1000, &ICP_handle::state_callback, this);
+
 
 	map_publisher = nh.advertise<sensor_msgs::PointCloud2>("/mapa_icp", 10);
 
-	ros::Time hola = ros::Time::now();
+}
 
+void ICP_handle::state_callback(common_msgs::CarState state_msg) {
+	vx = state_msg.vx;
+    yaw_rate = state_msg.r;
 }
 
 void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
@@ -39,6 +48,7 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 	pcl::fromROSMsg(map_msg, *new_map);
 
 	if(!has_map){
+		prev_t = ros::Time::now();
 		*allp_clustered = *new_map;
 		*previous_map = *new_map;
 		has_map = true;
@@ -57,42 +67,47 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
             icp.setInputTarget(previous_map);
         else
             icp.setInputTarget(allp_clustered);
-	icp.setMaximumIterations(5);
-	icp.setEuclideanFitnessEpsilon (0.005);
+	icp.setMaximumIterations(50);
+	icp.setEuclideanFitnessEpsilon(0.005);
 	icp.setTransformationEpsilon(1e-5);
 
 	pcl::PointCloud<PointXYZColorScore> registered_map;
 	icp.setMaxCorrespondenceDistance (1.0);
 	icp.align(registered_map);
-
 	Eigen::Matrix4f transformation = icp.getFinalTransformation();
 	
 
+	
+	
+  
 	float ang = (float)-atan2(transformation.coeff(0, 1), transformation.coeff(0,0));
 	float dist = pow((transformation.coeff(0,3) - prev_transformation.coeff(0,3)),2) + pow((transformation.coeff(1,3) - prev_transformation.coeff(1,3)),2) + pow((transformation.coeff(2,3) - prev_transformation.coeff(2,3)),2);
+	std::cout << dist << std::endl;
 
-	dist_media = ((callback_iteration-1)*(dist_media)+dist)/callback_iteration;
-
-	std::cout << dist << "    " << dist_media << std::endl;
-
-	// if(dist>0.5){
-	// 	sensor_msgs::PointCloud2 new_map_msg;
-
-	// 	pcl::toROSMsg(*allp_clustered, new_map_msg);
-	// 	new_map_msg.header.frame_id = "map";
-	// 	map_publisher.publish(new_map_msg);
-
-	// 	*previous_map += *previous_map;
-
-	// 	return;
-	// }
-	prev_transformation = transformation;
-
-
-	position = transformation * position;
-	send_position();
 
 	*previous_map += registered_map;
+
+	float dt = ros::Time::now().toSec()-prev_t.toSec();
+	float dx = dt*vx;
+	float dyaw = dt*yaw_rate; 
+
+	float yaw = (float)-atan2(position.coeff(0, 1), position.coeff(0,0));
+	Eigen::Matrix4f estimation = Eigen::Matrix4f::Identity();
+	estimation(0,3)=dx*cos(yaw+dyaw)+position(0,3)-cos(dyaw)*position(0,3)+sin(dyaw)*position(1,3);
+	estimation(1,3)=dx*sin(yaw+dyaw)+position(1,3)-sin(dyaw)*position(0,3)-cos(dyaw)*position(1,3);
+	estimation(0,0)=cos(dyaw);
+	estimation(1,0)=sin(dyaw);
+	estimation(0,1)=-sin(dyaw);
+	estimation(1,1)=cos(dyaw);
+
+	//sigmoide para ponderar icp y estimacion
+	float w = -0.5 + 1.0/(1.0 + std::exp(-dist));
+	prev_transformation = (estimation*w + transformation*(1-w));
+	position = prev_transformation*position;
+
+	prev_t = ros::Time::now();
+	send_position();
+
 
 
 	pcl::search::KdTree<PointXYZColorScore>::Ptr tree (new pcl::search::KdTree<PointXYZColorScore>);
@@ -194,8 +209,8 @@ void ICP_handle::send_position() {
 	transformSt.header.stamp = ros::Time::now();
 	transformSt.header.frame_id = "map";
 	transformSt.child_frame_id = "body";
-	transformSt.transform.translation.x = position.coeff(12);
-	transformSt.transform.translation.y = position.coeff(13);
+	transformSt.transform.translation.x = position.coeff(0,3);
+	transformSt.transform.translation.y = position.coeff(1,3);
 	tf2::Quaternion q;
 	float ang = (float)-atan2(position.coeff(0, 1), position.coeff(0,0));
 	q.setRPY(0, 0, ang);
