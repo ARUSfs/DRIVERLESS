@@ -19,7 +19,7 @@ void initCan()
     canInitializeLibrary();
 
     //Openeamos el canalw
-    hnd = canOpenChannel(0, canOPEN_ACCEPT_VIRTUAL);
+    hnd = canOpenChannel(1, canOPEN_ACCEPT_VIRTUAL);
     if (hnd < 0)
     {
         printf("canOpenChannel failed, status=%d\n", hnd);
@@ -111,8 +111,10 @@ int main(int argc, char **argv)
         {
             if(!HV_ON)
             {
-                if((id == 0x186) && (msg[0] == 0x00) && (msg[1] == 0x0F)) HV_ON = true; //Se da alta
+                if((id == 0x186) && (msg[0] == 0x00) && (msg[1] == 0x0F)){
+                 HV_ON = true; //Se da alta
                 ROS_INFO("HV ON \n")
+                }
             }
             else
             {
