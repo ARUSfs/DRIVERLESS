@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="can_c" name="mission" type="missionHandle" output="screen">
+  </node>
+</launch>
