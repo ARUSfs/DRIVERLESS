@@ -6,6 +6,7 @@
 #include <std_msgs/Int16.h>
 #include <std_msgs/Int32MultiArray.h>
 #include <sensor_msgs/Imu.h>
+#include "sensor_msgs/PointCloud2.h"
 #include <common_msgs/Controls.h>
 
 using namespace std;
@@ -15,16 +16,25 @@ class CanInterface
 
 public:
     CanInterface();
-    void pubIMU(const ros::TimerEvent&);
+    
+    static void check_can(canStatus stat);
+private :
+
     void pubHeartBeat(const ros::TimerEvent&);
     void controlsCallback(common_msgs::Controls);
     void steeringInfoCallback(std_msgs::Int32MultiArray);
     void ASStatusCallback(std_msgs::Int16);
-    static void check_can(canStatus stat);
+    void lapCounterCallback(std_msgs::Int16);
+    void conesCountCallback(sensor_msgs::PointCloud2);
+    void conesCountAllCallback(sensor_msgs::PointCloud2);
+    void targetSpeedCallback(std_msgs::Int16);
+    void DL500Callback(const ros::TimerEvent&);
+    void DL501Callback(const ros::TimerEvent&);
+    void DL502Callback(const ros::TimerEvent&);
+
     void readCan1();
     void readCan0();
 
-    sensor_msgs::Imu IMUData;
     canHandle hndW0;
     canHandle hndW1;
 
@@ -41,8 +51,28 @@ public:
     ros::Publisher frontWheelSpeedPub;
     ros::Publisher RESRangePub;
 
-private :
+    uint8_t actual_speed;
+    uint8_t target_speed;
+    int8_t actual_steering_angle;
+    int8_t target_steering_angle;
+    uint8_t brake_hydr_actual;
+    uint8_t brake_hydr_target;
+    int8_t motor_moment_actual;
+    int8_t motor_moment_target;
+
+    sensor_msgs::Imu IMUData;
+    
+    uint8_t AS_state;
+    uint8_t EBS_state;
+    uint8_t AMI_state;
+    bool steering_state;
+    uint8_t service_brake_state;
+    uint8_t lap_counter;
+    uint8_t cones_count_actual;
+    uint8_t cones_count_all;
+
     void parseInvSpeed(unsigned char []);
+    void parseMission(unsigned char []);
     void parseASStatus(unsigned char []);
     void parseAcc(unsigned char []);
     void parseEulerAngles(unsigned char []);
@@ -59,11 +89,16 @@ private :
     ros::Subscriber controlsSub;
     ros::Subscriber steeringInfoSub;
     ros::Subscriber ASStatusSub;
+    ros::Subscriber lapCounterSub;
+    ros::Subscriber conesCountSub;
+    ros::Subscriber conesCountAllSub;
+    ros::Subscriber targetSpeedSub;
 
     ros::Timer heartBeatTimer;
-    ros::Timer IMUTimer;
+    ros::Timer DL500Timer;
+    ros::Timer DL501Timer;
+    ros::Timer DL502Timer;
 
     std::thread thread_0;
-    std::thread thread_1;
-    std::thread thread_timer;
+    std::thread thread_1;    
 };
