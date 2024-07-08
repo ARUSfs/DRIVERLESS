@@ -112,14 +112,16 @@ int main(int argc, char **argv)
             if(!HV_ON)
             {
                 if((id == 0x186) && (msg[0] == 0x00) && (msg[1] == 0x0F)) HV_ON = true; //Se da alta
+                ROS_INFO("HV ON \n")
             }
             else
             {
                 if((id == 0x185) && (msg[0]==0x01))
                 {
-                   mission = msg[1];
-		   closeCan();
-		   launchMission();
+                    ROS_INFO("Mission received\n")
+                    mission = msg[1];
+                    closeCan();
+                    launchMission();
                    break;
                 }
             }
