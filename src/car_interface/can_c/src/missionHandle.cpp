@@ -118,11 +118,11 @@ int main(int argc, char **argv)
                 if((id == 0x185) && (msg[0]==0x01))
                 {
                    mission = msg[1];
+		   closeCan();
+		   launchMission();
                    break;
                 }
             }
         }
     }
-    closeCan();
-    launchMission();
 }
