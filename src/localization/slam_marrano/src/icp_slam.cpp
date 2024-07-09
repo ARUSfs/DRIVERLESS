@@ -12,6 +12,7 @@
 #include <pcl/io/pcd_io.h>
 #include <algorithm>
 #include <common_msgs/CarState.h>
+#include <std_msgs/Int16.h>
 
 
 #include <pcl/common/impl/centroid.hpp>
@@ -21,7 +22,8 @@
 using namespace std;
 
 ICP_handle::ICP_handle(){
-	prev_t = ros::Time::now();
+	prev_t = ros::Time::now();	
+	lap_time = ros::Time::now();
 
 	previous_map = pcl::PointCloud<PointXYZColorScore>::Ptr(new pcl::PointCloud<PointXYZColorScore>);
 	allp_clustered = pcl::PointCloud<PointXYZColorScore>::Ptr(new pcl::PointCloud<PointXYZColorScore>);
@@ -34,6 +36,7 @@ ICP_handle::ICP_handle(){
 
 
 	map_publisher = nh.advertise<sensor_msgs::PointCloud2>("/mapa_icp", 10);
+	lap_count_publisher = nh.advertise<std_msgs::Int16>("/lap_counter", 10);
 
 }
 
@@ -49,6 +52,7 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 
 	if(!has_map){
 		prev_t = ros::Time::now();
+		lap_time = ros::Time::now();
 		*allp_clustered = *new_map;
 		*previous_map = *new_map;
 		has_map = true;
@@ -63,10 +67,10 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 
 	pcl::IterativeClosestPoint<PointXYZColorScore, PointXYZColorScore> icp;
 	icp.setInputSource(map_in_position);
-        if(callback_iteration < 10)
-            icp.setInputTarget(previous_map);
-        else
-            icp.setInputTarget(allp_clustered);
+	if(callback_iteration < 10)
+		icp.setInputTarget(previous_map);
+	else
+		icp.setInputTarget(allp_clustered);
 	icp.setMaximumIterations(50);
 	icp.setEuclideanFitnessEpsilon(0.005);
 	icp.setTransformationEpsilon(1e-5);
@@ -82,11 +86,12 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
   
 	float ang = (float)-atan2(transformation.coeff(0, 1), transformation.coeff(0,0));
 	float dist = pow((transformation.coeff(0,3) - prev_transformation.coeff(0,3)),2) + pow((transformation.coeff(1,3) - prev_transformation.coeff(1,3)),2) + pow((transformation.coeff(2,3) - prev_transformation.coeff(2,3)),2);
-	std::cout << dist << std::endl;
+	// std::cout << dist << std::endl;
 
 
 	*previous_map += registered_map;
 
+	//calcular estimacion
 	float dt = ros::Time::now().toSec()-prev_t.toSec();
 	float dx = dt*vx;
 	float dyaw = dt*yaw_rate; 
@@ -220,4 +225,19 @@ void ICP_handle::send_position() {
 	transformSt.transform.rotation.w = q.w();
 
 	br.sendTransform(transformSt);
+
+	if (position.coeff(0,3)*position.coeff(0,3)+position.coeff(1,3)*position.coeff(1,3) < 4){
+		if(ros::Time::now().toSec()-lap_time.toSec() > 20){
+			lap_count += 1;
+			lap_time = ros::Time::now();
+			std::cout << "Lap count: " << lap_count << std::endl;
+		}else{
+			lap_time = ros::Time::now();
+		}
+	} 
+	
+	std_msgs::Int16 lap_count_msg;
+	lap_count_msg.data = lap_count;
+	lap_count_publisher.publish(lap_count_msg);
+	
 }

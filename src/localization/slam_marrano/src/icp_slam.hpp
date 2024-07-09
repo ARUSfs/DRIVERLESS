@@ -24,14 +24,16 @@ class ICP_handle {
 		int callback_iteration = 0;
 		void send_position();
 		ros::Time prev_t;
-		float dist_media=0;
 		float yaw_rate=0;
 		float vx=0;
+		float lap_count = 0;
+		ros::Time lap_time;
 	public:
 		ros::NodeHandle nh;
 		ros::Subscriber perception_sub;
 		ros::Subscriber state_sub;
 		ros::Publisher map_publisher;
+		ros::Publisher lap_count_publisher;
 
 		tf2_ros::TransformBroadcaster br;
 
