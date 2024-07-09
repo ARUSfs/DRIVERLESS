@@ -16,12 +16,9 @@
 #include <common_msgs/Controls.h>
 #include "canInterface.hpp"
 
-
-
 int velMax = 5500;
 float wheelRadius = 0.2;
 float transmissionRatio = 0.24444444444444444;//11/45;
-
 
 void CanInterface::check_can(canStatus stat)
 {
@@ -29,14 +26,13 @@ void CanInterface::check_can(canStatus stat)
         char buf[50];
         buf[0] = '\0';
         canGetErrorText(stat, buf, sizeof(buf));
-        printf("failed, stat=%d (%s)\n", (int)stat, buf);
+        printf("failed, stat=%d (%s) \n", (int)stat, buf);
     }
 }
 
 //################################################# CAN HANDLE ############################################################
 CanInterface::CanInterface()
 {    
-
      // Subscribers
     controlsSub = nh.subscribe<common_msgs::Controls>("/controls", 100, &CanInterface::controlsCallback, this);    
     ASStatusSub = nh.subscribe<std_msgs::Int16>("can/AS_status", 100, &CanInterface::ASStatusCallback, this);
@@ -53,8 +49,6 @@ CanInterface::CanInterface()
     GPSSpeedPub = nh.advertise<geometry_msgs::Vector3>("can/gps_speed", 100);
     IMUPub = nh.advertise<sensor_msgs::Imu>("can/IMU", 100);
     steeringAnglePub = nh.advertise<std_msgs::Float32>("can/steering_angle", 100);
-    rearWheelSpeedPub = nh.advertise<geometry_msgs::Vector3>("can/rear_wheel_speed", 100);
-    frontWheelSpeedPub = nh.advertise<geometry_msgs::Vector3>("can/front_wheel_speed", 100);
     RESRangePub = nh.advertise<std_msgs::Float32>("/can/RESRange", 100);
 
     //Timers
@@ -79,15 +73,15 @@ CanInterface::CanInterface()
         printf("canOpenChannel() failed, %d\n", hndW0);
         return;
     } else{
-        printf("can0 enabled for writing");
+        printf("can0 enabled for writing \n");
     }
 
     hndW1 = canOpenChannel(1, canOPEN_ACCEPT_VIRTUAL);
     if (hndW1 < 0){
-        printf("canOpenChannel() failed, %d\n", hndW1);
+        printf("canOpenChannel() failed, %d \n", hndW1);
         return;
     }else{
-        printf("can1 enabled for writing");
+        printf("can1 enabled for writing \n");
     }
 
     canBusOn(hndW0);
@@ -240,31 +234,6 @@ void CanInterface::parseSteeringAngle(uint8_t msg[8])
     this->steeringAnglePub.publish(x);
 }
 
-void CanInterface::parseFrontWheelSpeed(uint8_t msg[8])
-{
-    int16_t intLeft = (msg[2] << 8) | msg[1];
-
-    int16_t intRight = (msg[4] << 8) | msg[3];
-
-    geometry_msgs::Vector3 x;
-    x.x = intLeft;
-    x.y = intRight;
-
-    this->frontWheelSpeedPub.publish(x);
-}
-
-void CanInterface::parseRearWheelSpeed(uint8_t msg[8])
-{
-    int16_t intLeft = (msg[2] << 8) | msg[1];
-
-    int16_t intRight = (msg[4] << 8) | msg[3];
-
-    geometry_msgs::Vector3 x;
-    x.x = intLeft;
-    x.y = intRight;
-
-    this->rearWheelSpeedPub.publish(x);
-}
 
 //---------------------------------------------RES---------------------------------------------------------------
 void CanInterface::parseRES(uint8_t msg[8])
@@ -315,24 +284,24 @@ void CanInterface::readCan0()
     // Open handle to channel 0
     CanHandle hndR0 = canOpenChannel(0, canOPEN_ACCEPT_VIRTUAL);
     if (hndR0 < 0){
-        printf("canOpenChannel() failed, %d\n", hndR0);
+        printf("canOpenChannel() failed, %d \n", hndR0);
         return;
     }else{
-        printf("can0 enabled for reading");
+        printf("can0 enabled for reading \n");
     }
-
     //Set the channel parameters
-    //stat = canSetAcceptanceFilter(hndR0, 0x181, 0x7FF, 0);
-    //CanInterface::check_can(stat);
-
-    //stat = canSetAcceptanceFilter(hndR0, 0x18b, 0x7FF, 0);
-    //CanInterface::check_can(stat);
+    stat = canAccept(hndR0, 0xFFF, canFILTER_SET_MASK_STD);
+    CanInterface::check_can(stat);
+    stat = canAccept(hndR0, 0x181, canFILTER_SET_CODE_STD);
+    CanInterface::check_can(stat);
+    stat = canAccept(hndR0, 0x18B, canFILTER_SET_CODE_STD);
+    CanInterface::check_can(stat);
 
     stat = canBusOn(hndR0);
     CanInterface::check_can(stat);
 
     //Read
-    while (true){
+    while (ros::ok()){
 
         long id;
         uint8_t msg[8];
@@ -355,11 +324,11 @@ void CanInterface::readCan0()
                         case 0x01:
                             parseASStatus(msg);
                             break;
-                        case 0x04:
-                            parseFrontWheelSpeed(msg);
+                        case 0x04: //Break pressure
+                            break; 
+                        case 0x05: //Pneumtic pressure
                             break;
-                        case 0x05:
-                            parseRearWheelSpeed(msg);
+                        case 0x06: //Valves state
                             break;
                         default:
                             break;
@@ -386,7 +355,7 @@ void CanInterface::readCan0()
 void setFilter(CanHandle hnd, int code){
 
     canStatus stat;
-    stat = canSetAcceptanceFilter(hnd, code, 0x7FF, 0);
+    stat = canAccept(hnd, code, canFILTER_SET_CODE_STD);
     CanInterface::check_can(stat);
 }
 
@@ -400,24 +369,27 @@ void CanInterface::readCan1()
         printf("canOpenChannel() failed, %d\n", hndR1);
         return;
     }else{
-        printf("can1 enabled for reading");
+        printf("can1 enabled for reading \n");
     }
 
     //Set the channel parameters
-    // setFilter(hndR1, 0x182);
-    // setFilter(hndR1, 0x380);
-    // setFilter(hndR1, 0x394);
-    // setFilter(hndR1, 0x392);
-    // setFilter(hndR1, 0x384);
-    // setFilter(hndR1, 0x382);
-    // setFilter(hndR1, 0x185);
-    // setFilter(hndR1, 0x205);
-    // setFilter(hndR1, 0x334);
-    // setFilter(hndR1, 0x187);
+    stat = canAccept(hndR1, 0xFFF, canFILTER_SET_MASK_STD);
+    CanInterface::check_can(stat);
+
+    setFilter(hndR1, 0x182);
+    setFilter(hndR1, 0x380);
+    setFilter(hndR1, 0x394);
+    setFilter(hndR1, 0x392);
+    setFilter(hndR1, 0x384);
+    setFilter(hndR1, 0x382);
+    setFilter(hndR1, 0x185);
+    setFilter(hndR1, 0x205);
+    setFilter(hndR1, 0x334);
+    setFilter(hndR1, 0x187);
 
     stat = canBusOn(hndR1);
     //Read
-    while (true){
+    while (ros::ok()){
 
         long id;
         uint8_t msg[8];
@@ -451,6 +423,8 @@ void CanInterface::readCan1()
                     {
                         case 0x01:
                             parseSteeringAngle(msg);
+                            break;
+                        case 0x04:
                             break;
                     }
                     break;
@@ -565,8 +539,10 @@ void CanInterface::conesCountAllCallback(sensor_msgs::PointCloud2 msg)
 
 void CanInterface::DL500Callback(const ros::TimerEvent&)
 {
-    uint8_t data[1] = {0x01};
-    canWrite(hndW1, 0x500, data, 1, canMSG_STD);
+    int8_t data[8] = {motor_moment_target ,this->motor_moment_actual ,this->brake_hydr_target,this->brake_hydr_actual,
+        this->target_steering_angle,this->actual_steering_angle,this->target_speed,this->actual_speed};
+
+    canWrite(hndW0, 0x500, data, 8, canMSG_STD);
 }
 
 void CanInterface::DL501Callback(const ros::TimerEvent&)
@@ -598,7 +574,13 @@ void CanInterface::DL502Callback(const ros::TimerEvent&)
 {
     uint8_t b1 = (((this->AMI_state <<2) | this->EBS_state)<<3) | this->AS_state;
     uint8_t b2 = ((((((this->cones_count_actual & 0x01)<<4)|this->lap_counter)<<2)|this->service_brake_state)<<1)|steering_state;
-    uint8_t b3 = (this->cones_count_all & 0x01)|((this->cones_count_actual & 0xFE)>>1);
+    uint8_t b3 = (this->cones_count_all & 0x0001)|((this->cones_count_actual & 0xFE)>>1);
+    uint8_t b4 = (this->cones_count_all & 0x01FE)>>1;
+    uint8_t b5 = (this->cones_count_all & 0xFE00)>>9;
+
+    uint8_t data[5] = {b5, b4, b3, b2, b1};
+
+    canWrite(hndW1, 0x502, data, 5, canMSG_STD);
 }
 
 void CanInterface::targetSpeedCallback(std_msgs::Int16 msg)

@@ -47,8 +47,6 @@ private :
     ros::Publisher GPSSpeedPub;
     ros::Publisher motorSpeedPub;
     ros::Publisher steeringAnglePub;
-    ros::Publisher rearWheelSpeedPub;
-    ros::Publisher frontWheelSpeedPub;
     ros::Publisher RESRangePub;
 
     uint8_t actual_speed;
@@ -69,7 +67,7 @@ private :
     uint8_t service_brake_state;
     uint8_t lap_counter;
     uint8_t cones_count_actual;
-    uint8_t cones_count_all;
+    uint16_t cones_count_all;
 
     void parseInvSpeed(unsigned char []);
     void parseMission(unsigned char []);
@@ -80,8 +78,6 @@ private :
     void parseGPS(unsigned char []);
     void parseGPSVel(unsigned char []);
     void parseSteeringAngle(unsigned char []);
-    void parseRearWheelSpeed(unsigned char []);
-    void parseFrontWheelSpeed(unsigned char []);
     void parseRES(unsigned char []);
     void initialize_timer();
 
