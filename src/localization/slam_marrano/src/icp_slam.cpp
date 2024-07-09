@@ -81,13 +81,10 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 	Eigen::Matrix4f transformation = icp.getFinalTransformation();
 	
 
-	
-	
-  
-	float ang = (float)-atan2(transformation.coeff(0, 1), transformation.coeff(0,0));
-	float dist = pow((transformation.coeff(0,3) - prev_transformation.coeff(0,3)),2) + pow((transformation.coeff(1,3) - prev_transformation.coeff(1,3)),2) + pow((transformation.coeff(2,3) - prev_transformation.coeff(2,3)),2);
+	float tx = transformation.coeff(0,0)*position.coeff(0,3) + transformation.coeff(0,1)*position.coeff(1,3) + transformation.coeff(0,3) - position.coeff(0,3);
+	float ty = transformation.coeff(1,0)*position.coeff(0,3) + transformation.coeff(1,1)*position.coeff(1,3) + transformation.coeff(1,3) - position.coeff(1,3);
+	float dist = sqrt(tx*tx + ty*ty);
 	// std::cout << dist << std::endl;
-
 
 	*previous_map += registered_map;
 
@@ -235,7 +232,7 @@ void ICP_handle::send_position() {
 			lap_time = ros::Time::now();
 		}
 	} 
-	
+
 	std_msgs::Int16 lap_count_msg;
 	lap_count_msg.data = lap_count;
 	lap_count_publisher.publish(lap_count_msg);
