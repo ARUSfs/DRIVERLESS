@@ -80,13 +80,14 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 	icp.align(registered_map);
 	Eigen::Matrix4f transformation = icp.getFinalTransformation();
 	
+	// *previous_map += registered_map;
+
 
 	float tx = transformation.coeff(0,0)*position.coeff(0,3) + transformation.coeff(0,1)*position.coeff(1,3) + transformation.coeff(0,3) - position.coeff(0,3);
 	float ty = transformation.coeff(1,0)*position.coeff(0,3) + transformation.coeff(1,1)*position.coeff(1,3) + transformation.coeff(1,3) - position.coeff(1,3);
 	float dist = sqrt(tx*tx + ty*ty);
 	// std::cout << dist << std::endl;
 
-	*previous_map += registered_map;
 
 	//calcular estimacion
 	float dt = ros::Time::now().toSec()-prev_t.toSec();
@@ -103,9 +104,40 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 	estimation(1,1)=cos(dyaw);
 
 	//sigmoide para ponderar icp y estimacion
-	float w = -0.5 + 1.0/(1.0 + std::exp(-dist));
+	float tyaw = (float)-atan2(transformation.coeff(0, 1), transformation.coeff(0,0)); 
+	float w;
+	if(dist == 0)
+		w = 1;
+	else
+		w = -0.5 + 1.0/(1.0 + std::exp(-(3*std::abs(dist-dx)+3*std::abs(tyaw-dyaw))));
+	std::cout << w << std::endl;
 	prev_transformation = (estimation*w + transformation*(1-w));
 	position = prev_transformation*position;
+	pcl::PointCloud<PointXYZColorScore> m;
+	pcl::transformPointCloud(*new_map, m, position);
+	*previous_map += m;
+
+	// pcl::PointCloud<PointXYZColorScore>::Ptr map_in_position = pcl::PointCloud<PointXYZColorScore>::Ptr(new pcl::PointCloud<PointXYZColorScore>);
+	// pcl::transformPointCloud(*new_map, *map_in_position, estimation*position);
+
+	// pcl::IterativeClosestPoint<PointXYZColorScore, PointXYZColorScore> icp;
+	// icp.setInputSource(map_in_position);
+	// if(callback_iteration < 10)
+	// 	icp.setInputTarget(previous_map);
+	// else
+	// 	icp.setInputTarget(allp_clustered);
+	// icp.setMaximumIterations(50);
+	// icp.setEuclideanFitnessEpsilon(0.005);
+	// icp.setTransformationEpsilon(1e-5);
+
+	// pcl::PointCloud<PointXYZColorScore> registered_map;
+	// icp.setMaxCorrespondenceDistance (1.0);
+	// icp.align(registered_map);
+	// Eigen::Matrix4f transformation = icp.getFinalTransformation();
+
+	// *previous_map += registered_map;
+	
+	// position = transformation*position;
 
 	prev_t = ros::Time::now();
 	send_position();
