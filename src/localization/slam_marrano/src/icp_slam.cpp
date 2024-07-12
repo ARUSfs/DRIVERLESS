@@ -61,9 +61,9 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 		return;
 	}
 
+	//get ICP transformation
 	pcl::PointCloud<PointXYZColorScore>::Ptr map_in_position = pcl::PointCloud<PointXYZColorScore>::Ptr(new pcl::PointCloud<PointXYZColorScore>);
 	pcl::transformPointCloud(*new_map, *map_in_position, position);
-
 
 	pcl::IterativeClosestPoint<PointXYZColorScore, PointXYZColorScore> icp;
 	icp.setInputSource(map_in_position);
@@ -71,25 +71,18 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 		icp.setInputTarget(previous_map);
 	else
 		icp.setInputTarget(allp_clustered);
-	icp.setMaximumIterations(50);
+	icp.setMaximumIterations(5);
 	icp.setEuclideanFitnessEpsilon(0.005);
 	icp.setTransformationEpsilon(1e-5);
 
-	pcl::PointCloud<PointXYZColorScore> registered_map;
+	pcl::PointCloud<PointXYZColorScore>::Ptr registered_map = pcl::PointCloud<PointXYZColorScore>::Ptr(new pcl::PointCloud<PointXYZColorScore>);
 	icp.setMaxCorrespondenceDistance (1.0);
-	icp.align(registered_map);
+	icp.align(*registered_map);
 	Eigen::Matrix4f transformation = icp.getFinalTransformation();
 	
-	// *previous_map += registered_map;
 
 
-	float tx = transformation.coeff(0,0)*position.coeff(0,3) + transformation.coeff(0,1)*position.coeff(1,3) + transformation.coeff(0,3) - position.coeff(0,3);
-	float ty = transformation.coeff(1,0)*position.coeff(0,3) + transformation.coeff(1,1)*position.coeff(1,3) + transformation.coeff(1,3) - position.coeff(1,3);
-	float dist = sqrt(tx*tx + ty*ty);
-	// std::cout << dist << std::endl;
-
-
-	//calcular estimacion
+	//get transformation estimation from odometry
 	float dt = ros::Time::now().toSec()-prev_t.toSec();
 	float dx = dt*vx;
 	float dyaw = dt*yaw_rate; 
@@ -103,47 +96,37 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 	estimation(0,1)=-sin(dyaw);
 	estimation(1,1)=cos(dyaw);
 
-	//sigmoide para ponderar icp y estimacion
+
+	//get transformation distance
+	float tx = transformation.coeff(0,0)*position.coeff(0,3) + transformation.coeff(0,1)*position.coeff(1,3) + transformation.coeff(0,3) - position.coeff(0,3);
+	float ty = transformation.coeff(1,0)*position.coeff(0,3) + transformation.coeff(1,1)*position.coeff(1,3) + transformation.coeff(1,3) - position.coeff(1,3);
+	float dist = sqrt(tx*tx + ty*ty);
+	std::cout << dist << std::endl;
+
+
+	//sigmoidal weighting of transformations
 	float tyaw = (float)-atan2(transformation.coeff(0, 1), transformation.coeff(0,0)); 
 	float w;
 	if(dist == 0)
 		w = 1;
 	else
-		w = -0.5 + 1.0/(1.0 + std::exp(-(3*std::abs(dist-dx)+3*std::abs(tyaw-dyaw))));
-	std::cout << w << std::endl;
+		w = -0.5 + 1.0/(1.0 + std::exp(-(std::abs(dist-dx)+2*std::abs(tyaw-dyaw))));
+	
+	//update position
 	prev_transformation = (estimation*w + transformation*(1-w));
 	position = prev_transformation*position;
-	pcl::PointCloud<PointXYZColorScore> m;
-	pcl::transformPointCloud(*new_map, m, position);
-	*previous_map += m;
-
-	// pcl::PointCloud<PointXYZColorScore>::Ptr map_in_position = pcl::PointCloud<PointXYZColorScore>::Ptr(new pcl::PointCloud<PointXYZColorScore>);
-	// pcl::transformPointCloud(*new_map, *map_in_position, estimation*position);
-
-	// pcl::IterativeClosestPoint<PointXYZColorScore, PointXYZColorScore> icp;
-	// icp.setInputSource(map_in_position);
-	// if(callback_iteration < 10)
-	// 	icp.setInputTarget(previous_map);
-	// else
-	// 	icp.setInputTarget(allp_clustered);
-	// icp.setMaximumIterations(50);
-	// icp.setEuclideanFitnessEpsilon(0.005);
-	// icp.setTransformationEpsilon(1e-5);
-
-	// pcl::PointCloud<PointXYZColorScore> registered_map;
-	// icp.setMaxCorrespondenceDistance (1.0);
-	// icp.align(registered_map);
-	// Eigen::Matrix4f transformation = icp.getFinalTransformation();
-
-	// *previous_map += registered_map;
-	
-	// position = transformation*position;
-
 	prev_t = ros::Time::now();
 	send_position();
 
 
+	//update map
+	pcl::PointCloud<PointXYZColorScore>::Ptr registered_map2 = pcl::PointCloud<PointXYZColorScore>::Ptr(new pcl::PointCloud<PointXYZColorScore>);
+	pcl::transformPointCloud(*new_map, *registered_map2, position);
+	*previous_map += *registered_map2;
 
+
+
+	//map clustering
 	pcl::search::KdTree<PointXYZColorScore>::Ptr tree (new pcl::search::KdTree<PointXYZColorScore>);
 	tree->setInputCloud(previous_map);
 
@@ -207,9 +190,9 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 			cono.color = 0;
 			cono.score = 1;
 			for (const auto& idx : cluster.indices) {
-                                // This is a botch that works but should be changed. PCL ICP doesn't sopport weighted points,
-                                // so the more reliable we consider a point to be, the more that are placed on the exact same
-                                // coordinates (limited in this case to 50).
+								// This is a botch that works but should be changed. PCL ICP doesn't sopport weighted points,
+								// so the more reliable we consider a point to be, the more that are placed on the exact same
+								// coordinates (limited in this case to 50).
 				if(j < 10)
 					clustered_points->push_back((*previous_map)[idx]);
 				else
@@ -227,6 +210,7 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 
 		*previous_map = *clustered_points;
 	}
+	
 
 	sensor_msgs::PointCloud2 new_map_msg;
 
