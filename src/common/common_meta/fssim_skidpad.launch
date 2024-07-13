@@ -18,6 +18,7 @@
   <node pkg="car_state" name="car_state" type="main.py">
     <rosparam command="load" file="$(find car_state)/config/car_state.yaml"/>
     <rosparam>
+      car_frame: "body"
       SLAM: "marrano"
     </rosparam>
   </node>
