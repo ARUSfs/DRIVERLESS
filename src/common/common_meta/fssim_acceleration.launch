@@ -26,6 +26,8 @@
   <node name="accel_control" pkg="accel_control" type="main.py"  output="screen">
     <rosparam command="load" file="$(find accel_control)/config/accel_control.yaml"/>
     <rosparam>
+      perception_topic: "/mapa_icp"
+
       kp: 0.5
       target: 10
       track_length: 75
@@ -35,6 +37,9 @@
       lqr_beta: 0.0
       lqr_r: 3.0
     </rosparam>
+  </node>
+
+  <node pkg="slam_marrano" name="slam_marrano" type="main" output="screen">
   </node>
 
 </launch>

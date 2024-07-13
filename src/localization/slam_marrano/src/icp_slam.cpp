@@ -101,16 +101,16 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 	float tx = transformation.coeff(0,0)*position.coeff(0,3) + transformation.coeff(0,1)*position.coeff(1,3) + transformation.coeff(0,3) - position.coeff(0,3);
 	float ty = transformation.coeff(1,0)*position.coeff(0,3) + transformation.coeff(1,1)*position.coeff(1,3) + transformation.coeff(1,3) - position.coeff(1,3);
 	float dist = sqrt(tx*tx + ty*ty);
-	std::cout << dist << std::endl;
 
 
 	//sigmoidal weighting of transformations
 	float tyaw = (float)-atan2(transformation.coeff(0, 1), transformation.coeff(0,0)); 
 	float w;
-	if(dist == 0)
+	if(dist == 0 || std::abs(tyaw-dyaw)>0.1)
 		w = 1;
 	else
-		w = -0.5 + 1.0/(1.0 + std::exp(-(std::abs(dist-dx)+2*std::abs(tyaw-dyaw))));
+		w = -1 + 2.0/(1.0 + std::exp(-(5*std::abs(dist-dx)+10*std::abs(tyaw-dyaw))));
+	std::cout << "ICP confidence: " << 1-w << std::endl;
 	
 	//update position
 	prev_transformation = (estimation*w + transformation*(1-w));
