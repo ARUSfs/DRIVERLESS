@@ -14,6 +14,7 @@
 #include <tf2/LinearMath/Quaternion.h>
 
 #include "PointXYZColorScore.h"
+#include <common_msgs/CarState.h>
 
 using namespace std;
 
@@ -22,11 +23,17 @@ class ICP_handle {
 		bool has_map = false;
 		int callback_iteration = 0;
 		void send_position();
-		ros::Time hola;
+		ros::Time prev_t;
+		float yaw_rate=0;
+		float vx=0;
+		float lap_count = 0;
+		ros::Time lap_time;
 	public:
 		ros::NodeHandle nh;
-		ros::Subscriber sub;
+		ros::Subscriber perception_sub;
+		ros::Subscriber state_sub;
 		ros::Publisher map_publisher;
+		ros::Publisher lap_count_publisher;
 
 		tf2_ros::TransformBroadcaster br;
 
@@ -34,9 +41,11 @@ class ICP_handle {
 		pcl::PointCloud<PointXYZColorScore>::Ptr allp_clustered;
 
 		Eigen::Matrix4f position;
+		Eigen::Matrix4f prev_transformation;
 
 		float score = 1.0;
 
 		ICP_handle();
 		void map_callback(sensor_msgs::PointCloud2);
+		void state_callback(common_msgs::CarState);
 };

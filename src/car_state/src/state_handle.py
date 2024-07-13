@@ -86,11 +86,11 @@ class StateClass:
     def base_pose_callback(self,msg: State):
         self.vx = msg.vx
         self.vy = msg.vy
+        self.yaw = msg.yaw
+        self.r = msg.r
         if get_base_pose_position:
             self.x = msg.x
             self.y = msg.y
-            self.yaw = msg.yaw
-            self.r = msg.r
 
     def update_limovelo_rotation(self, msg: Float32MultiArray):
         self.limovelo_rotation = np.array([[msg.data[0],msg.data[1],msg.data[2]],

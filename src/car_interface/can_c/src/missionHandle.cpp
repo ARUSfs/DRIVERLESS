@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <cstdlib>
 #include <iostream>
+#include <ros/ros.h>
+
 
 bool HV_ON = false;
 canStatus stat;
@@ -17,7 +19,7 @@ void initCan()
     canInitializeLibrary();
 
     //Openeamos el canalw
-    hnd = canOpenChannel(0, canOPEN_ACCEPT_VIRTUAL);
+    hnd = canOpenChannel(1, canOPEN_ACCEPT_VIRTUAL);
     if (hnd < 0)
     {
         printf("canOpenChannel failed, status=%d\n", hnd);
@@ -74,23 +76,27 @@ void launchMission()
             break;
     }
 
+
     int ret = system(baseCommand.c_str());
 
     if(ret == 0)
     {
-        printf("Mission launched successfully\n");
+        ROS_INFO("Mission launched successfully\n");
     }
     else
     {
-        printf("Mission failed to launch\n");
+        ROS_INFO("Mission failed to launch\n");
     }
 }
 
-int main()
+int main(int argc, char **argv)
 {   
+    ros::init(argc,argv,"carlos_mpc");
+    ros::NodeHandle n;
+
     initCan();
 
-    while(1)
+    while(ros::ok())
     {
         long id;
         uint8_t msg[8];
@@ -104,17 +110,23 @@ int main()
         {
             if(!HV_ON)
             {
-                if((id == 0x186) && (msg[0] == 0x00) && (msg[1] == 0x0F)) HV_ON = true; //Se da alta
+                if((id == 0x186) && (msg[0] == 0x00) && (msg[1] == 0x0F)){
+                 HV_ON = true; //Se da alta
+                ROS_INFO("HV ON \n");
+                }
             }
             else
             {
                 if((id == 0x185) && (msg[0]==0x01))
                 {
-                   mission = msg[1];
+                    ROS_INFO("Mission received\n");
+                    mission = msg[1];
+                    closeCan();
+                    launchMission();
+                    while(true){}
                    break;
                 }
             }
         }
     }
-    closeCan();
 }
