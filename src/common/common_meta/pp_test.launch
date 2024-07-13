@@ -1,4 +1,11 @@
 <launch>
+  <node name="interface" pkg="visualization" type="main_interface.py">
+  <rosparam command="load"  file="$(find visualization)/config/interface.yaml"/>
+    <rosparam>
+      frame: 'map'
+    </rosparam>
+  </node>
+
   <node pkg="rslidar_sdk" name="rslidar_sdk_node" type="rslidar_sdk_node" output="screen">
     <param name="config_path" value=""/>
   </node>
@@ -8,8 +15,8 @@
     <rosparam command="load" file="$(find steering)/config/steering.yaml"/>
 	</node>
 
-  <node name="can" pkg="can" type="main.py">
-	</node>
+  <node name="can_c" pkg="can_c" type="main" output="screen">
+  </node>
 
   <node pkg="car_state" name="car_state" type="main.py">
   <rosparam command="load" file="$(find car_state)/config/car_state.yaml"/>
@@ -43,14 +50,14 @@
   <node pkg="pure_pursuit" name="pure_pursuit" type="main" output="screen">
     <rosparam command="load" file="$(find pure_pursuit)/config/pure_pursuit.yaml"/>
     <rosparam>
-      LAD: 4
+      LAD: 5
       TARGET_SPEED: 3
       global_mode: false
     </rosparam>
   </node>
 
   <!-- Se guardan en $HOME/.ros/ -->
-  <node pkg="rosbag" type="record" name="rosbag_record" args="record -o pp -a"/>
+  <node pkg="rosbag" type="record" name="rosbag_record" args="record -o pp_test -a"/>
 
 
 </launch>

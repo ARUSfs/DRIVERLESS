@@ -9,7 +9,7 @@ import rospkg
 class EPOSHandle:    
     rospack = rospkg.RosPack()
     EPOS_LIB_PATH = rospack.get_path('steering')+"/lib/libEposCmd.so.6.8.1.0"
-    NodeID = 1
+    NodeID = 4
 
     def __init__(self, max_acc, max_dec, prof_vel):
         self.max_acc = max_acc
@@ -27,8 +27,12 @@ class EPOSHandle:
     def connect_to_device(self):
         pErrorCode = c_uint()
         if not self._is_connected:
-            self.keyhandle = self.epos.VCS_OpenDevice(b'EPOS4', b'CANopen', b'CAN_kvaser_usb 0',
-                                                      b'CAN0', byref(pErrorCode))
+
+            self.keyhandle = self.epos.VCS_OpenDevice(b'EPOS4', b'MAXON SERIAL V2', b'USB',
+                                                       b'USB0', byref(pErrorCode))
+            #self.keyhandle = self.epos.VCS_OpenDevice(b'EPOS4', b'CANopen', b'CAN_kvaser_usb 0',
+            #                                          b'CAN0', byref(pErrorCode))
+
             if self.keyhandle == 0:
                 rospy.logerr('Failed to connect to EPOS4. Is it on and connected?')
             elif pErrorCode.value != 0:
@@ -83,6 +87,7 @@ class EPOSHandle:
             rospy.logwarn('EPOS already enabled')
 
     def disable(self):
+        return
         pErrorCode = c_uint()
         if not self._is_connected:
             rospy.logerr(f'EPOS4 not connected. Cannot disable')
