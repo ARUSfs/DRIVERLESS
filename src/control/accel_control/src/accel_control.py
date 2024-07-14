@@ -39,14 +39,10 @@ class AccelControl():
         self.accel_localizator = AccelLocalization()
         
         ### Inicializaciones ###
-        self.prev_time = 0
-        self.prev_yaw = 0
         self.start_time = 0
         self.steer = 0
         self.acc = 0
         self.speed = 0
-        self.x = 0
-        self.y = 0
         self.yaw_car = 0
         self.avg_speed = 0.0001
         self.i = 0
@@ -64,9 +60,8 @@ class AccelControl():
 
     def update_state(self, msg: CarState):
         self.speed = math.hypot(msg.vx,msg.vy)
-        self.x = msg.x
-        self.y = msg.y
         self.yaw_car = msg.yaw
+        self.r = msg.r
 
         if self.start_time == 0 and self.speed > 0.1:
             self.start_time = time.time()
@@ -91,7 +86,7 @@ class AccelControl():
     def update_route(self, msg: PointCloud2):
         try:
             a,b = self.accel_localizator.get_route(msg)
-            if abs(a) < 0.4 and abs(b) < 1:
+            if abs(a) < 0.5 and abs(b) < 2:
                 self.a_media = self.a_media*0.7 + a*0.3
                 self.b_media = self.b_media*0.7 + b*0.3
             else:
@@ -99,9 +94,6 @@ class AccelControl():
         except Exception as e:
             a,b = self.a_media, self.b_media
             rospy.logwarn(e)
-        # rospy.logwarn(f"Recta: y = {a}x + {b}")
-        
-        # rospy.logwarn(f"{a} {b}")
 
         self.steer = self.get_steer(a, b)
         msg = Point()
@@ -111,15 +103,11 @@ class AccelControl():
 
 
     def get_steer(self, a, b):
-        dist = -(a*self.x-self.y+b)/np.sqrt(a**2 + 1)   # Distancia del coche a la trayectoria
-        yaw = self.yaw_car - math.atan(a)               # Ángulo entre la trayectoria y el coche
+        dist = -b/np.sqrt(a**2 + 1)   # Distancia del coche a la trayectoria
+        yaw = - math.atan(a)               # Ángulo entre la trayectoria y el coche
         beta = 0
-        r = (yaw-self.prev_yaw)/(time.time()-self.prev_time)
 
-        self.prev_yaw = yaw
-        self.prev_time = time.time()
-
-        w = np.array([dist, yaw, beta, r], np.float64) 
+        w = np.array([dist, yaw, beta, self.r], np.float64) 
         steer = -np.dot(LQR_PARAMS, w)         # u = -K*w
 
         return max(min(steer, 19.9),-19.9)

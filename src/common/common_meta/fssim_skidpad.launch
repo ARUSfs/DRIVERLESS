@@ -38,6 +38,7 @@
   </node>
 
   <node name="slam_marrano" pkg="slam_marrano" type="main">
+  <rosparam command="load" file="$(find slam_marrano)/config/slam_marrano.yaml"/>
   </node>
 
 

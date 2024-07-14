@@ -1,12 +1,14 @@
-sim_mode: false
 kp: 0.5
 target: 10
-track_length: 50
+track_length: 75
 
-lqr_dist: 3.1623
-lqr_yaw: 36.0
+lqr_dist: 1.0
+lqr_yaw: 25.0
 lqr_beta: 0.0
-lqr_r: 0.0
+lqr_r: 3.0
 
 perception_topic: "/perception_map"
+global_frame: "ini"
+car_frame: "body"
+slam: "marrano"
 
