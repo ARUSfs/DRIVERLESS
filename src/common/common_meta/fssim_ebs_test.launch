@@ -1,0 +1,35 @@
+<launch>
+
+  <node pkg="controller" name="controller" type="main.py" output='screen'>
+    <rosparam command="load" file="$(find controller)/config/controller.yaml"/>
+    <rosparam>
+      braking_kp: 0.5
+      deceleration:  5
+      min_braking_cmd: -0.2 
+      max_cmd: 1 
+      min_cmd: 0
+    </rosparam>
+  </node>
+
+  <node pkg="car_state" name="car_state" type="main.py">
+  <rosparam command="load" file="$(find car_state)/config/car_state.yaml"/>
+  </node>
+
+  <node pkg="fssim_interface" name="fssim_interface" type="main.py">
+  </node>
+
+  <node name="interface" pkg="visualization" type="main_interface.py">
+	  <rosparam command="load" file="$(find visualization)/config/interface.yaml"/>
+	</node>
+
+
+  <node name="accel_control" pkg="accel_control" type="main_ebs.py"  output="screen">
+    <rosparam command="load" file="$(find accel_control)/config/accel_control.yaml"/>
+    <rosparam>
+      kp: 0.5
+      target: 12
+      track_length: 20
+    </rosparam>
+  </node>
+
+</launch>
