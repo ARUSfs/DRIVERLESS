@@ -324,7 +324,7 @@ void CanInterface::readCan0()
                         case 0x01:
                             parseASStatus(msg);
                             break;
-                        case 0x04: //Break pressure
+                        case 0x04: //Brake pressure
                             break; 
                         case 0x05: //Pneumtic pressure
                             break;
