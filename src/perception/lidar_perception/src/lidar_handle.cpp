@@ -63,7 +63,7 @@ void recostruccion(const pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud, const pcl:
 {
     pcl::KdTreeFLANN<pcl::PointXYZI> kdtree;
     kdtree.setInputCloud(cloud_f);
-    float search_radius = 0.15;
+    float search_radius = 0.25;
     for (size_t idx = 0; idx < punto.size(); ++idx)
     {
         std::vector<int> point_indices;
@@ -90,66 +90,48 @@ struct pair_hash
     }
 };
 
-void processLidarData(const pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud,
-                      pcl::PointIndices::Ptr &inliers,
-                      pcl::PointIndices::Ptr &outliers,
-                      int n_segments)
+void filter_segments(const pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud,
+                     pcl::PointIndices::Ptr &inliers,
+                     pcl::PointIndices::Ptr &outliers,
+                     int n_segments,
+                     float threshold)
 {
+    const float PI = 3.14159265358979323846;
+    std::unordered_map<std::pair<int, int>, float, pair_hash> min_z_map;
 
-    cloud->points.resize(cloud->points.size() - (cloud->points.size() % n_segments));
-
-
-    std::vector<std::vector<pcl::PointXYZI>> separated_data;
-    for (int i = 0; i < n_segments; ++i)
+    for (std::size_t i = 0; i < cloud->points.size(); ++i)
     {
-        separated_data.push_back(std::vector<pcl::PointXYZI>(cloud->points.begin() + i * (cloud->points.size() / n_segments),
-                                                             cloud->points.begin() + (i + 1) * (cloud->points.size() / n_segments)));
-    }
+        pcl::PointXYZI p = cloud->at(i);
 
-    std::unordered_map<std::pair<int, int>, float, pair_hash> min_z;
-    std::vector<bool> is_ground;
-    for (int i = 0; i < n_segments; ++i)
-    {
-        for (const auto &p : separated_data[i])
+        float angle = atan2(p.y, p.x); // Usar atan2 para obtener el ángulo correcto
+        if (angle < 0)
         {
-            int d = 0;
-            if (p.x > -100)
-            {
-                d = static_cast<int>(std::sqrt(p.x * p.x + p.y * p.y));
-            }
-            auto key = std::make_pair(i, d);
-            if (min_z.find(key) != min_z.end())
-            {
-                min_z[key] = std::min(p.z, min_z[key]);
-                if (p.z < min_z[key] + 0.07)
-                {
-                    is_ground.push_back(true);
-                }
-                else
-                {
-                    is_ground.push_back(false);
-                }
-            }
-            else
-            {
-                min_z[key] = p.z;
-                is_ground.push_back(true);
-            }
+            angle += 2 * PI; // Asegurarse de que el ángulo esté en [0, 2*PI)
         }
-    }
 
-    inliers.reset(new pcl::PointIndices);
-    outliers.reset(new pcl::PointIndices);
+        int segment = static_cast<int>(angle / (2 * PI / n_segments));
+        int distance = static_cast<int>(std::sqrt(p.x * p.x + p.y * p.y));
+        std::pair<int, int> key = {segment, distance};
 
-    for (size_t i = 0; i < cloud->points.size(); ++i)
-    {
-        if (is_ground[i])
+        if (min_z_map.find(key) == min_z_map.end())
         {
-            inliers->indices.push_back(i); 
+            // Si no existe el segmento, agregarlo y mantener el punto actual
+            min_z_map[key] = p.z;
+            inliers->indices.push_back(i);
         }
         else
         {
-            outliers->indices.push_back(i); 
+            if (p.z >= min_z_map[key] + threshold)
+            {
+                // Si el valor de z es mayor que el valor mínimo más el umbral, mantener el punto actual
+                outliers->indices.push_back(i);
+            }
+            else
+            {
+                // Si el valor de z es menor, actualizar el mínimo z y agregar el punto actual a inliers
+                min_z_map[key] = p.z;
+                inliers->indices.push_back(i);
+            }
         }
     }
 }
@@ -195,27 +177,13 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg)
     // Apply filter
     cloud->erase(std::remove_if(cloud->points.begin(), cloud->points.end(), condition), cloud->points.end());
 
-    //THIS WOULD BE NECESSARY IF THE LIDAR IS NOT CALIBRATED
-    /*
-    pcl::PointIndices::Ptr inliers1(new pcl::PointIndices);
-    pcl::ModelCoefficients::Ptr coefficients1(new pcl::ModelCoefficients);
-    pcl::SACSegmentation<pcl::PointXYZI> seg1;
-    seg1.setOptimizeCoefficients(true);
-    seg1.setModelType(pcl::SACMODEL_PLANE);
-    seg1.setMethodType(pcl::SAC_RANSAC);
-    seg1.setDistanceThreshold(0.01);
+    // THIS WOULD BE NECESSARY IF THE LIDAR IS NOT CALIBRATED
+    
+    Eigen::Vector3d coefficients1;
+    coefficients1 << -0.0433816, 0.00200159, 0.999057; // Reemplaza estos valores con los coeficientes que tienes
 
-    seg1.setInputCloud(cloud);
-    seg1.segment(*inliers1, *coefficients1);
-
-    if (inliers1->indices.size() == 0)
-    {
-        std::cout << "Could not estimate a planar model for the given dataset." << std::endl;
-        return;
-    }
-
-    // coefficients(a, b, c, d) of model ax + by + cz + d = 0
-    Eigen::Vector3d plane_normal(coefficients1->values[0], coefficients1->values[1], coefficients1->values[2]);
+    // Coeficientes (a, b, c) del modelo
+    Eigen::Vector3d plane_normal(coefficients1[0], coefficients1[1], coefficients1[2]);
     plane_normal.normalize();
 
     Eigen::Vector3d z_axis(0, 0, 1);
@@ -224,7 +192,7 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg)
     double theta = std::acos(cosTheta);
 
     if (rotation_axis.norm() > 1e-6)
-    { 
+    {
         rotation_axis.normalize();
         Eigen::AngleAxisd angleAxis(theta, rotation_axis);
         Eigen::Matrix3d rotation_matrix = angleAxis.toRotationMatrix();
@@ -242,28 +210,28 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg)
             transformed_cloud->points.push_back(transformed_point);
         }
 
-        *cloud = *transformed_cloud; 
+        *cloud = *transformed_cloud;
     }
     else
     {
         std::cout << "Plane is already aligned with the z-axis." << std::endl;
     }
-    */
-   
+    
+    
     pcl::PointCloud<pcl::PointXYZI>::Ptr ground_cloud(new pcl::PointCloud<pcl::PointXYZI>);
     pcl::PointIndices::Ptr inliers(new pcl::PointIndices);
     pcl::PointIndices::Ptr outliers(new pcl::PointIndices);
 
-    processLidarData(cloud, inliers, outliers, 12);
+    filter_segments(cloud, inliers, outliers, 24, 0.06);
 
     pcl::ExtractIndices<pcl::PointXYZI> extract;
     extract.setInputCloud(cloud);
-    extract.setIndices(inliers);
-    extract.filter(*ground_cloud);
-
-    extract.setNegative(true);
+    extract.setIndices(outliers);
     extract.filter(*cloud_f);
 
+    extract.setNegative(true);
+    extract.filter(*ground_cloud);
+    
     ros::Time fin_r = ros::Time::now();
     ros::Duration t_segment = fin_r - ini;
 
@@ -305,7 +273,7 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg)
     std::vector<pcl::PointIndices> cluster_indices;
     pcl::EuclideanClusterExtraction<pcl::PointXYZI> ec;
     ec.setClusterTolerance(0.4); // 2cm
-    ec.setMinClusterSize(4);
+    ec.setMinClusterSize(2);
     ec.setMaxClusterSize(200);
     ec.setSearchMethod(tree);
     ec.setInputCloud(cloud_f);
