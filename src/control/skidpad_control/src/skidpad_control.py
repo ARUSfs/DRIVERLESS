@@ -181,7 +181,6 @@ class SkidpadControl():
             signo_d=np.sign(y[i+1]-y[i])*np.sign(self.pos[0]-x[i])
 
         d_min=np.min(dist)*signo_d
-        rospy.loginfo(d_min)
 
         corrected_yaw = (msg.yaw+np.pi)%(2*np.pi) - np.pi
         theta = np.arctan2(y[(i+5)%len(x)]-y[i],x[(i+5)%len(x)]-x[i])
