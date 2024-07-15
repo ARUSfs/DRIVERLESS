@@ -62,7 +62,7 @@ class SkidpadControl():
         d = 2*math.pi*r/self.N
 
         self.plantilla = np.array([[-20 + d*i,0] for i in range(int(20/d)+1)]+2*[[r * np.sin(2 * np.pi * i / self.N), -9.125+r * np.cos(2 * np.pi * i / self.N)] for i in range(self.N)]+2*[[r * np.sin(2 * np.pi * i / self.N), 9.125-r * np.cos(2 * np.pi * i / self.N)] for i in range(self.N)]+[[d*i,0] for i in range(int(15/d)+1)])
-
+        self.route = None
         
     
 
@@ -204,15 +204,31 @@ class SkidpadControl():
             return self.steer
 
         self.si = self.i*d
-        self.k = 0 if self.i <= int(20/d) else (-1/9.125 if self.i <= int(19/d)+2*self.N else (1/9.125 if self.i <= int(19/d)+4*self.N else 0))
-
-
+        self.k = self.kk()
 
         r_target = self.vx*self.k
 
-        delta = delta_correction*math.degrees(np.arctan(self.k*1.535)) - k_mu*((self.dist**3+0.1*self.dist)) - k_phi*self.phi + k_r*(r_target - self.r)
+        delta = delta_correction*math.degrees(np.arctan(self.k*1.535)) - k_mu*((self.dist**3+0.1*self.dist)) - k_phi*(self.phi+2*np.arctan(self.k*1.535/2)) + k_r*(r_target - self.r)
         delta = max(-20,min(20,delta))
 
         return delta
-
-
+    
+    def kk(self):
+        s11=5
+        s12=2
+        s21=6
+        s22=4
+        f=2
+        if self.si < 20-s11:
+            self.k=0
+        elif self.si < 20+s12:
+            self.k = -(1/9.125)*((self.si-20+s11)/(s12+s11))
+        elif self.si < 134.67-s21:
+            self.k = -(1/9.125)
+        elif self.si < 134.67+s22:
+            self.k = 2*(1/9.125)*(self.si-134.67-0.5*(s22-s21))/(s21+s22)
+        elif self.si < 249.34-f:
+            self.k = (1/9.125)
+        else:
+            self.k = 0
+        return self.k

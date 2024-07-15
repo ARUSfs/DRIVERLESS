@@ -13,6 +13,10 @@
 
   <node pkg="car_state" name="car_state" type="main.py">
   <rosparam command="load" file="$(find car_state)/config/car_state.yaml"/>
+    <rosparam>
+      car_frame: "body"
+      SLAM: "marrano"
+    </rosparam>
   </node>
 
   <node pkg="fssim_interface" name="fssim_interface" type="main.py">
@@ -27,6 +31,9 @@
     <rosparam command="load" file="$(find accel_control)/config/accel_control.yaml"/>
     <rosparam>
       perception_topic: "/mapa_icp"
+      global_frame: "ini"
+      car_frame: "body"
+      slam: "marrano"
 
       kp: 0.5
       target: 10
@@ -39,7 +46,12 @@
     </rosparam>
   </node>
 
-  <node pkg="slam_marrano" name="slam_marrano" type="main" output="screen">
+  <node pkg="slam_marrano" name="slam_marrano" type="main">
+  <rosparam command="load" file="$(find slam_marrano)/config/slam_marrano.yaml"/>
+  <rosparam>
+    global_frame: "ini"
+    car_frame: "body"
+  </rosparam>
   </node>
 
 </launch>

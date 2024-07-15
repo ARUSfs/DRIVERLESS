@@ -35,6 +35,9 @@ class ICP_handle {
 		ros::Publisher map_publisher;
 		ros::Publisher lap_count_publisher;
 
+		std::string global_frame;
+		std::string car_frame;
+
 		tf2_ros::TransformBroadcaster br;
 
 		pcl::PointCloud<PointXYZColorScore>::Ptr previous_map;

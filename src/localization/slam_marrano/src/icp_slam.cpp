@@ -22,6 +22,10 @@
 using namespace std;
 
 ICP_handle::ICP_handle(){
+
+	nh.getParam("/slam_marrano/global_frame", global_frame);
+	nh.getParam("/slam_marrano/car_frame", car_frame);
+
 	prev_t = ros::Time::now();	
 	lap_time = ros::Time::now();
 
@@ -215,7 +219,7 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 	sensor_msgs::PointCloud2 new_map_msg;
 
 	pcl::toROSMsg(*allp_clustered, new_map_msg);
-	new_map_msg.header.frame_id = "map";
+	new_map_msg.header.frame_id = global_frame;
 	map_publisher.publish(new_map_msg);
 
 	callback_iteration++;
@@ -225,8 +229,8 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 void ICP_handle::send_position() {
 	geometry_msgs::TransformStamped transformSt;
 	transformSt.header.stamp = ros::Time::now();
-	transformSt.header.frame_id = "map";
-	transformSt.child_frame_id = "body";
+	transformSt.header.frame_id = global_frame;
+	transformSt.child_frame_id = car_frame;
 	transformSt.transform.translation.x = position.coeff(0,3);
 	transformSt.transform.translation.y = position.coeff(1,3);
 	tf2::Quaternion q;

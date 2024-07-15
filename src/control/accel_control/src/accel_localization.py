@@ -6,17 +6,33 @@ from sensor_msgs import point_cloud2
 import itertools
 from sensor_msgs.msg import PointCloud2
 import random
+import tf2_ros
+import tf2_sensor_msgs.tf2_sensor_msgs as tf2_sensor_msgs
 
+
+global_frame = rospy.get_param('/accel_control/global_frame')
+car_frame = rospy.get_param('/accel_control/car_frame')
+slam = rospy.get_param('/accel_control/slam')
 
 class AccelLocalization():
 
     def __init__(self):
         self.ransac_threshold = 0.2
         self.max_iterations = 500
+        self.tf_buffer = tf2_ros.Buffer()
+        self.listener = tf2_ros.TransformListener(self.tf_buffer)
 
     def get_route(self, msg: PointCloud2):
-        cones_all = point_cloud2.read_points(msg, field_names=("x", "y", "z","color", "score"), skip_nans=True)
-        cones = [[c[0],c[1]] for c in cones_all]
+        if(slam!="none"):
+            trans=self.tf_buffer.lookup_transform(car_frame, global_frame, rospy.Time(0))
+            trans_msg = tf2_sensor_msgs.do_transform_cloud(msg,transform=trans)
+            cones_all = point_cloud2.read_points(trans_msg, field_names=("x", "y", "z","color", "score"), skip_nans=True)
+            cones = [[c[0],c[1]] for c in cones_all if c[0]>-5]
+        else:
+            cones_all = point_cloud2.read_points(msg, field_names=("x", "y", "z","color", "score"), skip_nans=True)
+            cones = [[c[0],c[1]] for c in cones_all]
+
+
         if len(cones)<2:
             raise ValueError("1 cono")
         elif len(cones)==2:
