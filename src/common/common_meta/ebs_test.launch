@@ -33,7 +33,7 @@
 
 
   <!-- Se guardan en $HOME/.ros/ -->
-  <node pkg="rosbag" type="record" name="rosbag_record" args="record -o acceleration -a"/>
+  <node pkg="rosbag" type="record" name="rosbag_record" args="record -o ebs_test -a"/>
 
 
 </launch>
