@@ -3,6 +3,6 @@ car_frame: "body"
 global_mode: false
 LAD: 6
 TARGET_SPEED: 4
-KP: 0.5
-KI: 0.0
+KP: 43.87
+KI: 1.29
 KD: 0.0

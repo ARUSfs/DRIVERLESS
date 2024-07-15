@@ -1,6 +1,6 @@
 sim_mode: false
-kp: 0.5
-ki: 0.0
+kp: 43.87
+ki: 1.29
 kd: 0.0
 target: 8
 
