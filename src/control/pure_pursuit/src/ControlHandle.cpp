@@ -29,6 +29,8 @@ ControlHandle::ControlHandle(){
     control_publisher = nh.advertise<common_msgs::Controls>("/controls_pp", 1);
     pursuit_point_publisher = nh.advertise<geometry_msgs::Point>("pursuit_point",1);
      
+    
+    previous_time = std::chrono::high_resolution_clock::now();
 
 
     publisher_timer = nh.createTimer(ros::Duration(0.01),
@@ -39,7 +41,6 @@ ControlHandle::ControlHandle(){
 
 void ControlHandle::control_timer_callback(const ros::TimerEvent& event) {
     // TODO PONER CON PARAMETROS POR DIOS ESTO ES PARA PROBAR TODO
-    auto previous_time = std::chrono::high_resolution_clock::now();
 
     auto current_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> delta_time = current_time - previous_time;
