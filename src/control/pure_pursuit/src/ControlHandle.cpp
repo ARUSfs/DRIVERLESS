@@ -9,13 +9,18 @@
 
 #include <pcl/point_types.h>
 
+#include <iostream>
+#include <chrono>
 
 ControlHandle::ControlHandle(){
 
     nh.getParam("/pure_pursuit/TARGET_SPEED", TARGET_SPEED);
     nh.getParam("/pure_pursuit/KP", KP);
-    nh.getParam("/pure_pursuit/KI", KI);
     nh.getParam("/pure_pursuit/KD", KD);
+    nh.getParam("/pure_pursuit/KI", KI);
+    nh.getParam("/pure_pursuit/previous_error", previous_error);
+    nh.getParam("/pure_pursuit/integral", integral);
+
 
     velocity_sub = nh.subscribe("/car_state/state", 10, &ControlHandle::speed_callback, this);
 
@@ -23,6 +28,9 @@ ControlHandle::ControlHandle(){
 
     control_publisher = nh.advertise<common_msgs::Controls>("/controls_pp", 1);
     pursuit_point_publisher = nh.advertise<geometry_msgs::Point>("pursuit_point",1);
+     
+
+
     publisher_timer = nh.createTimer(ros::Duration(0.01),
                                                 &ControlHandle::control_timer_callback,
                                                 this);
@@ -31,17 +39,18 @@ ControlHandle::ControlHandle(){
 
 void ControlHandle::control_timer_callback(const ros::TimerEvent& event) {
     // TODO PONER CON PARAMETROS POR DIOS ESTO ES PARA PROBAR TODO
+    auto previous_time = std::chrono::high_resolution_clock::now();
 
-    const float error = TARGET_SPEED - velocity;
-    const float dt = ros::Time::now().toSec() - prev_t;
-    integral += error*dt;
-    const float derivative = (error-prev_err)/dt;
+    auto current_time = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> delta_time = current_time - previous_time;
+    previous_time = current_time;
 
-    prev_t = ros::Time::now().toSec();
-    prev_err = error;
+    const float v_error = TARGET_SPEED - velocity;
+    integral += v_error * delta_time.count();
+    const float derivative = (v_error - previous_error)/delta_time.count(); 
+    previous_error = v_error;
+    const float accelerator_control = (v_error*KP)+(KI*integral)+(KD*derivative);
 
-    const float accelerator_control = error*KP + KI*integral + KD*derivative;
-    
     const float angle = pPursuit.get_steering_angle();
 
     
@@ -75,3 +84,4 @@ void ControlHandle::path_callback(const common_msgs::Trajectory path) {
 
     pPursuit.update_path(new_path);
 }
+
