@@ -22,7 +22,9 @@ from geometry_msgs.msg import Point
 
 from accel_localization import AccelLocalization
 
-KP = rospy.get_param('/accel_control/kp')
+KP = rospy.get_param('/accel_control/KP')
+KI = rospy.get_param('/accel_control/KI')
+KD = rospy.get_param('/accel_control/KD')
 TARGET = rospy.get_param('/accel_control/target')
 TRACK_LENGTH = rospy.get_param('/accel_control/track_length')
 LQR_PARAMS = np.array([rospy.get_param('/accel_control/lqr_dist'),
@@ -49,6 +51,9 @@ class AccelControl():
         self.braking = False
         self.a_media = 0
         self.b_media = 0
+        self.prev_t = time.time()
+        self.prev_err = 0
+        self.integral = 0
 
         ### Publicadores y suscriptores ###
         self.cmd_publisher = rospy.Publisher('/controls_pp', Controls, queue_size=1) 
@@ -115,7 +120,15 @@ class AccelControl():
 
     def get_acc(self):
         error = TARGET - self.speed
-        cmd = KP * error
+
+        dt=time.time()-self.prev_t
+        self.integral += error*dt
+        derivative = (error-self.prev_err)/dt
+
+        self.prev_t = time.time()
+        self.prev_err = error
+
+        cmd = KP*error + KI*self.integral + KD*derivative
 
         return max(min(cmd, 1),-1)
 

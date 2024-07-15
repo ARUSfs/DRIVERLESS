@@ -10,6 +10,8 @@ class ControlHandle {
         float velocity = 0;
         float TARGET_SPEED;
         float KP;
+        float KI;
+        float KD;
 
         ros::NodeHandle nh;
         ros::Publisher control_publisher;
@@ -17,7 +19,9 @@ class ControlHandle {
         ros::Subscriber velocity_sub;
         ros::Subscriber path_sub;
         ros::Timer publisher_timer;
-
+        float prev_t;
+        float integral;
+        float prev_err;
 
         PurePursuit pPursuit;
 

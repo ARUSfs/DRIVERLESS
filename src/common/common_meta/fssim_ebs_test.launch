@@ -26,7 +26,7 @@
   <node name="accel_control" pkg="accel_control" type="main_ebs.py"  output="screen">
     <rosparam command="load" file="$(find accel_control)/config/accel_control.yaml"/>
     <rosparam>
-      kp: 0.5
+      KP: 0.5
       target: 12
       track_length: 20
     </rosparam>

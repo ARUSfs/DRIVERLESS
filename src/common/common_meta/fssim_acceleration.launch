@@ -35,7 +35,7 @@
       car_frame: "body"
       slam: "marrano"
 
-      kp: 0.5
+      KP: 0.5
       target: 10
       track_length: 75
 

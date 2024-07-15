@@ -1,5 +1,7 @@
 sim_mode: false
 kp: 0.5
+ki: 0.0
+kd: 0.0
 target: 8
 
 k_mu: 5.5

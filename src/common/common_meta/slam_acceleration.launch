@@ -2,7 +2,6 @@
   <node pkg="rslidar_sdk" name="rslidar_sdk_node" type="rslidar_sdk_node" output="screen">
     <param name="config_path" value=""/>
 	</node>
-  
 
   <node name="steering" pkg="steering" type="main.py" output="screen">
     <rosparam command="load" file="$(find steering)/config/steering.yaml"/>
@@ -39,7 +38,7 @@
       car_frame: "body"
       slam: "marrano"
 
-      kp: 0.5
+      KP: 0.5
       target: 10
       track_length: 75
 

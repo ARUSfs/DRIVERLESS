@@ -4,3 +4,5 @@ global_mode: false
 LAD: 6
 TARGET_SPEED: 4
 KP: 0.5
+KI: 0.0
+KD: 0.0

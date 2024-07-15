@@ -25,6 +25,8 @@ from geometry_msgs.msg import PointStamped
 from skidpad_localization import SkidpadLocalization
 
 KP = rospy.get_param('/skidpad_control/kp')
+KI = rospy.get_param('/skidpad_control/ki')
+KD = rospy.get_param('/skidpad_control/kd')
 TARGET = rospy.get_param('/skidpad_control/target')
 
 k_mu = rospy.get_param('/skidpad_control/k_mu')
@@ -45,6 +47,9 @@ class SkidpadControl():
         self.acc = 0
         self.speed = 0
         self.braking = False
+        self.integral = 0
+        self.prev_err = 0
+        self.prev_t = time.time()
 
         self.tfBuffer = tf2_ros.Buffer()
         self.listener = tf2_ros.TransformListener(self.tfBuffer)
@@ -147,7 +152,15 @@ class SkidpadControl():
 
     def get_acc(self):
         error = TARGET - self.speed
-        cmd = KP * error
+
+        dt=time.time()-self.prev_t
+        self.integral += error*dt
+        derivative = (error-self.prev_err)/dt
+
+        self.prev_t = time.time()
+        self.prev_err = error
+
+        cmd = KP*error + KI*self.integral + KD*derivative
 
         return max(min(cmd, 1),-1)
 
