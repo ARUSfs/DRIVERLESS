@@ -18,6 +18,7 @@
   <node pkg="car_state" name="car_state" type="main.py">
     <rosparam command="load" file="$(find car_state)/config/car_state.yaml"/>
     <rosparam>
+      global_frame: "map"
       car_frame: "body"
       SLAM: "marrano"
     </rosparam>
@@ -33,7 +34,7 @@
       k_mu: 8
       k_phi: 10
       k_r: 0
-      delta_correction: 0.9
+      delta_correction: 1
     </rosparam>
   </node>
 

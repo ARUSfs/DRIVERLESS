@@ -62,7 +62,7 @@ class SkidpadControl():
         d = 2*math.pi*r/self.N
 
         self.plantilla = np.array([[-20 + d*i,0] for i in range(int(20/d)+1)]+2*[[r * np.sin(2 * np.pi * i / self.N), -9.125+r * np.cos(2 * np.pi * i / self.N)] for i in range(self.N)]+2*[[r * np.sin(2 * np.pi * i / self.N), 9.125-r * np.cos(2 * np.pi * i / self.N)] for i in range(self.N)]+[[d*i,0] for i in range(int(15/d)+1)])
-
+        self.route = None
         
     
 
@@ -181,6 +181,7 @@ class SkidpadControl():
             signo_d=np.sign(y[i+1]-y[i])*np.sign(self.pos[0]-x[i])
 
         d_min=np.min(dist)*signo_d
+        rospy.loginfo(d_min)
 
         corrected_yaw = (msg.yaw+np.pi)%(2*np.pi) - np.pi
         theta = np.arctan2(y[(i+5)%len(x)]-y[i],x[(i+5)%len(x)]-x[i])
@@ -222,13 +223,13 @@ class SkidpadControl():
         if self.si < 20-s11:
             self.k=0
         elif self.si < 20+s12:
-            self.k = -0.1096*((self.si-20+s11)/(s12+s11))
+            self.k = -(1/9.125)*((self.si-20+s11)/(s12+s11))
         elif self.si < 134.67-s21:
-            self.k = -0.1096
+            self.k = -(1/9.125)
         elif self.si < 134.67+s22:
-            self.k = 2*0.1096*(self.si-134.67-0.5*(s22-s21))/(s21+s22)
+            self.k = 2*(1/9.125)*(self.si-134.67-0.5*(s22-s21))/(s21+s22)
         elif self.si < 249.34-f:
-            self.k = 0.1096
+            self.k = (1/9.125)
         else:
             self.k = 0
         return self.k

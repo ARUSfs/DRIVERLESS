@@ -219,7 +219,7 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 	sensor_msgs::PointCloud2 new_map_msg;
 
 	pcl::toROSMsg(*allp_clustered, new_map_msg);
-	new_map_msg.header.frame_id = "map";
+	new_map_msg.header.frame_id = global_frame;
 	map_publisher.publish(new_map_msg);
 
 	callback_iteration++;
