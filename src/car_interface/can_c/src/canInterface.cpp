@@ -572,11 +572,12 @@ void CanInterface::DL501Callback(const ros::TimerEvent&)
 
 void CanInterface::DL502Callback(const ros::TimerEvent&)
 {
-    uint8_t b1 = (((this->AMI_state <<2) | this->EBS_state)<<3) | this->AS_state;
-    uint8_t b2 = ((((((this->cones_count_actual & 0x01)<<4)|this->lap_counter)<<2)|this->service_brake_state)<<1)|steering_state;
-    uint8_t b3 = (this->cones_count_all & 0x0001)|((this->cones_count_actual & 0xFE)>>1);
-    uint8_t b4 = (this->cones_count_all & 0x01FE)>>1;
-    uint8_t b5 = (this->cones_count_all & 0xFE00)>>9;
+    uint8_t data[5];
+    data[4] = (((this->AMI_state <<2) | this->EBS_state)<<3) | this->AS_state;
+    data[3] = ((((((this->cones_count_actual & 0x01)<<4)|this->lap_counter)<<2)|this->service_brake_state)<<1)|steering_state;
+    data[2] = (this->cones_count_all & 0x0001)|((this->cones_count_actual & 0xFE)>>1);
+    data[1] = (this->cones_count_all & 0x01FE)>>1;
+    data[0] = (this->cones_count_all & 0xFE00)>>9;
 
     uint8_t data[5] = {b5, b4, b3, b2, b1};
 
