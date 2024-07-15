@@ -579,8 +579,6 @@ void CanInterface::DL502Callback(const ros::TimerEvent&)
     data[1] = (this->cones_count_all & 0x01FE)>>1;
     data[0] = (this->cones_count_all & 0xFE00)>>9;
 
-    uint8_t data[5] = {b5, b4, b3, b2, b1};
-
     canWrite(hndW1, 0x502, data, 5, canMSG_STD);
 }
 
