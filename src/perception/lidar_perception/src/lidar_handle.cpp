@@ -28,6 +28,8 @@
 #include <pcl/point_cloud.h>
 #include "pointRT.h"
 #include <unordered_map>
+#include <unordered_set>
+
 using namespace std;
 
 #include "lidar_handle.hpp"
@@ -58,26 +60,182 @@ LidarHandle::LidarHandle()
     map_pub = nh.advertise<sensor_msgs::PointCloud2>(map_topic, 1000);
     filtered_cloud_pub = nh.advertise<sensor_msgs::PointCloud2>(filtered_cloud_topic, 1000);
 };
-
-void recostruccion(const pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud, const pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud_f, std::vector<pcl::PointXYZI> punto)
+/*
+void recostruccion(const pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud,
+                   const pcl::PointCloud<pcl::PointXYZI>::Ptr &ground,
+                   const std::vector<pcl::PointXYZI> &punto,
+                   std::vector<pcl::PointIndices> &chosen_clusters)
 {
     pcl::KdTreeFLANN<pcl::PointXYZI> kdtree;
-    kdtree.setInputCloud(cloud_f);
-    float search_radius = 0.25;
-    for (size_t idx = 0; idx < punto.size(); ++idx)
-    {
-        std::vector<int> point_indices;
-        std::vector<float> point_distances;
-        if (kdtree.radiusSearch(punto[idx], search_radius, point_indices, point_distances) > 0)
+    kdtree.setInputCloud(ground);
+    float search_radius = 0.15;
+    pcl::PointIndices::Ptr indices_to_remove(new pcl::PointIndices);
+
+    for (int i = chosen_clusters.size() - 1; i >= 0; --i)
+    { // Iterar de atrás hacia adelante para poder eliminar elementos
+        const auto &cluster = chosen_clusters[i];
+
+        // Create a temporary cloud for the current cluster
+        pcl::PointCloud<pcl::PointXYZI>::Ptr cluster_cloud(new pcl::PointCloud<pcl::PointXYZI>);
+        pcl::copyPointCloud(*cloud, cluster, *cluster_cloud);
+
+        // Retrieve the bounding box of the cluster
+        pcl::PointXYZI min_pt, max_pt;
+        pcl::getMinMax3D(*cluster_cloud, min_pt, max_pt);
+        float max_x = max_pt.x;
+        float min_x = min_pt.x;
+        float max_y = max_pt.y;
+        float min_y = min_pt.y;
+        float max_z = max_pt.z;
+        float min_z = min_pt.z;
+
+        if ((max_z - min_z) < 0.4 && (max_x - min_x) < 0.4 && (max_y - min_y) < 0.4)
         {
-            for (size_t i = 0; i < point_indices.size(); ++i)
+            for (const auto &p : punto)
             {
-                int point_index = point_indices[i];
-                cloud->emplace_back(cloud_f->points[point_index]);
+                std::vector<int> point_indices;
+                std::vector<float> point_distances;
+                if (kdtree.radiusSearch(p, search_radius, point_indices, point_distances) > 0)
+                {
+                    for (const auto &point_index : point_indices)
+                    {
+                        cloud->emplace_back(ground->points[point_index]);
+                    }
+                }
+            }
+        }
+
+        else
+        {
+            // Registrar índices para eliminación
+            indices_to_remove->indices.insert(indices_to_remove->indices.end(), cluster.indices.begin(), cluster.indices.end());
+            // Eliminar el cluster que no cumple las condiciones
+            chosen_clusters.erase(chosen_clusters.begin() + i);
+        }
+
+    }
+
+    // Crear un filtro para eliminar los puntos marcados
+    pcl::ExtractIndices<pcl::PointXYZI> extract;
+    extract.setInputCloud(cloud);
+    extract.setIndices(indices_to_remove);
+    extract.setNegative(true);
+    extract.filter(*cloud);
+
+}
+*/
+void recostruccion(const pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud,
+                   const pcl::PointCloud<pcl::PointXYZI>::Ptr &ground,
+                   const std::vector<pcl::PointXYZI> &punto,
+                   std::vector<pcl::PointIndices> &chosen_clusters)
+{
+    pcl::KdTreeFLANN<pcl::PointXYZI> kdtree;
+    kdtree.setInputCloud(ground);
+    float search_radius = 0.15;
+    pcl::PointIndices::Ptr indices_to_remove(new pcl::PointIndices);
+
+    for (int i = chosen_clusters.size() - 1; i >= 0; --i)
+    { // Iterar de atrás hacia adelante para poder eliminar elementos
+        const auto &cluster = chosen_clusters[i];
+
+        // Create a temporary cloud for the current cluster
+        pcl::PointCloud<pcl::PointXYZI>::Ptr cluster_cloud(new pcl::PointCloud<pcl::PointXYZI>);
+        pcl::copyPointCloud(*cloud, cluster, *cluster_cloud);
+
+        // Retrieve the bounding box of the cluster
+        pcl::PointXYZI min_pt, max_pt;
+        pcl::getMinMax3D(*cluster_cloud, min_pt, max_pt);
+        float max_x = max_pt.x;
+        float min_x = min_pt.x;
+        float max_y = max_pt.y;
+        float min_y = min_pt.y;
+        float max_z = max_pt.z;
+        float min_z = min_pt.z;
+
+        if ((max_z - min_z) < 0.4 && (max_x - min_x) < 0.4 && (max_y - min_y) < 0.4)
+        {
+            for (const auto &p : punto)
+            {
+                std::vector<int> point_indices;
+                std::vector<float> point_distances;
+                if (kdtree.radiusSearch(p, search_radius, point_indices, point_distances) > 0)
+                {
+                    for (const auto &point_index : point_indices)
+                    {
+                        cloud->emplace_back(ground->points[point_index]);
+                    }
+                }
+            }
+        }
+        
+        else
+            {
+                // Eliminar el cluster que no cumple las condiciones
+                chosen_clusters.erase(chosen_clusters.begin() + i);
+            }
+        
+    }
+}
+
+/*
+void reconstruccion2(const pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud,
+                     const pcl::PointCloud<pcl::PointXYZI>::Ptr &ground,
+                     std::vector<pcl::PointIndices> &chosen_clusters)
+{
+    // KD-Tree para realizar búsquedas por radio en la nube del suelo (cloud_f)
+    pcl::KdTreeFLANN<pcl::PointXYZI> kdtree;
+    kdtree.setInputCloud(ground);
+    float search_radius = 0.15;
+
+    // Vector para almacenar los nuevos clústeres
+    std::vector<pcl::PointIndices> new_clusters;
+
+    // Itera sobre cada clúster elegido
+    for (const auto &cluster : chosen_clusters)
+    {
+        pcl::PointCloud<pcl::PointXYZI>::Ptr cluster_cloud(new pcl::PointCloud<pcl::PointXYZI>);
+        pcl::copyPointCloud(*cloud, cluster, *cluster_cloud);
+
+        // Obtener el cuadro delimitador del clúster
+        pcl::PointXYZI min_pt, max_pt;
+        pcl::getMinMax3D(*cluster_cloud, min_pt, max_pt);
+        float max_x = max_pt.x;
+        float min_x = min_pt.x;
+        float max_y = max_pt.y;
+        float min_y = min_pt.y;
+        float max_z = max_pt.z;
+        float min_z = min_pt.z;
+
+        // Comprobar las dimensiones del clúster
+        if ((max_z - min_z) < 0.4 && (max_x - min_x) < 0.4 && (max_y - min_y) < 0.4)
+        {
+            // Calcular el punto medio del clúster
+            pcl::PointXYZI midpoint;
+            midpoint.x = (max_x + min_x) / 2.0;
+            midpoint.y = (max_y + min_y) / 2.0;
+            midpoint.z = (max_z + min_z) / 2.0;
+
+            std::vector<int> point_indices;
+            std::vector<float> point_distances;
+            if (kdtree.radiusSearch(midpoint, search_radius, point_indices, point_distances) > 0)
+            {
+                pcl::PointIndices new_cluster_indices;
+                for (size_t i = 0; i < point_indices.size(); ++i)
+                {
+                    int point_index = point_indices[i];
+                    // std::cout << point_index << endl;
+                    new_cluster_indices.indices.push_back(point_index);
+                }
+                // Añadir el nuevo clúster al vector de nuevos clústeres
+                new_clusters.push_back(new_cluster_indices);
             }
         }
     }
+
+    // Actualizar el vector de clústeres con los nuevos clústeres
+    chosen_clusters = new_clusters;
 }
+*/
 
 struct pair_hash
 {
@@ -216,13 +374,12 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg)
     {
         std::cout << "Plane is already aligned with the z-axis." << std::endl;
     }
-    
-    
+
     pcl::PointCloud<pcl::PointXYZI>::Ptr ground_cloud(new pcl::PointCloud<pcl::PointXYZI>);
     pcl::PointIndices::Ptr inliers(new pcl::PointIndices);
     pcl::PointIndices::Ptr outliers(new pcl::PointIndices);
 
-    filter_segments(cloud, inliers, outliers, 24, 0.06);
+    filter_segments(cloud, inliers, outliers, 16, 0.06);
 
     pcl::ExtractIndices<pcl::PointXYZI> extract;
     extract.setInputCloud(cloud);
@@ -265,25 +422,39 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg)
         cloud_f->points[i].x = rotationMatrix[0][0] * x + rotationMatrix[0][1] * y;
         cloud_f->points[i].y = rotationMatrix[1][0] * x + rotationMatrix[1][1] * y;
     }
-
+    /*
     // Creating the KdTree object for the search method of the extraction
+    pcl::search::KdTree<pcl::PointXYZI>::Ptr tree1(new pcl::search::KdTree<pcl::PointXYZI>);
+    tree1->setInputCloud(cloud_f);
+
+    std::vector<pcl::PointIndices> cluster_indices1;
+    pcl::EuclideanClusterExtraction<pcl::PointXYZI> ec1;
+    ec1.setClusterTolerance(0.4); // 2cm
+    ec1.setMinClusterSize(2);
+    ec1.setMaxClusterSize(200);
+    ec1.setSearchMethod(tree1);
+    ec1.setInputCloud(cloud_f);
+    ec1.extract(cluster_indices1);
+    */
     pcl::search::KdTree<pcl::PointXYZI>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZI>);
     tree->setInputCloud(cloud_f);
 
     std::vector<pcl::PointIndices> cluster_indices;
     pcl::EuclideanClusterExtraction<pcl::PointXYZI> ec;
     ec.setClusterTolerance(0.4); // 2cm
-    ec.setMinClusterSize(2);
+    ec.setMinClusterSize(4);
     ec.setMaxClusterSize(200);
     ec.setSearchMethod(tree);
     ec.setInputCloud(cloud_f);
     ec.extract(cluster_indices);
-
     //****OPTIONAL****
     std::vector<pcl::PointXYZI> puntos;
     obtenerPuntosDeClusters(puntos, cluster_indices, cloud_f);
+    // std::cout << "Antes: " << cluster_indices1.size() << endl;
+    recostruccion(cloud_f, ground_cloud, puntos, cluster_indices);
+    // std::cout << "Despues: " << cluster_indices1.size() << endl;
 
-    recostruccion(cloud_f, ground_cloud, puntos);
+
 
     int i = 0;
     // pcl::PointCloud<pcl::PointXYZI>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZI>);
@@ -306,13 +477,13 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg)
         float max_z = max_pt.z;
         float min_z = min_pt.z;
 
-        if ((max_z - min_z) > 0.1 && (max_z - min_z) < 0.4 && (max_x - min_x) < 0.4 && (max_y - min_y) < 0.4)
+        if ((max_z - min_z) > 0.1 && (max_x - min_x) < 0.4 && (max_y - min_y) < 0.4)
         {
-            // for (const auto& idx : cluster.indices) {
-            //     p = (*cloud)[idx];
-            //     p.intensity = i;
-            //     cloud_cluster->push_back(p);
-            // }
+            //  for (const auto& idx : cluster.indices) {
+            //      p = (*cloud)[idx];
+            //      p.intensity = i;
+            //      cloud_cluster->push_back(p);
+            //  }
             PointXYZColorScore cone;
             cone.x = (max_x + min_x) / 2;
             cone.y = (max_y + min_y) / 2;
@@ -321,7 +492,6 @@ void LidarHandle::callback(sensor_msgs::PointCloud2 msg)
             cone.score = 1;
             map_cloud->push_back(cone);
         }
-
         i++;
     }
     sensor_msgs::PointCloud2 msg2;
