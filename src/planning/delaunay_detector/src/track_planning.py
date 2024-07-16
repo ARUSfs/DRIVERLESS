@@ -14,12 +14,13 @@ from scipy.interpolate import BSpline
 
 from common_msgs.msg import Simplex, Triangulation
 from geometry_msgs.msg import Point
+import math
 
 
-MAX_DISTANCE = 8
-W_DISTANCE = 0.5
-W_ANGLE = 0.5
-W_THRESH = 7
+MAX_DISTANCE = rospy.get_param('/delaunay_detector/MAX_DISTANCE')
+W_DISTANCE = rospy.get_param('/delaunay_detector/W_DISTANCE')
+W_ANGLE = rospy.get_param('/delaunay_detector/W_ANGLE')
+W_THRESH = rospy.get_param('/delaunay_detector/W_THRESH')
 
 
 class TrackPlanningSystem():
@@ -84,7 +85,7 @@ class TrackPlanningSystem():
             vectors[non_used_midpoints] = midpoints[non_used_midpoints] - last_element
             distances[non_used_midpoints] = np.linalg.norm(vectors[non_used_midpoints], axis=1)
             angles[non_used_midpoints] = np.abs(np.arctan2(vectors[non_used_midpoints, 1], vectors[non_used_midpoints, 0])-last_angle)
-
+            angles = np.minimum(angles,np.abs(angles-2*math.pi))
 
             weights = W_DISTANCE*distances + W_ANGLE*angles
 
