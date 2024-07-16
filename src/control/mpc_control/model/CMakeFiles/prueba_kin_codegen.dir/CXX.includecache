@@ -6,10 +6,6 @@
 
 #IncludeRegexTransform: 
 
-/home/alvaro/Videos/mpc_ws/src/DRIVERLESS/src/control/rpg_mpc/model/prueba_kin.cpp
-acado_code_generation.hpp
--
-
 /home/alvaro/workspaces/ACADOtoolkit/acado/acado_code_generation.hpp
 acado/code_generation/code_generation.hpp
 -
@@ -1635,4 +1631,8 @@ Eigen/src/Core/util/MKL_support.h
 /home/alvaro/workspaces/ACADOtoolkit/external_packages/eigen3/Eigen/src/plugins/MatrixCwiseBinaryOps.h
 
 /home/alvaro/workspaces/ACADOtoolkit/external_packages/eigen3/Eigen/src/plugins/MatrixCwiseUnaryOps.h
+
+/home/alvaro/workspaces/arus_ws/src/DRIVERLESS/src/control/mpc_control/model/prueba_kin.cpp
+acado_code_generation.hpp
+-
 

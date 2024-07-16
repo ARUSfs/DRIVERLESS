@@ -6,5 +6,5 @@ CXX_FLAGS =  -std=c++0x
 
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/home/alvaro/Videos/mpc_ws/src/DRIVERLESS/src/control/rpg_mpc/model/. -I/home/alvaro/workspaces/ACADOtoolkit -I/home/alvaro/workspaces/ACADOtoolkit/acado -I/home/alvaro/workspaces/ACADOtoolkit/external_packages -I/home/alvaro/workspaces/ACADOtoolkit/external_packages/qpOASES-3.2.0/include 
+CXX_INCLUDES = -I/home/alvaro/workspaces/arus_ws/src/DRIVERLESS/src/control/mpc_control/model/. -I/home/alvaro/workspaces/ACADOtoolkit -I/home/alvaro/workspaces/ACADOtoolkit/acado -I/home/alvaro/workspaces/ACADOtoolkit/external_packages -I/home/alvaro/workspaces/ACADOtoolkit/external_packages/qpOASES-3.2.0/include 
 

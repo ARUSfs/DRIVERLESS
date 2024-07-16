@@ -48,7 +48,7 @@ class PlanningHandle():
         self.pub_global_route = rospy.Publisher('/delaunay/global_route', Trajectory, queue_size=1)
 
         rospy.Subscriber('/car_state/state', CarState, self.accum_path, queue_size=1)
-        self.colored_map_pub = rospy.Publisher(topic_global_map, PointCloud2, queue_size=1)
+        self.colored_map_pub = rospy.Publisher("/global_colored_map", PointCloud2, queue_size=1)
 
     def get_trajectory(self, msg):
         cones = point_cloud2.read_points(msg, field_names=("x", "y", "z","color","score"),skip_nans=True)
