@@ -43,7 +43,7 @@
   </node>
 
  
-
+<!-- 
   <node pkg="pure_pursuit" name="pure_pursuit" type="main" output="screen">
   <rosparam command="load" file="$(find pure_pursuit)/config/pure_pursuit.yaml"/>
     <rosparam>
@@ -51,7 +51,7 @@
       TARGET_SPEED: 6
       global_mode: false
     </rosparam>
-  </node>
+  </node> -->
 
   <node pkg="ekf_slam" name="ekf_slam" type="main.py" output="screen">
   </node> 
