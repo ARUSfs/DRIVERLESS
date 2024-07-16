@@ -37,15 +37,10 @@ class EKF_SLAM:
     def perception_handle(self, msg: PointCloud2):
         self.prediction_update()
 
-        
         map = point_cloud2.read_points(msg, field_names=("x", "y", "z","color","score"),skip_nans=True)
-        for c in map:
-            dist = np.sqrt((self.mu[0]+c[0])**2 + (self.mu[1]+c[1])**2)
-            phi = self.mu[2] + np.arctan2(c[1],c[0])
-            self.single_measurement_update(np.array([dist,phi]))
         
-
-        # self.measurement_update()
+        self.measurement_update(map)
+    
 
 
     def prediction_update(self):
@@ -75,13 +70,17 @@ class EKF_SLAM:
 
     
 
-    def single_measurement_update(self,landmark):
-            dist = landmark[0]
-            phi = landmark[1]
-
-            x = self.mu[0]
-            y = self.mu[1]
-            yaw = self.mu[2]
+    def measurement_update(self,map):
+        x = self.mu[0]
+        y = self.mu[1]
+        yaw = self.mu[2] 
+        delta_zs = [np.zeros((2,1)) for _ in range(self.n_landmarks)] # A list of how far an actual measurement is from the estimate measurement
+        Ks = [np.zeros((self.mu.shape[0],2)) for _ in range(self.n_landmarks)] # A list of matrices stored for use outside the measurement for loop
+        Hs = [np.zeros((2,self.mu.shape[0])) for _ in range(self.n_landmarks)] # A list of matrices stored for use outside the measurement for loop
+    
+        for c in map:
+            dist = np.sqrt((self.mu[0]+c[0])**2 + (self.mu[1]+c[1])**2)
+            phi = self.mu[2] + np.arctan2(c[1],c[0])
 
             mu_landmark = np.array([x + dist*np.cos(phi+yaw),
                                     y+ dist*np.sin(phi+yaw)]) 
@@ -89,39 +88,56 @@ class EKF_SLAM:
             d_min = np.Infinity
             index = None
             for i in range(self.n_landmarks):
-                d = np.linalg.norm(self.mu[i+3:i+4]-mu_landmark)
+                d = np.linalg.norm(self.mu[i+3:i+5]-mu_landmark)
                 if d < d_min:
                     d_min = d
                     index = i
                     
             if d_min < self.threshold:
-                pass 
+                mu_landmark = self.mu[index+3:index+5]
             else:
+                index = -1
                 self.mu = np.vstack((self.mu, mu_landmark))
                 self.Fx = np.pad(self.Fx, ((0, 0), (0, 2)), 'constant', constant_values=0)
                 self.sigma = np.pad(self.sigma, ((0, 2), (0, 2)), 'constant', constant_values=0)
                 self.sigma[-2,-2] = 0.001
                 self.sigma[-1,-1] = 0.001
                 self.n_landmarks+=1
-                
+
+                delta_zs.append(np.zeros((2,1)))
+                Ks.append(np.zeros((self.mu.shape[0],2)))
+                Hs.append(np.zeros((2,self.mu.shape[0])))
             
-            # delta  = mu_landmark - np.array([[x],[y]]) # Helper variable
-            # q = np.linalg.norm(delta)**2 # Helper variable
+            
+            delta  = mu_landmark - np.array([[x],[y]]) # Helper variable
+            q = np.linalg.norm(delta)**2 # Helper variable
 
-            # dist_est = np.sqrt(q) # Distance between robot estimate and and landmark estimate, i.e., distance estimate
-            # phi_est = np.arctan2(delta[1,0],delta[0,0])-theta; phi_est = np.arctan2(np.sin(phi_est),np.cos(phi_est)) # Estimated angled between robot heading and landmark
-            # z_est_arr = np.array([[dist_est],[phi_est]]) # Estimated observation, in numpy array
-            # z_act_arr = np.array([[dist],[phi]]) # Actual observation in numpy array
-            # delta_zs[lidx] = z_act_arr-z_est_arr # Difference between actual and estimated observation
+            dist_est = np.sqrt(q) # Distance between robot estimate and and landmark estimate, i.e., distance estimate
+            phi_est = np.arctan2(delta[1,0],delta[0,0])-yaw
+            phi_est = np.arctan2(np.sin(phi_est),np.cos(phi_est)) # Estimated angled between robot heading and landmark
+            
+            z_est_arr = np.array([[dist_est],[phi_est]]) # Estimated observation, in numpy array
+            z_act_arr = np.array([[dist],[phi]]) # Actual observation in numpy array
+            delta_zs[index] = z_act_arr-z_est_arr # Difference between actual and estimated observation
 
-            # # Helper matrices in computing the measurement update
-            # Fxj = np.block([[Fx],[np.zeros((2,Fx.shape[1]))]])
-            # Fxj[n_state:n_state+2,n_state+2*lidx:n_state+2*lidx+2] = np.eye(2)
-            # H = np.array([[-delta[0,0]/np.sqrt(q),-delta[1,0]/np.sqrt(q),0,delta[0,0]/np.sqrt(q),delta[1,0]/np.sqrt(q)],\
-            #             [delta[1,0]/q,-delta[0,0]/q,-1,-delta[1,0]/q,+delta[0,0]/q]])
-            # H = H.dot(Fxj)
-            # Hs[lidx] = H # Added to list of matrices
-            # Ks[lidx] = sigma.dot(np.transpose(H)).dot(np.linalg.inv(H.dot(sigma).dot(np.transpose(H)) + Q)) # Add to list of matrices
-
+            # Helper matrices in computing the measurement update
+            Fxj = np.block([[self.Fx],[np.zeros((2,self.Fx.shape[1]))]])
+            Fxj[3:5,3+2*index:3+2*index+2] = np.eye(2)
+            H = np.array([[-delta[0,0]/np.sqrt(q),-delta[1,0]/np.sqrt(q),0,delta[0,0]/np.sqrt(q),delta[1,0]/np.sqrt(q)],\
+                        [delta[1,0]/q,-delta[0,0]/q,-1,-delta[1,0]/q,+delta[0,0]/q]])
+            H = H @ Fxj
+            Hs[index] = H # Added to list of matrices
+            Ks[index] = self.sigma @ H.T @ np.linalg.inv(H @ self.sigma @ H.T + self.Q) # Add to list of matrices
+        
+        # After storing appropriate matrices, perform measurement update of mu and sigma
+        mu_offset = np.zeros(self.mu.shape) # Offset to be added to state estimate
+        sigma_factor = np.eye(self.sigma.shape[0]) # Factor to multiply state uncertainty
+        for index in range(self.n_landmarks):
+            mu_offset += Ks[index]@delta_zs[index] # Compute full mu offset
+            sigma_factor -= Ks[index]@Hs[index] # Compute full sigma factor
+            
+        self.mu = self.mu + mu_offset # Update state estimate
+        self.sigma = sigma_factor @ self.sigma # Update state uncertainty
+       
 
 
