@@ -5,6 +5,10 @@ topic_route: 'route'
 topic_simplices: '/delaunay_detector/simplices'
 send_simplices_marker: true
 
+global_frame: 'map'
+car_frame: 'body'
+slam: 'none'
+
 # Hiperparameters of delaunay detector
 MAX_DISTANCE: 8
 W_DISTANCE: 1
