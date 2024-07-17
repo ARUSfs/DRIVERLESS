@@ -201,7 +201,7 @@ class SkidpadControl():
             braking_msg = Bool()
             braking_msg.data = True
             self.braking_publisher.publish(braking_msg)
-            return self.steer
+            
 
         self.si = self.i*d
         self.k = self.kk()
