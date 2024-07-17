@@ -7,7 +7,7 @@
   <node pkg="delaunay_detector" name="delaunay_detector" type="main.py" output="screen">
     <rosparam command="load" file="$(find delaunay_detector)/config/delaunay.yaml"/>
     <rosparam>
-      topic_perception_map: '/perception_map'
+      topic_perception_map: '/mapa_icp'
       slam: 'marrano'
       color_enabled: false
     </rosparam>
