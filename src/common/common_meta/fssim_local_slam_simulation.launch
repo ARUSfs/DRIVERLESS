@@ -2,6 +2,10 @@
 
   <node pkg="slam_marrano" name="slam_marrano" type="main" output="screen">
   <rosparam command="load" file="$(find slam_marrano)/config/slam_marrano.yaml"/>
+  <rosparam>
+    restart_map: true
+    restart_iterations: 100
+  </rosparam>
   </node>
 
   <node pkg="delaunay_detector" name="delaunay_detector" type="main.py" output="screen">
@@ -26,7 +30,7 @@
   <node name="interface" pkg="visualization" type="main_interface.py">
 	  <rosparam command="load" file="$(find visualization)/config/interface.yaml"/>
     <rosparam>
-      frame: 'map'
+      frame: 'fssim/vehicle/cog'
     </rosparam>
 	</node>
 

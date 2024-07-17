@@ -25,6 +25,8 @@ ICP_handle::ICP_handle(){
 
 	nh.getParam("/slam_marrano/global_frame", global_frame);
 	nh.getParam("/slam_marrano/car_frame", car_frame);
+	nh.getParam("/slam_marrano/restart_map", restart_map);
+	nh.getParam("/slam_marrano/restart_iterations", restart_iterations);
 
 	prev_t = ros::Time::now();	
 	lap_time = ros::Time::now();
@@ -214,7 +216,11 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 
 		*previous_map = *clustered_points;
 	}
-	
+
+	if(restart_map && callback_iteration>restart_iterations){
+		has_map = false;
+		callback_iteration = 0;
+	}
 
 	sensor_msgs::PointCloud2 new_map_msg;
 

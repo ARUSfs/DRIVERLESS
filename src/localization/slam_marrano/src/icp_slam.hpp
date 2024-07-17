@@ -38,6 +38,9 @@ class ICP_handle {
 		std::string global_frame;
 		std::string car_frame;
 
+		bool restart_map;
+		int restart_iterations;
+
 		tf2_ros::TransformBroadcaster br;
 
 		pcl::PointCloud<PointXYZColorScore>::Ptr previous_map;

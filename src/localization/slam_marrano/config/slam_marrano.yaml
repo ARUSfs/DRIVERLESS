@@ -1,2 +1,5 @@
 global_frame: "map"
 car_frame: "body"
+
+restart_map: false
+restart_iterations: 100
