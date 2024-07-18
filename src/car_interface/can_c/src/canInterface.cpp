@@ -4,7 +4,7 @@
 #include <ros/ros.h>
 #include <std_msgs/Int16.h>
 #include <std_msgs/Float32.h>
-#include <std_msgs/Int32MultiArray.h>
+#include <std_msgs/Float32MultiArray.h>
 #include <math.h>
 #include<iostream>
 #include <cstdint>
@@ -36,7 +36,7 @@ CanInterface::CanInterface()
      // Subscribers
     controlsSub = nh.subscribe<common_msgs::Controls>("/controls", 100, &CanInterface::controlsCallback, this);    
     ASStatusSub = nh.subscribe<std_msgs::Int16>("can/AS_status", 100, &CanInterface::ASStatusCallback, this);
-    steeringInfoSub = nh.subscribe<std_msgs::Int32MultiArray>("/steering/epos_info", 100, &CanInterface::steeringInfoCallback, this);
+    steeringInfoSub = nh.subscribe<std_msgs::Float32MultiArray>("/steering/epos_info", 100, &CanInterface::steeringInfoCallback, this);
     lapCounterSub = nh.subscribe<std_msgs::Int16>("/lap_counter", 100, &CanInterface::lapCounterCallback, this);
     conesCountSub = nh.subscribe<sensor_msgs::PointCloud2>("/perception_map", 100, &CanInterface::conesCountCallback, this);
     conesCountAllSub = nh.subscribe<sensor_msgs::PointCloud2>("/mapa_icp", 100, &CanInterface::conesCountAllCallback, this);
@@ -479,7 +479,7 @@ void CanInterface::ASStatusCallback(std_msgs::Int16 msg)
     }
 }
 
-void CanInterface::steeringInfoCallback(std_msgs::Int32MultiArray msg)
+void CanInterface::steeringInfoCallback(std_msgs::Float32MultiArray msg)
 {
     int8_t pMovementState = msg.data[0];
     this->steering_state = pMovementState;

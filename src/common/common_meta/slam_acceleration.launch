@@ -7,6 +7,10 @@
     <rosparam command="load" file="$(find steering)/config/steering.yaml"/>
   </node>
 
+  <node pkg="lidar_perception" name="lidar_perception" type="main">
+    <rosparam command="load" file="$(find lidar_perception)/config/lidar_cpp.yaml"/>
+  </node>
+
   <node name="can_c" pkg="can_c" type="main" output="screen">
   </node>
 

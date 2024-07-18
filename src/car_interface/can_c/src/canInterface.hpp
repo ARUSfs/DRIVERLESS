@@ -4,7 +4,7 @@
 #include <ros/ros.h>
 #include <thread>
 #include <std_msgs/Int16.h>
-#include <std_msgs/Int32MultiArray.h>
+#include <std_msgs/Float32MultiArray.h>
 #include <sensor_msgs/Imu.h>
 #include "sensor_msgs/PointCloud2.h"
 #include <common_msgs/Controls.h>
@@ -22,7 +22,7 @@ private :
 
     void pubHeartBeat(const ros::TimerEvent&);
     void controlsCallback(common_msgs::Controls);
-    void steeringInfoCallback(std_msgs::Int32MultiArray);
+    void steeringInfoCallback(std_msgs::Float32MultiArray);
     void ASStatusCallback(std_msgs::Int16);
     void lapCounterCallback(std_msgs::Int16);
     void conesCountCallback(sensor_msgs::PointCloud2);

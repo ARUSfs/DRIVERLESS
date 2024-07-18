@@ -54,6 +54,7 @@ class AccelControl():
         self.prev_t = time.time()
         self.prev_err = 0
         self.integral = 0
+        self.r = 0
 
         ### Publicadores y suscriptores ###
         self.cmd_publisher = rospy.Publisher('/controls_pp', Controls, queue_size=1) 
