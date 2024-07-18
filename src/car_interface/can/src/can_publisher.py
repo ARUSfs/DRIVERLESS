@@ -46,6 +46,10 @@ class CanPublisher:
             rospy.logwarn("AS FINISHED")
             m = can.Message(arbitration_id=0x202, is_extended_id=False, data=[0x01,0x01,0x03])
             self.bus0.send(m)
+        elif msg.data==4:
+            rospy.logwarn("AS EMERGENCY")
+            m = can.Message(arbitration_id=0x202, is_extended_id=False, data=[0x01,0x01,0x04])
+            self.bus0.send(m)
 
     
     def publish_temp(self, event):

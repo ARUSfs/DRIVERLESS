@@ -2,6 +2,7 @@ KP: 43.87
 KI: 1.29
 KD: 0.0
 target: 10
+reach_target_time: 6.0
 track_length: 75
 
 lqr_dist: 1.0

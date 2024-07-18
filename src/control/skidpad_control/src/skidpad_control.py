@@ -133,7 +133,6 @@ class SkidpadControl():
 
                 marker = Marker()
                 marker.header.frame_id = "fssim/vehicle/cog"
-                marker.header.stamp = rospy.Time().now()
                 marker.id = 102
                 marker.type = Marker.LINE_STRIP
                 marker.action = Marker.ADD

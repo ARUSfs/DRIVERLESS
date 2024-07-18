@@ -25,6 +25,7 @@ KI = rospy.get_param('/accel_control/KI')
 KD = rospy.get_param('/accel_control/KD')
 TARGET = rospy.get_param('/accel_control/target')
 TRACK_LENGTH = rospy.get_param('/accel_control/track_length')
+REACH_TARGET_TIME = rospy.get_param('/accel_control/reach_target_time')
 perception_topic = rospy.get_param('/accel_control/perception_topic')
 
 
@@ -47,11 +48,17 @@ class EBSTestControl():
         ### Publicadores y suscriptores ###
         self.cmd_publisher = rospy.Publisher('/controls_pp', Controls, queue_size=1) 
         self.braking_publisher = rospy.Publisher('/braking', Bool, queue_size=10)
+        self.pub_AS_status = rospy.Publisher('can/AS_status', Int16, queue_size=10)
         rospy.Subscriber('/car_state/state', CarState, self.update_state, queue_size=1)
 
 
     def update_state(self, msg: CarState):
+        self.update_route(msg)
         self.speed = math.hypot(msg.vx,msg.vy)
+        if self.speed > TARGET:
+            emergency_msg = Int16()
+            emergency_msg.data = 4
+            self.pub_AS_status.publish(emergency_msg)
 
         if self.start_time == 0 and self.speed > 0.1:
             self.start_time = time.time()
@@ -78,7 +85,7 @@ class EBSTestControl():
 
 
     def get_acc(self):
-        error = TARGET - self.speed
+        error = self.get_target() - self.speed
 
         dt=time.time()-self.prev_t
         self.integral += error*dt
@@ -98,3 +105,6 @@ class EBSTestControl():
         controls.accelerator = self.acc
         self.cmd_publisher.publish(controls)
 
+    def get_target(self):
+        t = time.time()-self.start_time
+        return min(t/REACH_TARGET_TIME,1)*TARGET
