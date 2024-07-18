@@ -11,7 +11,7 @@
     <rosparam command="load" file="$(find lidar_perception)/config/lidar_cpp.yaml"/>
   </node>
 
-  <node name="can_c" pkg="can_c" type="main" output="screen">
+  <node name="can" pkg="can" type="main.py" output="screen">
   </node>
 
   <node pkg="car_state" name="car_state" type="main.py">
@@ -49,10 +49,10 @@
       target: 10
       track_length: 75
 
-      lqr_dist: 1.0
-      lqr_yaw: 25.0
+      lqr_dist: 5.0
+      lqr_yaw: 40.0
       lqr_beta: 0.0
-      lqr_r: 3.0
+      lqr_r: 0.0
     </rosparam>
   </node>
 

@@ -90,8 +90,8 @@ class CanReader:
                 sub_id = int(message.data[0])
                 if sub_id == 0x00:
                     self.parse_dashboard_HB(message)
-                elif sub_id == 0x01:
-                    self.parse_mission(message)
+                # elif sub_id == 0x01:
+                #     self.parse_mission(message)
                 
             elif message.arbitration_id == 0x205:
                 sub_id = int(message.data[0])
