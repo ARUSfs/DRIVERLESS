@@ -232,10 +232,10 @@ class SkidpadControl():
         s21=6
         s22=4
         f=2
-        if self.si < 20-s11:
+        if self.si < 19-s11:
             self.k=0
-        elif self.si < 20+s12:
-            self.k = -(1/9.125)*((self.si-20+s11)/(s12+s11))
+        elif self.si < 19+s12:
+            self.k = -(1/9.125)*((self.si-19+s11)/(s12+s11))
         elif self.si < 134.67-s21:
             self.k = -(1/9.125)
         elif self.si < 134.67+s22:

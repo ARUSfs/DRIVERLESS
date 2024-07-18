@@ -41,8 +41,8 @@
       KD : 0.0
       KI : 1.29
 
-      k_mu: 8
-      k_phi: 10
+      k_mu: 5
+      k_phi: 12
       k_r: 0
       delta_correction: 1
     </rosparam>
