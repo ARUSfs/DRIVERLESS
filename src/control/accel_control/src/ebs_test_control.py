@@ -20,18 +20,26 @@ from sensor_msgs.msg import PointCloud2
 from std_msgs.msg import Float32,Bool,Int16
 from geometry_msgs.msg import Point
 
+from accel_localization import AccelLocalization
+
 KP = rospy.get_param('/accel_control/KP')
 KI = rospy.get_param('/accel_control/KI')
 KD = rospy.get_param('/accel_control/KD')
 TARGET = rospy.get_param('/accel_control/target')
 TRACK_LENGTH = rospy.get_param('/accel_control/track_length')
 REACH_TARGET_TIME = rospy.get_param('/accel_control/reach_target_time')
+LQR_PARAMS = np.array([rospy.get_param('/accel_control/lqr_dist'),
+                       rospy.get_param('/accel_control/lqr_yaw'),
+                       rospy.get_param('/accel_control/lqr_beta'),
+                       rospy.get_param('/accel_control/lqr_r')],np.float64) 
 perception_topic = rospy.get_param('/accel_control/perception_topic')
 
 
 class EBSTestControl():
 
     def __init__(self):
+        
+        self.accel_localizator = AccelLocalization()
         
         ### Inicializaciones ###
         self.start_time = 0
@@ -50,6 +58,8 @@ class EBSTestControl():
         self.cmd_publisher = rospy.Publisher('/controls_pp', Controls, queue_size=1) 
         self.braking_publisher = rospy.Publisher('/braking', Bool, queue_size=10)
         self.pub_AS_status = rospy.Publisher('can/AS_status', Int16, queue_size=10)
+        self.recta_publisher = rospy.Publisher("/accel_control/recta", Point, queue_size=10)
+        #rospy.Subscriber(perception_topic, PointCloud2, self.update_route, queue_size=10)
         rospy.Subscriber('/car_state/state', CarState, self.update_state, queue_size=1)
 
 
@@ -116,3 +126,32 @@ class EBSTestControl():
     def get_target(self):
         t = time.time()-self.start_time
         return min(t/REACH_TARGET_TIME,1)*TARGET
+    
+
+    def update_route(self, msg: PointCloud2):
+        try:
+            a,b = self.accel_localizator.get_route(msg)
+            if abs(a) < 0.5 and abs(b) < 2:
+                self.a_media = self.a_media*0.7 + a*0.3
+                self.b_media = self.b_media*0.7 + b*0.3
+            else:
+                a,b = self.a_media, self.b_media
+        except Exception as e:
+            a,b = self.a_media, self.b_media
+            rospy.logwarn(e)
+
+        self.steer = self.get_steer(a, b)
+        msg = Point()
+        msg.x = a
+        msg.y = b
+        self.recta_publisher.publish(msg)
+
+    def get_steer(self, a, b):
+        dist = -b/np.sqrt(a**2 + 1)   # Distancia del coche a la trayectoria
+        yaw = - math.atan(a)               # Ángulo entre la trayectoria y el coche
+        beta = 0
+
+        w = np.array([dist, yaw, beta, self.r], np.float64) 
+        steer = -np.dot(LQR_PARAMS, w)         # u = -K*w
+
+        return max(min(steer, 19.9),-19.9)

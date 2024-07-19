@@ -1,10 +1,26 @@
 <launch>
 
-  <node name="steering" pkg="steering" type="main.py" output="screen">
+  <!-- <node name="steering" pkg="steering" type="main.py" output="screen">
     <rosparam command="load" file="$(find steering)/config/steering.yaml"/>
   </node>
 
-  <node name="can_c" pkg="can_c" type="main" output="screen">
+  <node pkg="rslidar_sdk" name="rslidar_sdk_node" type="rslidar_sdk_node" output="screen">
+    <param name="config_path" value=""/>
+	</node>
+
+  <node pkg="lidar_perception" name="lidar_perception" type="main" output="screen">
+    <rosparam command="load" file="$(find lidar_perception)/config/lidar_cpp.yaml"/>
+  </node>
+
+  <node pkg="slam_marrano" name="slam_marrano" type="main">
+  <rosparam command="load" file="$(find slam_marrano)/config/slam_marrano.yaml"/>
+  <rosparam>
+    global_frame: "map"
+    car_frame: "body"
+  </rosparam>
+  </node> -->
+
+  <node name="can" pkg="can" type="main.py" output="screen">
   </node>
 
   <node pkg="car_state" name="car_state" type="main.py">
@@ -25,6 +41,16 @@
    <node name="accel_control" pkg="accel_control" type="main_ebs.py"  output="screen">
    <rosparam command="load" file="$(find accel_control)/config/accel_control.yaml"/>
     <rosparam>
+      perception_topic: "/mapa_icp"
+      global_frame: "map"
+      car_frame: "body"
+      slam: "marrano"
+
+      lqr_dist: 5.0
+      lqr_yaw: 40.0
+      lqr_beta: 0.0
+      lqr_r: 0.0
+
       KP: 43.87
       KD : 0.0
       KI : 1.29
