@@ -14,6 +14,8 @@ global_frame = rospy.get_param('/car_state/global_frame')
 car_frame = rospy.get_param('/car_state/car_frame')
 get_base_pose_position = rospy.get_param('/car_state/get_base_pose_position')
 SLAM = rospy.get_param('/car_state/SLAM')
+V_ESTIMATION = rospy.get_param('/car_state/V_ESTIMATION')
+N_KMEANS = rospy.get_param('/car_state/N_KMEANS')
 
 class StateClass:
 
@@ -81,7 +83,12 @@ class StateClass:
         return roll, pitch, yaw
 
     def motorspeed_callback(self, msg):
-        self.vx = msg.data
+        if V_ESTIMATION == 'N_MEANS':
+            self.vx = msg.data*(1/N_KMEANS) + self.vx*(1-1/N_KMEANS)
+        elif V_ESTIMATION == 'KALMANN_FILTER':
+            self.vx = self.getKalmanEstimation(msg.data)
+        else:
+            self.vx = msg.data
     
     def base_pose_callback(self,msg: State):
         self.vx = msg.vx
@@ -134,4 +141,7 @@ class StateClass:
         state.pitch = self.pitch
         state.yaw = self.yaw
         self.pub_state.publish(state)
+
+    def getKalmanEstimation(self, speed):
+        pass
 

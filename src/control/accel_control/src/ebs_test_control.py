@@ -70,7 +70,7 @@ class EBSTestControl():
         if self.ebs_opened:
             emergency_msg = Int16()
             emergency_msg.data = 4
-            #self.pub_AS_status.publish(emergency_msg)
+            self.pub_AS_status.publish(emergency_msg)
             
             return
 
@@ -79,7 +79,7 @@ class EBSTestControl():
         if self.speed > 0.95*TARGET:
             emergency_msg = Int16()
             emergency_msg.data = 4
-            #self.pub_AS_status.publish(emergency_msg)
+            self.pub_AS_status.publish(emergency_msg)
             self.ebs_opened=True
             self.acc = 0
             self.publish_cmd()
@@ -120,6 +120,7 @@ class EBSTestControl():
 
         cmd = KP*error + KI*self.integral + KD*derivative
 
+        # escalate to max torque
         return max(min(cmd/230, 1),-1)
 
 
