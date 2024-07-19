@@ -289,13 +289,13 @@ void CanInterface::readCan0()
     }else{
         printf("can0 enabled for reading \n");
     }
-    //Set the channel parameters
-    stat = canAccept(hndR0, 0xFFF, canFILTER_SET_MASK_STD);
-    CanInterface::check_can(stat);
-    stat = canAccept(hndR0, 0x181, canFILTER_SET_CODE_STD);
-    CanInterface::check_can(stat);
-    stat = canAccept(hndR0, 0x18B, canFILTER_SET_CODE_STD);
-    CanInterface::check_can(stat);
+    // //Set the channel parameters
+    // stat = canAccept(hndR0, 0xFFF, canFILTER_SET_MASK_STD);
+    // CanInterface::check_can(stat);
+    // stat = canAccept(hndR0, 0x181, canFILTER_SET_CODE_STD);
+    // CanInterface::check_can(stat);
+    // stat = canAccept(hndR0, 0x18B, canFILTER_SET_CODE_STD);
+    // CanInterface::check_can(stat);
 
     stat = canBusOn(hndR0);
     CanInterface::check_can(stat);
@@ -372,20 +372,20 @@ void CanInterface::readCan1()
         printf("can1 enabled for reading \n");
     }
 
-    //Set the channel parameters
-    stat = canAccept(hndR1, 0xFFF, canFILTER_SET_MASK_STD);
-    CanInterface::check_can(stat);
+    // //Set the channel parameters
+    // stat = canAccept(hndR1, 0xFFF, canFILTER_SET_MASK_STD);
+    // CanInterface::check_can(stat);
 
-    setFilter(hndR1, 0x182);
-    setFilter(hndR1, 0x380);
-    setFilter(hndR1, 0x394);
-    setFilter(hndR1, 0x392);
-    setFilter(hndR1, 0x384);
-    setFilter(hndR1, 0x382);
-    setFilter(hndR1, 0x185);
-    setFilter(hndR1, 0x205);
-    setFilter(hndR1, 0x334);
-    setFilter(hndR1, 0x187);
+    // setFilter(hndR1, 0x182);
+    // setFilter(hndR1, 0x380);
+    // setFilter(hndR1, 0x394);
+    // setFilter(hndR1, 0x392);
+    // setFilter(hndR1, 0x384);
+    // setFilter(hndR1, 0x382);
+    // setFilter(hndR1, 0x185);
+    // setFilter(hndR1, 0x205);
+    // setFilter(hndR1, 0x334);
+    // setFilter(hndR1, 0x187);
 
     stat = canBusOn(hndR1);
     //Read
