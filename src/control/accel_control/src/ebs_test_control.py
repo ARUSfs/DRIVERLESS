@@ -42,16 +42,19 @@ class EBSTestControl():
         self.accel_localizator = AccelLocalization()
         
         ### Inicializaciones ###
-        self.start_time = 0
+        self.start_time = time.time()
         self.steer = 0
         self.acc = 0
         self.speed = 0
         self.avg_speed = 0.0001
         self.i = 0
         self.braking = False
+        self.a_media = 0
+        self.b_media = 0
         self.integral = 0
         self.prev_t = time.time()
         self.prev_err = 0
+        self.r = 0
         self.ebs_opened = False
 
         ### Publicadores y suscriptores ###
@@ -66,11 +69,10 @@ class EBSTestControl():
     def update_state(self, msg: CarState):
         if self.ebs_opened:
             return
-        
-        self.update_route(msg)
+
         self.speed = math.hypot(msg.vx,msg.vy)
         
-        if self.speed > TARGET:
+        if self.speed > 0.95*TARGET:
             emergency_msg = Int16()
             emergency_msg.data = 4
             self.pub_AS_status.publish(emergency_msg)
@@ -125,33 +127,33 @@ class EBSTestControl():
 
     def get_target(self):
         t = time.time()-self.start_time
-        return min(t/REACH_TARGET_TIME,1)*TARGET
+        return max(1,min(t/REACH_TARGET_TIME,1)*TARGET)
     
 
-    def update_route(self, msg: PointCloud2):
-        try:
-            a,b = self.accel_localizator.get_route(msg)
-            if abs(a) < 0.5 and abs(b) < 2:
-                self.a_media = self.a_media*0.7 + a*0.3
-                self.b_media = self.b_media*0.7 + b*0.3
-            else:
-                a,b = self.a_media, self.b_media
-        except Exception as e:
-            a,b = self.a_media, self.b_media
-            rospy.logwarn(e)
+    # def update_route(self, msg: PointCloud2):
+    #     try:
+    #         a,b = self.accel_localizator.get_route(msg)
+    #         if abs(a) < 0.5 and abs(b) < 2:
+    #             self.a_media = self.a_media*0.7 + a*0.3
+    #             self.b_media = self.b_media*0.7 + b*0.3
+    #         else:
+    #             a,b = self.a_media, self.b_media
+    #     except Exception as e:
+    #         a,b = self.a_media, self.b_media
+    #         rospy.logwarn(e)
 
-        self.steer = self.get_steer(a, b)
-        msg = Point()
-        msg.x = a
-        msg.y = b
-        self.recta_publisher.publish(msg)
+    #     self.steer = self.get_steer(a, b)
+    #     msg = Point()
+    #     msg.x = a
+    #     msg.y = b
+    #     self.recta_publisher.publish(msg)
 
-    def get_steer(self, a, b):
-        dist = -b/np.sqrt(a**2 + 1)   # Distancia del coche a la trayectoria
-        yaw = - math.atan(a)               # Ángulo entre la trayectoria y el coche
-        beta = 0
+    # def get_steer(self, a, b):
+    #     dist = -b/np.sqrt(a**2 + 1)   # Distancia del coche a la trayectoria
+    #     yaw = - math.atan(a)               # Ángulo entre la trayectoria y el coche
+    #     beta = 0
 
-        w = np.array([dist, yaw, beta, self.r], np.float64) 
-        steer = -np.dot(LQR_PARAMS, w)         # u = -K*w
+    #     w = np.array([dist, yaw, beta, self.r], np.float64) 
+    #     steer = -np.dot(LQR_PARAMS, w)         # u = -K*w
 
-        return max(min(steer, 19.9),-19.9)
+    #     return max(min(steer, 19.9),-19.9)
