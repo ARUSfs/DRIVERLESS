@@ -19,7 +19,7 @@
 int velMax = 5500;
 float wheelRadius = 0.2;
 float transmissionRatio = 0.24444444444444444;//11/45;
-
+ 
 void CanInterface::check_can(canStatus stat)
 {
     if(stat != canOK){
@@ -35,7 +35,7 @@ CanInterface::CanInterface()
 {    
      // Subscribers
     controlsSub = nh.subscribe<common_msgs::Controls>("/controls", 100, &CanInterface::controlsCallback, this);    
-    ASStatusSub = nh.subscribe<std_msgs::Int16>("can/AS_status", 100, &CanInterface::ASStatusCallback, this);
+    ASStatusSub = nh.subscribe<std_msgs::Int16>("/can/AS_status", 100, &CanInterface::ASStatusCallback, this);
     steeringInfoSub = nh.subscribe<std_msgs::Float32MultiArray>("/steering/epos_info", 100, &CanInterface::steeringInfoCallback, this);
     lapCounterSub = nh.subscribe<std_msgs::Int16>("/lap_counter", 100, &CanInterface::lapCounterCallback, this);
     conesCountSub = nh.subscribe<sensor_msgs::PointCloud2>("/perception_map", 100, &CanInterface::conesCountCallback, this);
@@ -475,7 +475,11 @@ void CanInterface::ASStatusCallback(std_msgs::Int16 msg)
 {
     if(msg.data == 3){
         uint8_t data[3] = {0x01, 0x01, 0x03};
-        canWrite(hndW1, 0x202, data, 8, canMSG_STD);
+        canWrite(hndW0, 0x202, data, 3, canMSG_STD);
+    }else if(msg.data==4){
+        std::cout << "EMERGENCIA" << std::endl;
+        uint8_t data[3] = {0x01, 0x01, 0x04};
+        canWrite(hndW0, 0x202, data, 3, canMSG_STD);
     }
 }
 

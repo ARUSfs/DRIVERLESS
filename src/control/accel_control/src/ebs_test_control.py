@@ -42,7 +42,7 @@ class EBSTestControl():
         self.accel_localizator = AccelLocalization()
         
         ### Inicializaciones ###
-        self.start_time = time.time()
+        self.start_time = 0
         self.steer = 0
         self.acc = 0
         self.speed = 0
@@ -68,6 +68,10 @@ class EBSTestControl():
 
     def update_state(self, msg: CarState):
         if self.ebs_opened:
+            emergency_msg = Int16()
+            emergency_msg.data = 4
+            #self.pub_AS_status.publish(emergency_msg)
+            
             return
 
         self.speed = math.hypot(msg.vx,msg.vy)
@@ -75,7 +79,7 @@ class EBSTestControl():
         if self.speed > 0.95*TARGET:
             emergency_msg = Int16()
             emergency_msg.data = 4
-            self.pub_AS_status.publish(emergency_msg)
+            #self.pub_AS_status.publish(emergency_msg)
             self.ebs_opened=True
             self.acc = 0
             self.publish_cmd()
@@ -116,7 +120,7 @@ class EBSTestControl():
 
         cmd = KP*error + KI*self.integral + KD*derivative
 
-        return max(min(cmd, 1),-1)
+        return max(min(cmd/230, 1),-1)
 
 
     def publish_cmd(self):
