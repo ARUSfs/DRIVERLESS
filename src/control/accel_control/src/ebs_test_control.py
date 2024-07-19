@@ -44,6 +44,7 @@ class EBSTestControl():
         self.integral = 0
         self.prev_t = time.time()
         self.prev_err = 0
+        self.ebs_opened = False
 
         ### Publicadores y suscriptores ###
         self.cmd_publisher = rospy.Publisher('/controls_pp', Controls, queue_size=1) 
@@ -53,12 +54,19 @@ class EBSTestControl():
 
 
     def update_state(self, msg: CarState):
+        if self.ebs_opened:
+            return
+        
         self.update_route(msg)
         self.speed = math.hypot(msg.vx,msg.vy)
+        
         if self.speed > TARGET:
             emergency_msg = Int16()
             emergency_msg.data = 4
             self.pub_AS_status.publish(emergency_msg)
+            self.ebs_opened=True
+            self.acc = 0
+            self.publish_cmd()
 
         if self.start_time == 0 and self.speed > 0.1:
             self.start_time = time.time()
