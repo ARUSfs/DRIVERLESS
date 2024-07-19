@@ -49,6 +49,8 @@ ICP_handle::ICP_handle(){
 void ICP_handle::state_callback(common_msgs::CarState state_msg) {
 	vx = state_msg.vx;
     yaw_rate = state_msg.r;
+
+	send_position();
 }
 
 void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
@@ -62,8 +64,6 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 		*allp_clustered = *new_map;
 		*previous_map = *new_map;
 		has_map = true;
-
-		send_position();
 		return;
 	}
 
@@ -122,7 +122,6 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 	prev_transformation = (estimation*w + transformation*(1-w));
 	position = prev_transformation*position;
 	prev_t = ros::Time::now();
-	send_position();
 
 
 	//update map
@@ -233,19 +232,21 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 }
 
 void ICP_handle::send_position() {
+	float dt = ros::Time::now().toSec()-prev_t.toSec();
 	geometry_msgs::TransformStamped transformSt;
 	transformSt.header.stamp = ros::Time::now();
 	transformSt.header.frame_id = global_frame;
 	transformSt.child_frame_id = car_frame;
-	transformSt.transform.translation.x = position.coeff(0,3);
-	transformSt.transform.translation.y = position.coeff(1,3);
 	tf2::Quaternion q;
-	float ang = (float)-atan2(position.coeff(0, 1), position.coeff(0,0));
+	float ang = (float)-atan2(position.coeff(0, 1), position.coeff(0,0)) + yaw_rate*dt;
+	transformSt.transform.translation.x = position.coeff(0,3)+vx*dt*cos(ang);
+	transformSt.transform.translation.y = position.coeff(1,3)+vx*dt*sin(ang);
 	q.setRPY(0, 0, ang);
 	transformSt.transform.rotation.x = q.x();
 	transformSt.transform.rotation.y = q.y();
 	transformSt.transform.rotation.z = q.z();
 	transformSt.transform.rotation.w = q.w();
+
 
 	br.sendTransform(transformSt);
 
