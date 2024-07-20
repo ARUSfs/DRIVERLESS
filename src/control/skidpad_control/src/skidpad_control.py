@@ -17,7 +17,7 @@ from common_msgs.msg import Controls, CarState
 from fssim_common.msg import State
 from visualization_msgs.msg import Marker
 from sensor_msgs.msg import PointCloud2
-from std_msgs.msg import Float32,Bool,Int16
+from std_msgs.msg import Float32,Bool,Int16, Float32MultiArray
 from geometry_msgs.msg import Point
 from sklearn.cluster import KMeans, DBSCAN
 from geometry_msgs.msg import PointStamped
@@ -77,6 +77,7 @@ class SkidpadControl():
 
         rospy.Subscriber('/perception_map', PointCloud2, self.update_route, queue_size=10)
         rospy.Subscriber('/car_state/state', CarState, self.update_state, queue_size=1)
+        rospy.Subscriber('/steering/epos_info', Float32MultiArray, self.update_steer, queue_size=1)
 
 
 
@@ -88,8 +89,9 @@ class SkidpadControl():
             self.acc = self.get_acc()
             self.steer = self.get_steer(msg)
             self.publish_cmd()
-
-        
+    
+    def update_steer(self, msg: Float32MultiArray):
+        self.delta_real = msg.data[1]
 
 
     def update_route(self, msg: PointCloud2):
@@ -224,9 +226,11 @@ class SkidpadControl():
         # delta = delta_correction*math.degrees(np.arctan(self.k*1.535)) - k_mu*((self.dist**3+0.1*self.dist)) - k_phi*(self.phi+2*np.arctan(self.k*1.535/2)) + k_r*(r_target - self.r)
         
         ### STANLEY CONTROL ###
-        coef = 0.5
-        delta = math.degrees(-self.phi - np.arctan(coef*self.dist/TARGET))
-        delta = max(-20,min(20,delta))
+        coef = 0.2
+        delta = -self.phi - np.arctan(coef*self.dist/TARGET)
+        # OPTIONAL CORRECTION
+        # delta += -0.02*(delta-self.delta_real) + 0.2*(r_target - self.r)    
+        delta = max(-20,min(20,math.degrees(delta)))
 
         return delta
     
