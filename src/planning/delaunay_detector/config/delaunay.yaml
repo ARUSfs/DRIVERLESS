@@ -9,12 +9,16 @@ global_frame: 'map'
 car_frame: 'body'
 slam: 'none'
 
+MODE: 'PP' # PP or STANLEY
+SMOOTH: false
+
 # Hiperparameters of delaunay detector
 MAX_DISTANCE: 8
 W_DISTANCE: 1
 W_ANGLE: 4
 W_THRESH: 8
 PREV_ANGLE: 0
+MAX_ROUTE_LENGTH: 10
 
 # Parameters of spline aproximation of path
 NUM_POINTS: 10

@@ -61,7 +61,7 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 
 	if(!has_map){
 		prev_t = ros::Time::now();
-		lap_time = ros::Time::now();
+		// lap_time = ros::Time::now();
 		*allp_clustered = *new_map;
 		*previous_map = *new_map;
 		has_map = true;
