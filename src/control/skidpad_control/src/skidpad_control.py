@@ -161,7 +161,7 @@ class SkidpadControl():
 
         cmd = KP*error + KI*self.integral + KD*derivative
 
-        return max(min(cmd, 1),-1)
+        return max(min(cmd/230, 1),-1)
 
 
     def publish_cmd(self):
@@ -220,9 +220,12 @@ class SkidpadControl():
 
         r_target = self.vx*self.k
 
-        delta = delta_correction*math.degrees(np.arctan(self.k*1.535)) - k_mu*((self.dist**3+0.1*self.dist)) - k_phi*(self.phi+2*np.arctan(self.k*1.535/2)) + k_r*(r_target - self.r)
-        # coef = 0.2
-        # delta = -self.phi - np.arctan2(coef*self.dist/TARGET)
+        ### BASE CONTROL + CORRECTION ###
+        # delta = delta_correction*math.degrees(np.arctan(self.k*1.535)) - k_mu*((self.dist**3+0.1*self.dist)) - k_phi*(self.phi+2*np.arctan(self.k*1.535/2)) + k_r*(r_target - self.r)
+        
+        ### STANLEY CONTROL ###
+        coef = 0.5
+        delta = math.degrees(-self.phi - np.arctan(coef*self.dist/TARGET))
         delta = max(-20,min(20,delta))
 
         return delta

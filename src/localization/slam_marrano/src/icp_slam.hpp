@@ -34,6 +34,7 @@ class ICP_handle {
 		ros::Subscriber state_sub;
 		ros::Publisher map_publisher;
 		ros::Publisher lap_count_publisher;
+		// ros::Publisher slam_speed_publisher;
 
 		std::string global_frame;
 		std::string car_frame;

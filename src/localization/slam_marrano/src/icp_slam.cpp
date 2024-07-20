@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <common_msgs/CarState.h>
 #include <std_msgs/Int16.h>
+#include <std_msgs/Float32.h>
 
 
 #include <pcl/common/impl/centroid.hpp>
@@ -43,7 +44,7 @@ ICP_handle::ICP_handle(){
 
 	map_publisher = nh.advertise<sensor_msgs::PointCloud2>("/mapa_icp", 10);
 	lap_count_publisher = nh.advertise<std_msgs::Int16>("/lap_counter", 10);
-
+	// slam_speed_publisher = nh.advertise<std_msgs::Float32>("/slam_speed", 10);
 }
 
 void ICP_handle::state_callback(common_msgs::CarState state_msg) {
@@ -120,8 +121,14 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 	
 	//update position
 	prev_transformation = (estimation*w + transformation*(1-w));
+	float prev_x = position.coeff(0,3);
+	float prev_y = position.coeff(1,3);
 	position = prev_transformation*position;
 	prev_t = ros::Time::now();
+
+	// std_msgs::Float32 slam_speed_msg;
+	// slam_speed_msg.data = sqrt((position.coeff(0,3)-prev_x)*(position.coeff(0,3)-prev_x) + (position.coeff(1,3)-prev_y)*(position.coeff(1,3)-prev_y))/dt;
+	// slam_speed_publisher.publish(slam_speed_msg);
 
 
 	//update map

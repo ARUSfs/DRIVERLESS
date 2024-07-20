@@ -131,7 +131,7 @@ class AccelControl():
 
         cmd = KP*error + KI*self.integral + KD*derivative
 
-        return max(min(cmd, 1),-1)
+        return max(min(cmd/230, 1),-1)
 
 
     def publish_cmd(self):

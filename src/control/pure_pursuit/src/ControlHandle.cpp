@@ -56,7 +56,7 @@ void ControlHandle::control_timer_callback(const ros::TimerEvent& event) {
 
     
     common_msgs::Controls msg;
-    msg.accelerator = accelerator_control;
+    msg.accelerator = accelerator_control/230;
     msg.steering = angle;
     control_publisher.publish(msg);
 
