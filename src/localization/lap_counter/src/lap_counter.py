@@ -2,6 +2,7 @@
 
 import rospy
 import numpy as np
+import matplotlib.pyplot as plt
 from scipy.signal import find_peaks
 from std_msgs.msg import Float32, Float64
 from common_msgs.msg import CarState, Controls
@@ -36,10 +37,9 @@ class Lap_counter:
 
     def angle_callback(self, msg: Float32):
         if(self.vx > 0.1):
-            self.angles.append(msg.steering*self.yaw)
+            self.angles.append(msg.steering)
 
     def yaw_callback(self, msg: Float64):
-        rospy.logwarn(msg.vx)
         self.vx = msg.vx
         self.yaw = msg.yaw
 
