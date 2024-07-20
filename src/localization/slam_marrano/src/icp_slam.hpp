@@ -21,12 +21,14 @@ using namespace std;
 class ICP_handle {
 	private:
 		bool has_map = false;
+		bool send_time = true;
 		int callback_iteration = 0;
 		void send_position();
 		ros::Time prev_t;
 		float yaw_rate=0;
 		float vx=0;
 		float lap_count = 0;
+		float initial_time = 0;
 		ros::Time lap_time;
 	public:
 		ros::NodeHandle nh;
@@ -34,6 +36,7 @@ class ICP_handle {
 		ros::Subscriber state_sub;
 		ros::Publisher map_publisher;
 		ros::Publisher lap_count_publisher;
+		ros::Publisher first_lap_pub;
 		// ros::Publisher slam_speed_publisher;
 
 		std::string global_frame;

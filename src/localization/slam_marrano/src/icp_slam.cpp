@@ -44,12 +44,18 @@ ICP_handle::ICP_handle(){
 
 	map_publisher = nh.advertise<sensor_msgs::PointCloud2>("/mapa_icp", 10);
 	lap_count_publisher = nh.advertise<std_msgs::Int16>("/lap_counter", 10);
+	first_lap_pub = nh.advertise<std_msgs::Float32>("/first_lap_periode", 10);
 	// slam_speed_publisher = nh.advertise<std_msgs::Float32>("/slam_speed", 10);
 }
 
 void ICP_handle::state_callback(common_msgs::CarState state_msg) {
 	vx = state_msg.vx;
     yaw_rate = state_msg.r;
+
+	if((vx > 0.1) && (initial_time == 0.))
+	{
+		initial_time = ros::Time::now().toSec();
+	}
 
 	send_position();
 }
@@ -61,7 +67,7 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 
 	if(!has_map){
 		prev_t = ros::Time::now();
-		lap_time = ros::Time::now();
+		//lap_time = ros::Time::now();
 		*allp_clustered = *new_map;
 		*previous_map = *new_map;
 		has_map = true;
@@ -258,10 +264,19 @@ void ICP_handle::send_position() {
 	br.sendTransform(transformSt);
 
 	if (position.coeff(0,3)*position.coeff(0,3)+position.coeff(1,3)*position.coeff(1,3) < 4){
-		if(ros::Time::now().toSec()-lap_time.toSec() > 20){
+		std::cout << ros::Time::now().toSec()-lap_time.toSec()<< std::endl;
+		if((ros::Time::now().toSec()-lap_time.toSec() > 20.)&&vx>0.1){
 			lap_count += 1;
 			lap_time = ros::Time::now();
 			std::cout << "Lap count: " << lap_count << std::endl;
+
+			if(send_time){
+				send_time = false; 
+				std_msgs::Float32 x;
+				x.data = lap_time.toSec() - initial_time;
+				first_lap_pub.publish(x);
+			}
+
 		}else{
 			lap_time = ros::Time::now();
 		}
