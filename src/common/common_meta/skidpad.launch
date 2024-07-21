@@ -36,8 +36,8 @@
   <node name="skidpad_control" pkg="skidpad_control" type="main.py"  output="screen">
   <rosparam command="load" file="$(find skidpad_control)/config/skidpad_control.yaml"/>
     <rosparam>
-      target: 3
-      KP: 10.87
+      target: 8
+      KP: 43.87
       KD : 0.0
       KI : 1.29
 

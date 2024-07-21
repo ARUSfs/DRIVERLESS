@@ -68,6 +68,7 @@ class SkidpadControl():
 
         self.plantilla = np.array([[-20 + d*i,0] for i in range(int(20/d)+1)]+2*[[r * np.sin(2 * np.pi * i / self.N), -9.125+r * np.cos(2 * np.pi * i / self.N)] for i in range(self.N)]+2*[[r * np.sin(2 * np.pi * i / self.N), 9.125-r * np.cos(2 * np.pi * i / self.N)] for i in range(self.N)]+[[d*i,0] for i in range(int(15/d)+1)])
         self.route = None
+        self.delta_real=0
         
     
 
@@ -228,10 +229,10 @@ class SkidpadControl():
         # delta = delta_correction*math.degrees(np.arctan(self.k*1.535)) - k_mu*((self.dist**3+0.1*self.dist)) - k_phi*(self.phi+2*np.arctan(self.k*1.535/2)) + k_r*(r_target - self.r)
         
         ### STANLEY CONTROL ###
-        coef = 0.2
+        coef = 1
         delta = -self.phi - np.arctan(coef*self.dist/TARGET)
         # OPTIONAL CORRECTION
-        # delta += -0.02*(delta-self.delta_real) + 0.2*(r_target - self.r)    
+        delta += -0.02*(delta-math.radians(self.delta_real)) + 0.2*(r_target - self.r)    
         delta = math.degrees(delta)
         delta = max(-20,min(20,delta))
         
