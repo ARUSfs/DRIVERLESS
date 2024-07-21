@@ -69,7 +69,8 @@ class StateClass:
         roll, pitch, yaw = self.quaternion_to_euler(q)
         if self.yaw_ini == None:
             self.yaw_ini = - yaw
-        self.yaw = - yaw - self.yaw_ini
+        if SLAM == 'none':
+            self.yaw = - yaw - self.yaw_ini
         self.r = - msg.angular_velocity.z
 
     def quaternion_to_euler(self, q):

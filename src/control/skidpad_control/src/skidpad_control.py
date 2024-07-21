@@ -225,14 +225,14 @@ class SkidpadControl():
         r_target = self.vx*self.k
 
         ### BASE CONTROL + CORRECTION ###
-        delta = delta_correction*math.degrees(np.arctan(self.k*1.535)) - k_mu*((self.dist**3+0.1*self.dist)) - k_phi*(self.phi+2*np.arctan(self.k*1.535/2)) + k_r*(r_target - self.r)
+        # delta = delta_correction*math.degrees(np.arctan(self.k*1.535)) - k_mu*((self.dist**3+0.1*self.dist)) - k_phi*(self.phi+2*np.arctan(self.k*1.535/2)) + k_r*(r_target - self.r)
         
         ### STANLEY CONTROL ###
         coef = 0.2
-        #delta = -self.phi - np.arctan(coef*self.dist/TARGET)
+        delta = -self.phi - np.arctan(coef*self.dist/TARGET)
         # OPTIONAL CORRECTION
         # delta += -0.02*(delta-self.delta_real) + 0.2*(r_target - self.r)    
-        # delta = math.degrees(delta)
+        delta = math.degrees(delta)
         delta = max(-20,min(20,delta))
         
         params = Float32MultiArray()
