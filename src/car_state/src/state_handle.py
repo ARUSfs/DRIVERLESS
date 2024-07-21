@@ -50,27 +50,23 @@ class StateClass:
             if SLAM == "limovelo":
                 rospy.Subscriber('/limovelo/rotation', Float32MultiArray, self.update_limovelo_rotation)
                 
-        # Timer to periodically publish state
+        # Time to periodically publish state
         rospy.Timer(rospy.Duration(0.01), self.publish_state)
 
     def imu_Callback(self, msg: Imu):
-        # Extrae el cuaternión del mensaje IMU
+         # Extrae el cuaternión del mensaje IMU
         q = (
             msg.orientation.x,
             msg.orientation.y,
             msg.orientation.z,
             msg.orientation.w
         )
-
         # Convierte el cuaternión a roll, pitch, yaw
-        #roll, pitch, yaw = tf_transformations.euler_from_quaternion(q)
-        #roll, pitch, yaw = tf.euler_from_quaternion(q)
-
         roll, pitch, yaw = self.quaternion_to_euler(q)
         if self.yaw_ini == None:
             self.yaw_ini = - yaw
         if SLAM == 'none':
-            self.yaw = - yaw - self.yaw_ini
+            self.yaw = ((-yaw - self.yaw_ini)+np.pi)%(2*np.pi) - np.pi 
         self.r = - msg.angular_velocity.z
 
     def quaternion_to_euler(self, q):

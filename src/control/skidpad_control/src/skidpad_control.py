@@ -46,6 +46,10 @@ class SkidpadControl():
         self.steer = 0
         self.acc = 0
         self.speed = 0
+        self.pos = np.array([0,0])
+        self.yaw = 0
+        self.r = 0
+
         self.braking = False
         self.integral = 0
         self.prev_err = 0
@@ -85,10 +89,12 @@ class SkidpadControl():
     def update_state(self, msg: CarState):
         self.speed = math.hypot(msg.vx,msg.vy)
         self.pos = np.array([msg.x,msg.y])
+        self.yaw = msg.yaw
+        self.r = msg.r
 
         if self.calibrated:
             self.acc = self.get_acc()
-            self.steer = self.get_steer(msg)
+            self.steer = self.get_steer()
             self.publish_cmd()
     
     def update_steer(self, msg: Float32MultiArray):
@@ -177,38 +183,44 @@ class SkidpadControl():
         self.cmd_publisher.publish(controls)
 
 
-    def get_steer(self,msg: CarState):
-        if self.i+self.N/2 < len(self.route):
-            dist = np.linalg.norm(self.route[self.i:self.i+int(self.N/2),:]-self.pos,axis=1)
-            self.i+=np.argmin(dist)
-        elif self.i< len(self.route)-1:
-            dist = np.linalg.norm(self.route[self.i:,:]-self.pos,axis=1)
-            self.i+=np.argmin(dist)
+    def get_steer(self):
+        # if self.i+self.N/2 < len(self.route):
+        #     dist = np.linalg.norm(self.route[self.i:self.i+int(self.N/2),:]-self.pos,axis=1)
+        #     self.i+=np.argmin(dist)
+        # elif self.i< len(self.route)-1:
+        #     dist = np.linalg.norm(self.route[self.i:,:]-self.pos,axis=1)
+        #     self.i+=np.argmin(dist)
 
         i = self.i
 
         x = self.route[:,0]
         y = self.route[:,1]
 
-        if x[i]!=x[i+1]:
-            recta=(y[self.i+1]-y[i])/(x[i+1]-x[i])*(self.pos[0]-x[i])+y[i]-msg.y
-            signo_d=np.sign(recta)*np.sign(x[i]-x[i+1])
-        else:
-            signo_d=np.sign(y[i+1]-y[i])*np.sign(self.pos[0]-x[i])
+        # if x[i]!=x[i+1]:
+        #     recta=(y[self.i+1]-y[i])/(x[i+1]-x[i])*(self.pos[0]-x[i])+y[i]-self.pos[1]
+        #     signo_d=np.sign(recta)*np.sign(x[i]-x[i+1])
+        # else:
+        #     signo_d=np.sign(y[i+1]-y[i])*np.sign(self.pos[0]-x[i])
+        
+        rot = np.array([[math.cos(-self.yaw),-math.sin(-self.yaw)],[math.sin(-self.yaw),math.cos(-self.yaw)]])
+        local_route = (self.route-self.pos) @ rot.T
 
+        if self.i+self.N/2 < len(local_route):
+            dist = np.linalg.norm(local_route[self.i:self.i+int(self.N/2),:],axis=1)
+            self.i+=np.argmin(dist)
+        elif self.i< len(local_route)-1:
+            dist = np.linalg.norm(local_route[self.i:,:],axis=1)
+            self.i+=np.argmin(dist)
+        signo_d = -np.sign(local_route[self.i,1])
+        
         d_min=np.min(dist)*signo_d
+        rospy.logwarn(d_min)
 
-        #corrected_yaw = (msg.yaw+np.pi)%(2*np.pi) - np.pi
         theta = np.arctan2(y[(i+5)%len(x)]-y[i],x[(i+5)%len(x)]-x[i])
-        #phi = corrected_yaw - theta
-        #phi_corrected = corrected_yaw - theta if np.abs(phi)<2 else (phi-2*np.pi if phi>0 else phi+2*np.pi)
-        phi_corrected = ((msg.yaw-theta)+np.pi)%(2*np.pi) - np.pi 
+        phi_corrected = ((self.yaw-theta)+np.pi)%(2*np.pi) - np.pi 
        
-        self.dist = d_min+0.0001
-        self.phi = phi_corrected
-        self.vx = msg.vx
-        self.vy = msg.vy
-        self.r = msg.r
+        dist = d_min+0.0001
+        phi = phi_corrected
 
         d = 2*math.pi*9.125/self.N
 
@@ -221,29 +233,29 @@ class SkidpadControl():
             return self.steer
 
         self.si = self.i*d
-        self.k = self.kk()
+        self.update_k()
 
-        r_target = self.vx*self.k
+        params = Float32MultiArray()
+        params.data.append(phi)
+        params.data.append(dist)
+        self.pubb.publish(params)
+
+        r_target = self.speed*self.k
 
         ### BASE CONTROL + CORRECTION ###
-        # delta = delta_correction*math.degrees(np.arctan(self.k*1.535)) - k_mu*((self.dist**3+0.1*self.dist)) - k_phi*(self.phi+2*np.arctan(self.k*1.535/2)) + k_r*(r_target - self.r)
+        # delta = delta_correction*math.degrees(np.arctan(self.k*1.535)) - k_mu*((dist**3+0.1*dist)) - k_phi*(phi+2*np.arctan(self.k*1.535/2)) + k_r*(r_target - self.r)
         
         ### STANLEY CONTROL ###
         coef = 1
-        delta = -self.phi - np.arctan(coef*self.dist/TARGET)
+        delta = -phi - np.arctan(coef*dist/TARGET)
         # OPTIONAL CORRECTION
         delta += -0.02*(delta-math.radians(self.delta_real)) + 0.2*(r_target - self.r)    
         delta = math.degrees(delta)
-        delta = max(-20,min(20,delta))
         
-        params = Float32MultiArray()
-        params.data.append(self.phi)
-        params.data.append(self.dist)
-        self.pubb.publish(params)
      
-        return delta
+        return max(-20,min(20,delta))
     
-    def kk(self):
+    def update_k(self):
         s11=5
         s12=2
         s21=6
@@ -261,4 +273,3 @@ class SkidpadControl():
             self.k = (1/9.125)
         else:
             self.k = 0
-        return self.k
