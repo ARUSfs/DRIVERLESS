@@ -45,14 +45,17 @@ class Lap_counter:
 
     def update(self, event):
         rospy.logwarn('Updating')
-        autocorr = np.correlate(self.angles[:int(np.round(self.first_period * freq))], self.angles, mode='full')
-        self.peaks, _ = find_peaks(autocorr, height=np.max(autocorr) * 0.90)
+
+        autocorr = np.correlate(self.angles[:int(np.round(self.first_period * freq))+100], self.angles, mode='full')
+        autocorr = autocorr[len(autocorr)//2:]
+        self.peaks, _ = find_peaks(autocorr, height=np.max(autocorr) * 0.85)
         
         if len(self.peaks) > 0:
-            self.peaks = np.append(self.peaks, np.zeros(9-len(self.peaks)))
             self.lap_count = len(self.peaks)
-            self.mean = np.mean([self.peaks[i+1]-self.peaks[i] for i in range(len(self.peaks)-1)])
-            self.next_lap = self.peaks[-1] + self.mean
+
+            if len(self.peaks) > 1:
+                self.mean = np.mean([self.peaks[i+1]-self.peaks[i] for i in range(len(self.peaks)-1)])
+                self.next_lap = self.peaks[-1] + self.mean
         else:
             rospy.logwarn('Puta')
 

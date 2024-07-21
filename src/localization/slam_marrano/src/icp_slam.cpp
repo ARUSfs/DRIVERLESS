@@ -264,7 +264,6 @@ void ICP_handle::send_position() {
 	br.sendTransform(transformSt);
 
 	if (position.coeff(0,3)*position.coeff(0,3)+position.coeff(1,3)*position.coeff(1,3) < 4){
-		std::cout << ros::Time::now().toSec()-lap_time.toSec()<< std::endl;
 		if((ros::Time::now().toSec()-lap_time.toSec() > 20.)&&vx>0.1){
 			lap_count += 1;
 			lap_time = ros::Time::now();
