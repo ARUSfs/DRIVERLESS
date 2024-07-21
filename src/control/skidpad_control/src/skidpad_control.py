@@ -74,7 +74,7 @@ class SkidpadControl():
         self.cmd_publisher = rospy.Publisher('/controls_pp', Controls, queue_size=1) 
         self.braking_publisher = rospy.Publisher('/braking', Bool, queue_size=10)
         self.route_pub = rospy.Publisher('/skidpad_route',Marker,queue_size=1)
-
+        self.pubb = rospy.Publisher('/phi_dist', Float32MultiArray,queue_size=1)
         rospy.Subscriber('/perception_map', PointCloud2, self.update_route, queue_size=10)
         rospy.Subscriber('/car_state/state', CarState, self.update_state, queue_size=1)
         rospy.Subscriber('/steering/epos_info', Float32MultiArray, self.update_steer, queue_size=1)
@@ -155,7 +155,8 @@ class SkidpadControl():
         error = TARGET - self.speed
 
         dt=time.time()-self.prev_t
-        self.integral += error*dt
+        if self.speed > 0.1:
+            self.integral += error*dt
         derivative = (error-self.prev_err)/dt
 
         self.prev_t = time.time()
@@ -196,11 +197,12 @@ class SkidpadControl():
 
         d_min=np.min(dist)*signo_d
 
-        corrected_yaw = (msg.yaw+np.pi)%(2*np.pi) - np.pi
+        #corrected_yaw = (msg.yaw+np.pi)%(2*np.pi) - np.pi
         theta = np.arctan2(y[(i+5)%len(x)]-y[i],x[(i+5)%len(x)]-x[i])
-        phi = corrected_yaw - theta
-        phi_corrected = corrected_yaw - theta if np.abs(phi)<2 else (phi-2*np.pi if phi>0 else phi+2*np.pi)
-
+        #phi = corrected_yaw - theta
+        #phi_corrected = corrected_yaw - theta if np.abs(phi)<2 else (phi-2*np.pi if phi>0 else phi+2*np.pi)
+        phi_corrected = ((msg.yaw-theta)+np.pi)%(2*np.pi) - np.pi 
+       
         self.dist = d_min+0.0001
         self.phi = phi_corrected
         self.vx = msg.vx
@@ -223,15 +225,21 @@ class SkidpadControl():
         r_target = self.vx*self.k
 
         ### BASE CONTROL + CORRECTION ###
-        # delta = delta_correction*math.degrees(np.arctan(self.k*1.535)) - k_mu*((self.dist**3+0.1*self.dist)) - k_phi*(self.phi+2*np.arctan(self.k*1.535/2)) + k_r*(r_target - self.r)
+        delta = delta_correction*math.degrees(np.arctan(self.k*1.535)) - k_mu*((self.dist**3+0.1*self.dist)) - k_phi*(self.phi+2*np.arctan(self.k*1.535/2)) + k_r*(r_target - self.r)
         
         ### STANLEY CONTROL ###
         coef = 0.2
-        delta = -self.phi - np.arctan(coef*self.dist/TARGET)
+        #delta = -self.phi - np.arctan(coef*self.dist/TARGET)
         # OPTIONAL CORRECTION
         # delta += -0.02*(delta-self.delta_real) + 0.2*(r_target - self.r)    
-        delta = max(-20,min(20,math.degrees(delta)))
-
+        # delta = math.degrees(delta)
+        delta = max(-20,min(20,delta))
+        
+        params = Float32MultiArray()
+        params.data.append(self.phi)
+        params.data.append(self.dist)
+        self.pubb.publish(params)
+     
         return delta
     
     def kk(self):

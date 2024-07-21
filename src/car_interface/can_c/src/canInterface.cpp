@@ -477,7 +477,6 @@ void CanInterface::ASStatusCallback(std_msgs::Int16 msg)
         uint8_t data[3] = {0x01, 0x01, 0x03};
         canWrite(hndW0, 0x202, data, 3, canMSG_STD);
     }else if(msg.data==4){
-        std::cout << "EMERGENCIA" << std::endl;
         uint8_t data[3] = {0x01, 0x01, 0x04};
         canWrite(hndW0, 0x202, data, 3, canMSG_STD);
     }
