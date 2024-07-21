@@ -214,7 +214,7 @@ class SkidpadControl():
         signo_d = -np.sign(local_route[self.i,1])
         
         d_min=np.min(dist)*signo_d
-        rospy.logwarn(d_min)
+        # rospy.logwarn(d_min)
 
         theta = np.arctan2(y[(i+5)%len(x)]-y[i],x[(i+5)%len(x)]-x[i])
         phi_corrected = ((self.yaw-theta)+np.pi)%(2*np.pi) - np.pi 
@@ -248,6 +248,7 @@ class SkidpadControl():
         ### STANLEY CONTROL ###
         coef = 1
         delta = -phi - np.arctan(coef*dist/TARGET)
+        # delta += 0.003*self.r*self.speed
         # OPTIONAL CORRECTION
         delta += -0.02*(delta-math.radians(self.delta_real)) + 0.2*(r_target - self.r)    
         delta = math.degrees(delta)
