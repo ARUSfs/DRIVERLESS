@@ -41,10 +41,10 @@
       KD : 0.0
       KI : 1.29
 
-      k_mu: 5
-      k_phi: 12
-      k_r: 0
-      delta_correction: 1
+      stanley_coef: 1
+      k_delta: -0.02
+      k_yaw_rate: 0.2
+      k_slip_ratio: 0
     </rosparam>
   </node>
 

@@ -24,15 +24,15 @@ from geometry_msgs.msg import PointStamped
 
 from skidpad_localization import SkidpadLocalization
 
+STANLEY_COEF = rospy.get_param('/skidpad_control/stanley_coef')
+K_DELTA = rospy.get_param('/skidpad_control/k_delta')
+K_YAW_RATE = rospy.get_param('/skidpad_control/k_yaw_rate')
+K_SLIP_RATIO = rospy.get_param('/skidpad_control/k_slip_ratio')
+
+TARGET = rospy.get_param('/skidpad_control/target')
 KP = rospy.get_param('/skidpad_control/kp')
 KI = rospy.get_param('/skidpad_control/ki')
 KD = rospy.get_param('/skidpad_control/kd')
-TARGET = rospy.get_param('/skidpad_control/target')
-
-k_mu = rospy.get_param('/skidpad_control/k_mu')
-k_phi = rospy.get_param('/skidpad_control/k_phi')
-k_r = rospy.get_param('/skidpad_control/k_r')
-delta_correction = rospy.get_param('/skidpad_control/delta_correction')
 
 
 class SkidpadControl():
@@ -70,7 +70,7 @@ class SkidpadControl():
         r=9.125
         d = 2*math.pi*r/self.N
 
-        self.plantilla = np.array([[-20 + d*i,0] for i in range(int(20/d)+1)]+2*[[r * np.sin(2 * np.pi * i / self.N), -9.125+r * np.cos(2 * np.pi * i / self.N)] for i in range(self.N)]+2*[[r * np.sin(2 * np.pi * i / self.N), 9.125-r * np.cos(2 * np.pi * i / self.N)] for i in range(self.N)]+[[d*i,0] for i in range(int(15/d)+1)])
+        self.plantilla = np.array([[-20 + d*i,0] for i in range(int(20/d)+1)]+2*[[r * np.sin(2 * np.pi * i / self.N), -9.125+r * np.cos(2 * np.pi * i / self.N)] for i in range(self.N)]+2*[[r * np.sin(2 * np.pi * i / self.N), 9.125-r * np.cos(2 * np.pi * i / self.N)] for i in range(self.N)]+[[d*i,0] for i in range(int(20/d)+1)])
         self.route = None
         self.delta_real=0
         
@@ -79,7 +79,7 @@ class SkidpadControl():
         self.cmd_publisher = rospy.Publisher('/controls_pp', Controls, queue_size=1) 
         self.braking_publisher = rospy.Publisher('/braking', Bool, queue_size=10)
         self.route_pub = rospy.Publisher('/skidpad_route',Marker,queue_size=1)
-        self.pubb = rospy.Publisher('/phi_dist', Float32MultiArray,queue_size=1)
+        self.phi_dist_pub = rospy.Publisher('/phi_dist', Float32MultiArray,queue_size=1)
         rospy.Subscriber('/perception_map', PointCloud2, self.update_route, queue_size=10)
         rospy.Subscriber('/car_state/state', CarState, self.update_state, queue_size=1)
         rospy.Subscriber('/steering/epos_info', Float32MultiArray, self.update_steer, queue_size=1)
@@ -154,7 +154,6 @@ class SkidpadControl():
                 self.centers = []
                 self.start_time = time.time()
 
-        # rospy.loginfo(time.time()-t)
 
 
 
@@ -214,7 +213,6 @@ class SkidpadControl():
         signo_d = -np.sign(local_route[self.i,1])
         
         d_min=np.min(dist)*signo_d
-        # rospy.logwarn(d_min)
 
         theta = np.arctan2(y[(i+5)%len(x)]-y[i],x[(i+5)%len(x)]-x[i])
         phi_corrected = ((self.yaw-theta)+np.pi)%(2*np.pi) - np.pi 
@@ -224,8 +222,9 @@ class SkidpadControl():
 
         d = 2*math.pi*9.125/self.N
 
-
-        if self.i > 4*self.N+int(25/d):
+        
+        # brake 10m after last lap
+        if self.i > 4*self.N+int(30/d):
             self.braking=True
             braking_msg = Bool()
             braking_msg.data = True
@@ -238,19 +237,14 @@ class SkidpadControl():
         params = Float32MultiArray()
         params.data.append(phi)
         params.data.append(dist)
-        self.pubb.publish(params)
+        self.phi_dist_pub.publish(params)
 
         r_target = self.speed*self.k
 
-        ### BASE CONTROL + CORRECTION ###
-        # delta = delta_correction*math.degrees(np.arctan(self.k*1.535)) - k_mu*((dist**3+0.1*dist)) - k_phi*(phi+2*np.arctan(self.k*1.535/2)) + k_r*(r_target - self.r)
-        
+
         ### STANLEY CONTROL ###
-        coef = 1
-        delta = -phi - np.arctan(coef*dist/TARGET)
-        # delta += 0.003*self.r*self.speed
-        # OPTIONAL CORRECTION
-        delta += -0.02*(delta-math.radians(self.delta_real)) + 0.2*(r_target - self.r)    
+        delta = -phi - np.arctan(STANLEY_COEF*dist/TARGET)
+        delta += K_DELTA*(delta-math.radians(self.delta_real)) + K_YAW_RATE*(r_target - self.r) + K_SLIP_RATIO*self.r*self.speed   
         delta = math.degrees(delta)
         
      

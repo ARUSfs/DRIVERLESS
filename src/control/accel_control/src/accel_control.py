@@ -26,13 +26,14 @@ KP = rospy.get_param('/accel_control/KP')
 KI = rospy.get_param('/accel_control/KI')
 KD = rospy.get_param('/accel_control/KD')
 TARGET = rospy.get_param('/accel_control/target')
+PENDIENTE = rospy.get_param('/accel_control/pendiente')
 TRACK_LENGTH = rospy.get_param('/accel_control/track_length')
 LQR_PARAMS = np.array([rospy.get_param('/accel_control/lqr_dist'),
                        rospy.get_param('/accel_control/lqr_yaw'),
                        rospy.get_param('/accel_control/lqr_beta'),
                        rospy.get_param('/accel_control/lqr_r')],np.float64) 
 perception_topic = rospy.get_param('/accel_control/perception_topic')
-REACH_TARGET_TIME = 2.4
+
 
 class AccelControl():
 
@@ -116,7 +117,7 @@ class AccelControl():
         w = np.array([dist, yaw, beta, self.r], np.float64) 
         steer = -np.dot(LQR_PARAMS, w)         # u = -K*w
 
-        return max(min(steer, 19.9),-19.9)
+        return max(min(steer, 20),-20)
 
 
     def get_acc(self):
@@ -144,4 +145,4 @@ class AccelControl():
    
     def get_target(self):
         t = time.time() - self.start_time
-        return max(0.5,min(t/REACH_TARGET_TIME,1)*TARGET)
+        return min(t*PENDIENTE+TARGET/10, TARGET)

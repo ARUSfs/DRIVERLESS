@@ -27,7 +27,7 @@ KI = rospy.get_param('/accel_control/KI')
 KD = rospy.get_param('/accel_control/KD')
 TARGET = rospy.get_param('/accel_control/target')
 TRACK_LENGTH = rospy.get_param('/accel_control/track_length')
-REACH_TARGET_TIME = rospy.get_param('/accel_control/reach_target_time')
+PENDIENTE = rospy.get_param('/accel_control/pendiente')
 LQR_PARAMS = np.array([rospy.get_param('/accel_control/lqr_dist'),
                        rospy.get_param('/accel_control/lqr_yaw'),
                        rospy.get_param('/accel_control/lqr_beta'),
@@ -132,9 +132,8 @@ class EBSTestControl():
         self.cmd_publisher.publish(controls)
 
     def get_target(self):
-        t = time.time()-self.start_time
-        # max 0.5 para que el target no sea 0 al empezar (creo)
-        return max(0.5,min(t/REACH_TARGET_TIME,1)*TARGET)
+        t = time.time() - self.start_time
+        return min(t*PENDIENTE+TARGET/10, TARGET)
     
 
     def update_route(self, msg: PointCloud2):
@@ -163,4 +162,4 @@ class EBSTestControl():
         w = np.array([dist, yaw, beta, self.r], np.float64) 
         steer = -np.dot(LQR_PARAMS, w)         # u = -K*w
 
-        return max(min(steer, 19.9),-19.9)
+        return max(min(steer, 20),-20)
