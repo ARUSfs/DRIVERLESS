@@ -190,10 +190,10 @@ class SkidpadControl():
         #     dist = np.linalg.norm(self.route[self.i:,:]-self.pos,axis=1)
         #     self.i+=np.argmin(dist)
 
-        i = self.i
+        # i = self.i
 
-        x = self.route[:,0]
-        y = self.route[:,1]
+        # x = self.route[:,0]
+        # y = self.route[:,1]
 
         # if x[i]!=x[i+1]:
         #     recta=(y[self.i+1]-y[i])/(x[i+1]-x[i])*(self.pos[0]-x[i])+y[i]-self.pos[1]
@@ -213,12 +213,12 @@ class SkidpadControl():
         signo_d = -np.sign(local_route[self.i,1])
         
         d_min=np.min(dist)*signo_d
-
-        theta = np.arctan2(y[(i+5)%len(x)]-y[i],x[(i+5)%len(x)]-x[i])
-        phi_corrected = ((self.yaw-theta)+np.pi)%(2*np.pi) - np.pi 
-       
         dist = d_min+0.0001
-        phi = phi_corrected
+
+        phi = -np.arctan2(local_route[self.i+6,1]-local_route[self.i,1],local_route[self.i+6,0]-local_route[self.i,0])
+        # theta = np.arctan2(y[(i+5)%len(x)]-y[i],x[(i+5)%len(x)]-x[i])
+        # phi_corrected = ((self.yaw-theta)+np.pi)%(2*np.pi) - np.pi  
+        # phi = phi_corrected
 
         d = 2*math.pi*9.125/self.N
 
