@@ -46,14 +46,14 @@
       KI: 1.29
       KD: 0.0
         
-      target: 12
-      pendiente: 4
+      target: 8
+      pendiente: 3
       track_length: 75
 
       lqr_dist: 1.0
       lqr_yaw: 25.0
       lqr_beta: 0.0
-      lqr_r: 3.0
+      lqr_r: 0.0
     </rosparam>
   </node>
 
@@ -71,3 +71,4 @@
 
 
 </launch>
+

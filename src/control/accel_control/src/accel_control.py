@@ -63,7 +63,7 @@ class AccelControl():
         self.recta_publisher = rospy.Publisher("/accel_control/recta", Point, queue_size=10)
         rospy.Subscriber(perception_topic, PointCloud2, self.update_route, queue_size=10)
         rospy.Subscriber('/car_state/state', CarState, self.update_state, queue_size=1)
-
+        self.phi_dist_pub = (rospy.Publisher('/phi_dist', Float32MultiArray, queue_size=1)
 
     def update_state(self, msg: CarState):
         self.speed = math.hypot(msg.vx,msg.vy)
@@ -113,6 +113,11 @@ class AccelControl():
         dist = -b/np.sqrt(a**2 + 1)   # Distancia del coche a la trayectoria
         yaw = - math.atan(a)               # Ángulo entre la trayectoria y el coche
         beta = 0
+
+        phi_dist_msg = Float32MultiArray()
+        phi_dist_msg.data.append(yaw)
+        phi_dist_msg.data.append(dist)
+        self.phi_dist_pub.publish(phi_dist_msg)
 
         w = np.array([dist, yaw, beta, self.r], np.float64) 
         steer = -np.dot(LQR_PARAMS, w)         # u = -K*w

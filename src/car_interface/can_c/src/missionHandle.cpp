@@ -67,7 +67,7 @@ void launchMission()
             baseCommand += "trackdrive.launch";
             break;
         case 5:
-            baseCommand += "EBS_test.launch";
+            baseCommand += "ebs_test.launch";
             break;
         case 6:
             baseCommand += "inspection.launch";

@@ -76,6 +76,12 @@ CanInterface::CanInterface()
         printf("can0 enabled for writing \n");
     }
 
+    stat = canSetBusParams(hndW0, canBITRATE_1M,0,0,0,0,0);
+    if (stat!=canOK){
+        printf("canSetBusParams failed, status=%d\n", stat);
+        exit(1);
+    }
+
     hndW1 = canOpenChannel(1, canOPEN_ACCEPT_VIRTUAL);
     if (hndW1 < 0){
         printf("canOpenChannel() failed, %d \n", hndW1);
