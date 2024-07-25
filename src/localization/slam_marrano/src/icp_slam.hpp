@@ -34,6 +34,7 @@ class ICP_handle {
 		ros::Subscriber state_sub;
 		ros::Publisher map_publisher;
 		ros::Publisher lap_count_publisher;
+		ros::Publisher finished_pub;
 		// ros::Publisher slam_speed_publisher;
 
 		std::string global_frame;
@@ -41,6 +42,7 @@ class ICP_handle {
 
 		bool restart_map;
 		int restart_iterations;
+		bool AUTOX;
 
 		tf2_ros::TransformBroadcaster br;
 

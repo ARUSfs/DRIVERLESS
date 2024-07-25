@@ -183,23 +183,6 @@ class SkidpadControl():
 
 
     def get_steer(self):
-        # if self.i+self.N/2 < len(self.route):
-        #     dist = np.linalg.norm(self.route[self.i:self.i+int(self.N/2),:]-self.pos,axis=1)
-        #     self.i+=np.argmin(dist)
-        # elif self.i< len(self.route)-1:
-        #     dist = np.linalg.norm(self.route[self.i:,:]-self.pos,axis=1)
-        #     self.i+=np.argmin(dist)
-
-        # i = self.i
-
-        # x = self.route[:,0]
-        # y = self.route[:,1]
-
-        # if x[i]!=x[i+1]:
-        #     recta=(y[self.i+1]-y[i])/(x[i+1]-x[i])*(self.pos[0]-x[i])+y[i]-self.pos[1]
-        #     signo_d=np.sign(recta)*np.sign(x[i]-x[i+1])
-        # else:
-        #     signo_d=np.sign(y[i+1]-y[i])*np.sign(self.pos[0]-x[i])
         
         rot = np.array([[math.cos(-self.yaw),-math.sin(-self.yaw)],[math.sin(-self.yaw),math.cos(-self.yaw)]])
         local_route = (self.route-self.pos) @ rot.T
@@ -216,9 +199,6 @@ class SkidpadControl():
         dist = d_min+0.0001
 
         phi = -np.arctan2(local_route[self.i+6,1]-local_route[self.i,1],local_route[self.i+6,0]-local_route[self.i,0])
-        # theta = np.arctan2(y[(i+5)%len(x)]-y[i],x[(i+5)%len(x)]-x[i])
-        # phi_corrected = ((self.yaw-theta)+np.pi)%(2*np.pi) - np.pi  
-        # phi = phi_corrected
 
         d = 2*math.pi*9.125/self.N
 

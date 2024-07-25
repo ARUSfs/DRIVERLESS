@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <common_msgs/CarState.h>
 #include <std_msgs/Int16.h>
+#include <std_msgs/Bool.h>
 #include <std_msgs/Float32.h>
 
 
@@ -28,6 +29,7 @@ ICP_handle::ICP_handle(){
 	nh.getParam("/slam_marrano/car_frame", car_frame);
 	nh.getParam("/slam_marrano/restart_map", restart_map);
 	nh.getParam("/slam_marrano/restart_iterations", restart_iterations);
+	nh.getParam("/slam_marrano/AUTOX", AUTOX);
 
 	prev_t = ros::Time::now();	
 	lap_time = ros::Time::now();
@@ -41,7 +43,7 @@ ICP_handle::ICP_handle(){
 	perception_sub = nh.subscribe<sensor_msgs::PointCloud2>("/perception_map", 1000, &ICP_handle::map_callback, this);
 	state_sub = nh.subscribe<common_msgs::CarState>("/car_state/state", 1000, &ICP_handle::state_callback, this);
 
-
+	finished_pub = nh.advertise<std_msgs::Bool>("/braking", 10);
 	map_publisher = nh.advertise<sensor_msgs::PointCloud2>("/mapa_icp", 10);
 	lap_count_publisher = nh.advertise<std_msgs::Int16>("/lap_counter", 10);
 	// slam_speed_publisher = nh.advertise<std_msgs::Float32>("/slam_speed", 10);
@@ -61,7 +63,6 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 
 	if(!has_map){
 		prev_t = ros::Time::now();
-		// lap_time = ros::Time::now();
 		*allp_clustered = *new_map;
 		*previous_map = *new_map;
 		has_map = true;
@@ -257,11 +258,16 @@ void ICP_handle::send_position() {
 
 	br.sendTransform(transformSt);
 
-	if (position.coeff(0,3)*position.coeff(0,3)+position.coeff(1,3)*position.coeff(1,3) < 4){
-		if(ros::Time::now().toSec()-lap_time.toSec() > 20){
+	if (position.coeff(0,3)*position.coeff(0,3)+position.coeff(1,3)*position.coeff(1,3) < 25){
+		if(ros::Time::now().toSec()-lap_time.toSec() > 20 && vx>1 ){
 			lap_count += 1;
 			lap_time = ros::Time::now();
 			std::cout << "Lap count: " << lap_count << std::endl;
+			if (lap_count==1 && AUTOX){
+				std_msgs::Bool finished_msg;
+				finished_msg.data = true;
+				finished_pub.publish(finished_msg);
+			}
 		}else{
 			lap_time = ros::Time::now();
 		}

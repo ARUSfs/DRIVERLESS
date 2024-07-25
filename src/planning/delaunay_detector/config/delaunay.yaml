@@ -18,7 +18,7 @@ W_DISTANCE: 1
 W_ANGLE: 4
 W_THRESH: 8
 PREV_ANGLE: 0
-MAX_ROUTE_LENGTH: 10
+MAX_ROUTE_LENGTH: 9999
 
 # Parameters of spline aproximation of path
 NUM_POINTS: 10

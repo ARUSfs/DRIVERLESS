@@ -3,3 +3,4 @@ car_frame: "body"
 
 restart_map: false
 restart_iterations: 100
+AUTOX: false
