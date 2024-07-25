@@ -188,17 +188,18 @@ class SkidpadControl():
         local_route = (self.route-self.pos) @ rot.T
 
         if self.i+self.N/2 < len(local_route):
-            dist = np.linalg.norm(local_route[self.i:self.i+int(self.N/2),:],axis=1)
+            # se halla el punto más cercano al eje delantero
+            dist = np.linalg.norm(local_route[self.i:self.i+int(self.N/2),:]-np.array([0.94,0]),axis=1)
             self.i+=np.argmin(dist)
         elif self.i< len(local_route)-1:
-            dist = np.linalg.norm(local_route[self.i:,:],axis=1)
+            dist = np.linalg.norm(local_route[self.i:,:]-np.array([0.94,0]),axis=1)
             self.i+=np.argmin(dist)
         signo_d = -np.sign(local_route[self.i,1])
         
         d_min=np.min(dist)*signo_d
         dist = d_min+0.0001
 
-        phi = -np.arctan2(local_route[self.i+6,1]-local_route[self.i,1],local_route[self.i+6,0]-local_route[self.i,0])
+        phi = -np.arctan2(local_route[self.i+1,1]-local_route[self.i,1],local_route[self.i+1,0]-local_route[self.i,0])
 
         d = 2*math.pi*9.125/self.N
 
