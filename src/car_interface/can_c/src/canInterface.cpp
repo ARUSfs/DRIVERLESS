@@ -76,11 +76,11 @@ CanInterface::CanInterface()
         printf("can0 enabled for writing \n");
     }
 
-    // stat = canSetBusParams(hndW0, canBITRATE_1M,0,0,0,0,0);
-    // if (stat!=canOK){
-    //     printf("canSetBusParams failed, status=%d\n", stat);
-    //     exit(1);
-    // }
+    stat = canSetBusParams(hndW0, canBITRATE_1M,0,0,0,0,0);
+    if (stat!=canOK){
+        printf("canSetBusParams failed, status=%d\n", stat);
+        exit(1);
+    }
 
     hndW1 = canOpenChannel(1, canOPEN_ACCEPT_VIRTUAL);
     if (hndW1 < 0){
@@ -89,12 +89,6 @@ CanInterface::CanInterface()
     }else{
         printf("can1 enabled for writing \n");
     }
-
-    // stat = canSetBusParams(hndW1, canBITRATE_1M,0,0,0,0,0);
-    // if (stat!=canOK){
-    //     printf("canSetBusParams failed, status=%d\n", stat);
-    //     exit(1);
-    // }
 
     canBusOn(hndW0);
     canBusOn(hndW1);
@@ -302,11 +296,11 @@ void CanInterface::readCan0()
         printf("can0 enabled for reading \n");
     }
 
-    // stat = canSetBusParams(hndR0, canBITRATE_1M,0,0,0,0,0);
-    // if (stat!=canOK){
-    //     printf("canSetBusParams failed, status=%d\n", stat);
-    //     exit(1);
-    // }
+    stat = canSetBusParams(hndR0, canBITRATE_1M,0,0,0,0,0);
+    if (stat!=canOK){
+        printf("canSetBusParams failed, status=%d\n", stat);
+        exit(1);
+    }
     
 
     // //Set the channel parameters
@@ -391,12 +385,6 @@ void CanInterface::readCan1()
     }else{
         printf("can1 enabled for reading \n");
     }
-
-    // stat = canSetBusParams(hndR1, canBITRATE_1M,0,0,0,0,0);
-    // if (stat!=canOK){
-    //     printf("canSetBusParams failed, status=%d\n", stat);
-    //     exit(1);
-    // }
 
     // //Set the channel parameters
     // stat = canAccept(hndR1, 0xFFF, canFILTER_SET_MASK_STD);
