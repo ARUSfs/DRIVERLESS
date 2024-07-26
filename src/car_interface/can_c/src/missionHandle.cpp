@@ -10,6 +10,7 @@
 bool HV_ON = false;
 canStatus stat;
 canHandle hnd;
+canHandle hnd2;
 uint8_t mission;
 std::string baseCommand = "roslaunch common_meta ";
 
@@ -25,11 +26,23 @@ void initCan()
         printf("canOpenChannel failed, status=%d\n", hnd);
     }
 
+    hnd2 = canOpenChannel(1, canOPEN_ACCEPT_VIRTUAL);
+    if (hnd < 0)
+    {
+        printf("canOpenChannel2 failed, status=%d\n", hnd);
+    }
+
     //Oneamos el bus
     stat = canBusOn(hnd);
     if (stat != canOK)
     {
         printf("canBusOn failed, status=%d\n", stat);
+    }
+
+    stat = canBusOn(hnd2);
+    if (stat != canOK)
+    {
+        printf("canBusOn failed 2, status=%d\n", stat);
     }
 }
 
@@ -89,10 +102,19 @@ void launchMission()
     }
 }
 
+void pubHeartBeat(const ros::TimerEvent&)
+{
+    uint8_t data[1] = {0x01};
+    canWrite(hnd2, 0x183, data, 1, canMSG_STD);
+}
+
 int main(int argc, char **argv)
 {   
     ros::init(argc,argv,"carlos_mpc");
-    ros::NodeHandle n;
+    ros::NodeHandle nh;
+
+    ros::Timer heartBeatTimer = nh.createTimer(ros::Duration(0.1), pubHeartBeat);
+
 
     initCan();
 

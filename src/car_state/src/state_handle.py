@@ -8,6 +8,7 @@ from sensor_msgs.msg import Imu
 import numpy as np
 import math
 import subprocess
+import rospkg
 import os
 
 global_frame = rospy.get_param('/car_state/global_frame')
@@ -32,11 +33,13 @@ class StateClass:
         self.yaw = 0
         self.pub_state = None
 
+        PATH = rospkg.RosPack().get_path('can_c')
+
         self.yaw_ini = None
 
         self.limovelo_rotation = np.array([[1,0,0],[0,1,0],[0,0,1]])
-
-        os.chdir("/home/carlos/tests/src/DRIVERLESS")
+        
+        os.chdir(self.extract_workspace_path(PATH))
         self.commit_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD']).strip().decode('utf-8')
         
         # Initialize subscribers and publishers
@@ -58,6 +61,18 @@ class StateClass:
         rospy.Timer(rospy.Duration(0.01), self.publish_state)
         rospy.Timer(rospy.Duration(0.1), self.commit_hash_callback)
 
+    def extract_workspace_path(self, full_path):
+        # Definir el patrón que identifica el final de la parte del workspace
+        pattern = "/DRIVERLESS/"
+
+        # Encontrar la posición del patrón en la cadena completa
+        pos = full_path.find(pattern)
+        if pos != -1:
+            # Extraer la subcadena hasta el final del patrón
+            return full_path[:pos + len(pattern) - 1]
+        else:
+            # Si el patrón no se encuentra, devolver la ruta completa
+            return full_path
 
     def imu_Callback(self, msg: Imu):
          # Extrae el cuaternión del mensaje IMU
