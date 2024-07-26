@@ -27,13 +27,12 @@ from skidpad_localization import SkidpadLocalization
 STANLEY_COEF = rospy.get_param('/skidpad_control/stanley_coef')
 K_DELTA = rospy.get_param('/skidpad_control/k_delta')
 K_YAW_RATE = rospy.get_param('/skidpad_control/k_yaw_rate')
-K_SLIP_RATIO = rospy.get_param('/skidpad_control/k_slip_ratio')
 
 TARGETILLO = rospy.get_param('/skidpad_control/targetillo')
 TARGETASO = rospy.get_param('/skidpad_control/targetaso')
-KP = rospy.get_param('/skidpad_control/kp')
-KI = rospy.get_param('/skidpad_control/ki')
-KD = rospy.get_param('/skidpad_control/kd')
+KP = rospy.get_param('/skidpad_control/KP')
+KI = rospy.get_param('/skidpad_control/KI')
+KD = rospy.get_param('/skidpad_control/KD')
 
 
 class SkidpadControl():
@@ -57,9 +56,6 @@ class SkidpadControl():
         self.prev_t = time.time()
         self.steer_diff = 0
 
-        self.tfBuffer = tf2_ros.Buffer()
-        self.listener = tf2_ros.TransformListener(self.tfBuffer)
-
         self.centers = []
         self.start_time = None
         self.calib_time = 2
@@ -75,7 +71,6 @@ class SkidpadControl():
 
         self.plantilla = np.array([[-20 + d*i,0] for i in range(int(20/d)+1)]+2*[[r * np.sin(2 * np.pi * i / self.N), -9.125+r * np.cos(2 * np.pi * i / self.N)] for i in range(self.N)]+2*[[r * np.sin(2 * np.pi * i / self.N), 9.125-r * np.cos(2 * np.pi * i / self.N)] for i in range(self.N)]+[[d*i,0] for i in range(int(20/d)+1)])
         self.route = None
-        self.delta_real=0
         
     
 
@@ -101,7 +96,7 @@ class SkidpadControl():
             self.publish_cmd()
     
     def update_steer(self, msg: Float32MultiArray):
-        self.steer_diff = self.steer - msg.data[1]
+        self.steer_diff = self.prev_steer - msg.data[1]
         self.prev_steer = msg.data[1]
 
 
@@ -230,7 +225,7 @@ class SkidpadControl():
 
         ### STANLEY CONTROL ###
         delta = -phi -phi_ss - np.arctan(STANLEY_COEF*dist/self.get_target())
-        delta += K_DELTA*self.steer_diff + K_YAW_RATE*(r_target - self.r) + K_SLIP_RATIO*self.r*self.speed   
+        delta += K_DELTA*self.steer_diff + K_YAW_RATE*(r_target - self.r)  
         delta = math.degrees(delta)
         
      

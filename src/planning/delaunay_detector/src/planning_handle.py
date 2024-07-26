@@ -57,13 +57,6 @@ class PlanningHandle():
 
         self.pub_global_route = rospy.Publisher('/delaunay/global_route', Trajectory, queue_size=1)
 
-        rospy.Subscriber('/lap_counter',Int16,self.lap_counter_callback)
-
-    def lap_counter_callback(self,msg):
-        if msg.data==0:
-            self.first_lap = True
-        else:
-            self.first_lap = False
 
     def get_trajectory(self, msg):
         if(slam=="marrano"):
@@ -97,19 +90,22 @@ class PlanningHandle():
 
 
     def get_global_track(self,msg :PointCloud2):
-        cones = point_cloud2.read_points(msg, field_names=("x", "y", "z","color", "score"), skip_nans=True)
-        self.track_planning_system.update_tracklimits(cones)
-        route = self.track_planning_system.calculate_path()
+        if self.first_lap:
+            self.first_lap = False
 
-        route = route[1:]
-        
-        # rospy.logwarn(route)
-        msg2 = Trajectory()
-        msg2.trajectory = [Point(p[0],p[1],0) for p in route]
-        # rospy.logwarn(msg2)
-        rospy.logerr([len(route),len(msg2.trajectory)])
+            cones = point_cloud2.read_points(msg, field_names=("x", "y", "z","color", "score"), skip_nans=True)
+            self.planning_system.update_tracklimits(cones)
+            route, triang = self.planning_system.calculate_path()
 
-        self.pub_global_route.publish(msg2)
+            route = route[1:]
+            
+            # rospy.logwarn(route)
+            msg2 = Trajectory()
+            msg2.trajectory = [Point(p[0],p[1],0) for p in route]
+            # rospy.logwarn(msg2)
+            rospy.logerr([len(route),len(msg2.trajectory)])
+
+            self.pub_global_route.publish(msg2)
 
        
 

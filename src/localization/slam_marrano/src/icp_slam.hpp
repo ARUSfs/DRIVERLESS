@@ -34,6 +34,7 @@ class ICP_handle {
 		ros::Subscriber perception_sub;
 		ros::Subscriber state_sub;
 		ros::Publisher map_publisher;
+		ros::Publisher global_map_publisher;
 		ros::Publisher lap_count_publisher;
 		ros::Publisher finished_pub;
 		// ros::Publisher slam_speed_publisher;
