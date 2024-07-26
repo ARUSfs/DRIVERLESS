@@ -2,7 +2,8 @@ sim_mode: false
 kp: 43.87
 ki: 1.29
 kd: 0.0
-target: 8
+targetillo: 8
+targetaso: 8
 
 stanley_coef: 1
 k_delta: -0.02

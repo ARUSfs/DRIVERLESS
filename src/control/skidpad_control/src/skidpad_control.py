@@ -29,7 +29,8 @@ K_DELTA = rospy.get_param('/skidpad_control/k_delta')
 K_YAW_RATE = rospy.get_param('/skidpad_control/k_yaw_rate')
 K_SLIP_RATIO = rospy.get_param('/skidpad_control/k_slip_ratio')
 
-TARGET = rospy.get_param('/skidpad_control/target')
+TARGETILLO = rospy.get_param('/skidpad_control/targetillo')
+TARGETASO = rospy.get_param('/skidpad_control/targetaso')
 KP = rospy.get_param('/skidpad_control/kp')
 KI = rospy.get_param('/skidpad_control/ki')
 KD = rospy.get_param('/skidpad_control/kd')
@@ -54,6 +55,7 @@ class SkidpadControl():
         self.integral = 0
         self.prev_err = 0
         self.prev_t = time.time()
+        self.steer_diff = 0
 
         self.tfBuffer = tf2_ros.Buffer()
         self.listener = tf2_ros.TransformListener(self.tfBuffer)
@@ -64,6 +66,7 @@ class SkidpadControl():
         self.calibrated = False
 
         self.i = 0
+        self.si = 0
 
  
         self.N = 100
@@ -98,7 +101,8 @@ class SkidpadControl():
             self.publish_cmd()
     
     def update_steer(self, msg: Float32MultiArray):
-        self.delta_real = msg.data[1]
+        self.steer_diff = self.steer - msg.data[1]
+        self.prev_steer = msg.data[1]
 
 
     def update_route(self, msg: PointCloud2):
@@ -158,7 +162,7 @@ class SkidpadControl():
 
 
     def get_acc(self):
-        error = TARGET - self.speed
+        error = self.get_target() - self.speed
 
         dt=time.time()-self.prev_t
         if self.speed > 0.1:
@@ -204,8 +208,8 @@ class SkidpadControl():
         d = 2*math.pi*9.125/self.N
 
         
-        # brake 10m after last lap
-        if self.i > 4*self.N+int(30/d):
+        # brake 7m after last lap
+        if self.i > 4*self.N+int(27/d):
             self.braking=True
             braking_msg = Bool()
             braking_msg.data = True
@@ -222,10 +226,11 @@ class SkidpadControl():
 
         r_target = self.speed*self.k
 
+        phi_ss = 250*self.speed*r_target/(-20000*(1+0.55/0.45))
 
         ### STANLEY CONTROL ###
-        delta = -phi - np.arctan(STANLEY_COEF*dist/TARGET)
-        delta += K_DELTA*(delta-math.radians(self.delta_real)) + K_YAW_RATE*(r_target - self.r) + K_SLIP_RATIO*self.r*self.speed   
+        delta = -phi -phi_ss - np.arctan(STANLEY_COEF*dist/self.get_target())
+        delta += K_DELTA*self.steer_diff + K_YAW_RATE*(r_target - self.r) + K_SLIP_RATIO*self.r*self.speed   
         delta = math.degrees(delta)
         
      
@@ -249,3 +254,15 @@ class SkidpadControl():
             self.k = (1/9.125)
         else:
             self.k = 0
+    
+    def get_target(self):
+        if self.si < 50:
+            return TARGETILLO
+        elif self.si < 130:
+            return TARGETASO
+        elif self.si < 170:
+            return TARGETILLO
+        elif self.si < 245:
+            return TARGETASO
+        else:
+            return TARGETILLO

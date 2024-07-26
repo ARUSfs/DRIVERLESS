@@ -7,7 +7,7 @@
       braking_kp: 0.5
       deceleration:  5
       min_braking_cmd: -0.2 
-      max_cmd: 1 
+      max_cmd: 0.15 
       min_cmd: 0
     </rosparam>
   </node>
@@ -28,7 +28,8 @@
   <node name="skidpad_control" pkg="skidpad_control" type="main.py"  output="screen">
   <rosparam command="load" file="$(find skidpad_control)/config/skidpad_control.yaml"/>
     <rosparam>
-      target: 5
+      targetillo: 5
+      targetaso: 10
       KP: 43.87
       KD : 0.0
       KI : 1.29
