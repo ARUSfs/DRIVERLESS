@@ -15,6 +15,8 @@
 #include "sensor_msgs/PointCloud2.h"
 #include <common_msgs/Controls.h>
 #include "canInterface.hpp"
+#include <sstream>
+#include <stdlib.h>
 
 int velMax = 5500;
 float wheelRadius = 0.2;
@@ -50,8 +52,10 @@ CanInterface::CanInterface()
     IMUPub = nh.advertise<sensor_msgs::Imu>("can/IMU", 100);
     steeringAnglePub = nh.advertise<std_msgs::Float32>("can/steering_angle", 100);
     RESRangePub = nh.advertise<std_msgs::Float32>("/can/RESRange", 100);
+    PCTempPub = nh.advertise<std_msgs::Float32>("/pc_temp", 100);
 
     //Timers
+    pcTempTimer = nh.createTimer(ros::Duration(0.1), &CanInterface::pcTempCallback, this);
     heartBeatTimer = nh.createTimer(ros::Duration(0.1), &CanInterface::pubHeartBeat, this);
     DL500Timer = nh.createTimer(ros::Duration(0.1), &CanInterface::DL500Callback, this);
     DL501Timer = nh.createTimer(ros::Duration(0.1), &CanInterface::DL501Callback, this);
@@ -602,4 +606,48 @@ void CanInterface::DL502Callback(const ros::TimerEvent&)
 void CanInterface::targetSpeedCallback(std_msgs::Int16 msg)
 {
     this->target_speed = msg.data;
+}
+
+void CanInterface::pcTempCallback(const ros::TimerEvent&)
+{
+    this->getPcTemp();
+    std_msgs::Float32 x;
+    x.data = this->pc_temp;
+    this->PCTempPub.publish(x);
+
+    int8_t bytes[2];
+    int16_t temp = this->pc_temp*100;
+    intToBytes(temp, bytes);
+
+    int16_t msg[3] = {0x01, bytes[0], bytes[1]};
+    canWrite(hndW1, 0x183, msg, 3, canMSG_STD);
+}
+
+void CanInterface::getPcTemp()
+{
+    float temp = 0.0;
+    FILE* fp = popen("sensors", "r");
+    if (fp == NULL) {
+        ROS_ERROR("Failed to run sensors command");
+    }
+
+    char path[1035];
+    while (fgets(path, sizeof(path), fp) != NULL) {
+        std::string line(path);
+        if (line.find("Core 0:") != std::string::npos) { // Ajusta esto según tu salida de 'sensors'
+            std::istringstream iss(line);
+            std::string token;
+            while (iss >> token) {
+                if (token[0] == '+') {
+                    token = token.substr(1);
+                    token.pop_back();
+                    temp = std::stof(token);
+                    break;
+                }
+            }
+            break;
+        }
+    }
+    pclose(fp);
+    this->pc_temp = temp;
 }
