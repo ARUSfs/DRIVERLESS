@@ -1,5 +1,5 @@
 import rospy
-from std_msgs.msg import Float32, Float32MultiArray
+from std_msgs.msg import Float32, Float32MultiArray, String
 from common_msgs.msg import CarState
 import tf2_ros
 import tf.transformations
@@ -9,6 +9,8 @@ from sensor_msgs.msg import Imu
 import numpy as np
 import time
 import math
+import subprocess
+import os
 
 global_frame = rospy.get_param('/car_state/global_frame')
 car_frame = rospy.get_param('/car_state/car_frame')
@@ -32,12 +34,16 @@ class StateClass:
         self.yaw = 0
         self.pub_state = None
 
+        os.chdir("/home/carlos/tests/src/DRIVERLESS")
+        self.commit_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD']).strip().decode('utf-8')
+
         self.yaw_ini = None
 
         self.limovelo_rotation = np.array([[1,0,0],[0,1,0],[0,0,1]])
         
         # Initialize subscribers and publishers
         self.pub_state = rospy.Publisher('/car_state/state', CarState, queue_size=10)
+        self.pub_commit_hash = rospy.Publisher('/car_state/commit_hash', String, queue_size=10)
         rospy.Subscriber('/motor_speed', Float32, self.motorspeed_callback)
         rospy.Subscriber('fssim/base_pose_ground_truth', State, self.base_pose_callback)
         rospy.Subscriber('/can/IMU', Imu, self.imu_Callback)
@@ -52,6 +58,8 @@ class StateClass:
                 
         # Timer to periodically publish state
         rospy.Timer(rospy.Duration(0.01), self.publish_state)
+
+        rospy.Timer(rospy.Duration(0.1), self.commit_hash_callback)
 
     def imu_Callback(self, msg: Imu):
         # Extrae el cuaternión del mensaje IMU
@@ -144,4 +152,7 @@ class StateClass:
 
     def getKalmanEstimation(self, speed):
         pass
+
+    def commit_hash_callback(self, event):
+        self.pub_commit_hash.publish(self.commit_hash)
 
