@@ -109,6 +109,7 @@ class StanleyControl():
 
 
     def get_acc(self):
+        
         error = self.speed_profile[self.i] - self.speed
 
         dt=time.time()-self.prev_t
@@ -118,8 +119,11 @@ class StanleyControl():
 
         self.prev_t = time.time()
         self.prev_err = error
-        rospy.loginfo(self.speed)
+        
         cmd = KP*error + KI*self.integral + KD*derivative
+
+        rospy.loginfo(self.speed)
+        rospy.loginfo([error,self.integral,derivative])
 
         return max(min(cmd/230, 1),-1)
     
