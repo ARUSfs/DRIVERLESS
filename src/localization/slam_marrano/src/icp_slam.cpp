@@ -29,7 +29,8 @@ ICP_handle::ICP_handle(){
 	nh.getParam("/slam_marrano/car_frame", car_frame);
 	nh.getParam("/slam_marrano/restart_map", restart_map);
 	nh.getParam("/slam_marrano/restart_iterations", restart_iterations);
-	nh.getParam("/slam_marrano/AUTOX", AUTOX);
+	nh.getParam("/slam_marrano/mission", mission);
+	nh.getParam("/slam_marrano/braking_offset", braking_offset);
 
 	prev_t = ros::Time::now();	
 	lap_time = ros::Time::now();
@@ -130,7 +131,7 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 	// std_msgs::Float32 slam_speed_msg;
 	// slam_speed_msg.data = sqrt((position.coeff(0,3)-prev_x)*(position.coeff(0,3)-prev_x) + (position.coeff(1,3)-prev_y)*(position.coeff(1,3)-prev_y))/dt;
 	// slam_speed_publisher.publish(slam_speed_msg);
-
+	
 
 	//update map
 	pcl::PointCloud<PointXYZColorScore>::Ptr registered_map2 = pcl::PointCloud<PointXYZColorScore>::Ptr(new pcl::PointCloud<PointXYZColorScore>);
@@ -258,20 +259,24 @@ void ICP_handle::send_position() {
 
 	br.sendTransform(transformSt);
 
-	if (position.coeff(0,3)*position.coeff(0,3)+position.coeff(1,3)*position.coeff(1,3) < 25){
+	if (position.coeff(0,3)*position.coeff(0,3)+position.coeff(1,3)*position.coeff(1,3) < 10){
 		if(ros::Time::now().toSec()-lap_time.toSec() > 20 && vx>1 ){
 			lap_count += 1;
 			lap_time = ros::Time::now();
 			std::cout << "Lap count: " << lap_count << std::endl;
-			if (lap_count==1 && AUTOX){
-				std_msgs::Bool finished_msg;
-				finished_msg.data = true;
-				finished_pub.publish(finished_msg);
-			}
+			if ((lap_count==1 && mission=="AUTOX")||(lap_count==10 && mission=="TRACKDRIVE")){
+				start_braking = true;	
+			} 
 		}else{
 			lap_time = ros::Time::now();
 		}
 	} 
+
+	if(start_braking && position.coeff(0,3)>braking_offset){
+		std_msgs::Bool finished_msg;
+		finished_msg.data = true;
+		finished_pub.publish(finished_msg);
+	}
 
 	std_msgs::Int16 lap_count_msg;
 	lap_count_msg.data = lap_count;

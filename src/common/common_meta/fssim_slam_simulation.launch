@@ -10,6 +10,7 @@
       topic_perception_map: '/mapa_icp'
       color_enabled: false
       MAX_ROUTE_LENGTH: 9999
+      slam: 'none'
     </rosparam>
   </node>
 

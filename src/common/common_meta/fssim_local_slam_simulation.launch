@@ -14,8 +14,6 @@
       topic_perception_map: '/mapa_icp'
       slam: 'marrano'
       color_enabled: false
-      MODE: 'PP'
-      SMOOTH: false
     </rosparam>
   </node>
 

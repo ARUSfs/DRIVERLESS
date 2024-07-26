@@ -8,6 +8,7 @@ send_simplices_marker: true
 global_frame: 'map'
 car_frame: 'body'
 slam: 'none'
+trackdrive: false
 
 MODE: 'PP' # PP or STANLEY
 SMOOTH: false

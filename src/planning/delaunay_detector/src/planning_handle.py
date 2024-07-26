@@ -12,6 +12,7 @@ from common_msgs.msg import Simplex, Triangulation
 from sensor_msgs.msg import PointCloud2
 from sensor_msgs import point_cloud2
 from scipy.interpolate import splprep, splev
+from std_msgs.msg import Int16
 import numpy as np
 import tf2_ros
 import tf2_sensor_msgs.tf2_sensor_msgs as tf2_sensor_msgs
@@ -24,6 +25,7 @@ from track_planning import TrackPlanningSystem
 global_frame = rospy.get_param('/delaunay_detector/global_frame')
 car_frame = rospy.get_param('/delaunay_detector/car_frame')
 slam = rospy.get_param('/delaunay_detector/slam')
+TRACKDRIVE = rospy.get_param('/delaunay_detector/trackdrive')
 
 
 class PlanningHandle():
@@ -33,6 +35,7 @@ class PlanningHandle():
     """
 
     def __init__(self):
+        self.first_lap = True
 
         self.tf_buffer = tf2_ros.Buffer()
         self.listener = tf2_ros.TransformListener(self.tf_buffer)
@@ -54,9 +57,16 @@ class PlanningHandle():
 
         self.pub_global_route = rospy.Publisher('/delaunay/global_route', Trajectory, queue_size=1)
 
+        rospy.Subscriber('/lap_counter',Int16,self.lap_counter_callback)
+
+    def lap_counter_callback(self,msg):
+        if msg.data==0:
+            self.first_lap = True
+        else:
+            self.first_lap = False
 
     def get_trajectory(self, msg):
-        if(slam!="none"):
+        if(slam=="marrano"):
             # usamos el mapeado global como percepción local para ganar estabilidad
             trans=self.tf_buffer.lookup_transform(car_frame, global_frame, rospy.Time(0))
             trans_msg = tf2_sensor_msgs.do_transform_cloud(msg,transform=trans)
@@ -64,7 +74,9 @@ class PlanningHandle():
             cones = [c for c in cones_all if c[0]>-5]
         else:
             cones = point_cloud2.read_points(msg, field_names=("x", "y", "z","color","score"),skip_nans=True)
-        self.planning_system.update_tracklimits(cones)
+        
+        if (self.first_lap or not TRACKDRIVE):
+            self.planning_system.update_tracklimits(cones)
         self.publish_msg()
 
 

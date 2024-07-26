@@ -1,22 +1,22 @@
 <launch>
+  <!-- Usa marrano aplicando planning en global y deja de actualizar la ruta al completar la 
+  primera vuelta pero sí sigue actulizando el slam para que no pete la localización -->
 
-  <node pkg="slam_marrano" name="slam_marrano" type="main">
+  <node pkg="slam_marrano" name="slam_marrano" type="main" output="screen">
   <rosparam command="load" file="$(find slam_marrano)/config/slam_marrano.yaml"/>
-  <rosparam>
-    restart_map: true
-    restart_iterations: 100
-    AUTOX: true
-  </rosparam>
+    <rosparam>
+      mission: 'AUTOX'
+    </rosparam>
   </node>
 
   <node pkg="delaunay_detector" name="delaunay_detector" type="main.py" output="screen">
     <rosparam command="load" file="$(find delaunay_detector)/config/delaunay.yaml"/>
     <rosparam>
       topic_perception_map: '/mapa_icp'
-      slam: 'marrano'
       color_enabled: false
-      MODE: 'PP'
-      SMOOTH: false
+      MAX_ROUTE_LENGTH: 9999
+      slam: 'none'
+      trackdrive: true
     </rosparam>
   </node>
 
@@ -33,7 +33,7 @@
   <node name="interface" pkg="visualization" type="main_interface.py">
 	  <rosparam command="load" file="$(find visualization)/config/interface.yaml"/>
     <rosparam>
-      frame: 'fssim/vehicle/cog'
+      frame: 'map'
     </rosparam>
 	</node>
 
@@ -52,12 +52,12 @@
 
  
 
-  <node pkg="pure_pursuit" name="pure_pursuit" type="main">
+  <node pkg="pure_pursuit" name="pure_pursuit" type="main" output="screen">
   <rosparam command="load" file="$(find pure_pursuit)/config/pure_pursuit.yaml"/>
     <rosparam>
       LAD: 6
       TARGET_SPEED: 5
-      global_mode: false
+      global_mode: true
     </rosparam>
   </node>
 

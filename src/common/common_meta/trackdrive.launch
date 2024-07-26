@@ -19,9 +19,7 @@
   <node pkg="slam_marrano" name="slam_marrano" type="main">
   <rosparam command="load" file="$(find slam_marrano)/config/slam_marrano.yaml"/>
   <rosparam>
-    restart_map: true
-    restart_iterations: 100
-    AUTOX: false
+    mission: 'TRACKDRIVE'
   </rosparam>
   </node>
 
@@ -29,8 +27,10 @@
     <rosparam command="load" file="$(find delaunay_detector)/config/delaunay.yaml"/>
     <rosparam>
       topic_perception_map: '/mapa_icp'
-      slam: 'marrano'
       color_enabled: false
+      MAX_ROUTE_LENGTH: 9999
+      slam: 'none'
+      trackdrive: true
     </rosparam>
   </node>
 
