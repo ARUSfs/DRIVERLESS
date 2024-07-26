@@ -1,14 +1,23 @@
 <launch>
-  <node pkg="rslidar_sdk" name="rslidar_sdk_node" type="rslidar_sdk_node" output="screen">
-    <param name="config_path" value=""/>
-	</node>
 
   <node name="steering" pkg="steering" type="main.py" output="screen">
     <rosparam command="load" file="$(find steering)/config/steering.yaml"/>
   </node>
 
-  <node pkg="lidar_perception" name="lidar_perception" type="main">
+  <node pkg="rslidar_sdk" name="rslidar_sdk_node" type="rslidar_sdk_node" output="screen">
+    <param name="config_path" value=""/>
+	</node>
+
+  <node pkg="lidar_perception" name="lidar_perception" type="main" output="screen">
     <rosparam command="load" file="$(find lidar_perception)/config/lidar_cpp.yaml"/>
+  </node>
+
+  <node pkg="slam_marrano" name="slam_marrano" type="main">
+  <rosparam command="load" file="$(find slam_marrano)/config/slam_marrano.yaml"/>
+  <rosparam>
+    global_frame: "map"
+    car_frame: "body"
+  </rosparam>
   </node>
 
   <node name="can_c" pkg="can_c" type="main" output="screen">
@@ -16,9 +25,6 @@
 
   <node pkg="car_state" name="car_state" type="main.py">
   <rosparam command="load" file="$(find car_state)/config/car_state.yaml"/>
-  <rosparam>
-    SLAM: "marrano"
-  </rosparam>
   </node>
 
   <node pkg="controller" name="controller" type="main.py" output='screen'>
@@ -32,43 +38,32 @@
     </rosparam>
   </node>
 
-    
-
-  <node name="accel_control" pkg="accel_control" type="main.py"  output="screen">
-    <rosparam command="load" file="$(find accel_control)/config/accel_control.yaml"/>
+   <node name="accel_control" pkg="accel_control" type="main.py"  output="screen">
+   <rosparam command="load" file="$(find accel_control)/config/accel_control.yaml"/>
     <rosparam>
       perception_topic: "/mapa_icp"
       global_frame: "map"
       car_frame: "body"
       slam: "marrano"
 
-      KP: 43.87
-      KI: 1.29
-      KD: 0.0
-        
-      target: 8
-      pendiente: 3
-      track_length: 75
-
-      lqr_dist: 1.0
-      lqr_yaw: 25.0
+      lqr_dist: 20.0
+      lqr_yaw: 20.0
       lqr_beta: 0.0
       lqr_r: 0.0
-    </rosparam>
-  </node>
 
-  <node pkg="slam_marrano" name="slam_marrano" type="main">
-  <rosparam command="load" file="$(find slam_marrano)/config/slam_marrano.yaml"/>
-  <rosparam>
-    global_frame: "map"
-    car_frame: "body"
-  </rosparam>
+      KP: 43.87
+      KD : 0.0
+      KI : 1.29
+
+      target: 12
+      pendiente: 4
+      track_length: 75
+    </rosparam>
   </node>
 
 
   <!-- Se guardan en $HOME/.ros/ -->
-  <node pkg="rosbag" type="record" name="rosbag_record" args="record -o acceleration -a"/>
+  <node pkg="rosbag" type="record" name="rosbag_record" args="record -o ebs_test -a"/>
 
 
 </launch>
-

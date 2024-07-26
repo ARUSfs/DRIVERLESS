@@ -10,6 +10,11 @@ class ControlHandle {
         float velocity = 0;
         float TARGET_SPEED;
         float KP;
+        float KD;
+        float KI;
+        float previous_error;
+        float integral;
+        std::chrono::time_point<std::chrono::high_resolution_clock> previous_time;
 
         ros::NodeHandle nh;
         ros::Publisher control_publisher;
@@ -29,3 +34,4 @@ class ControlHandle {
         ControlHandle();
 
 };
+

@@ -23,9 +23,6 @@ using namespace pcl;
 void PurePursuit::update_path(const vector<pcl::PointXY> &new_path) {
     // Checking if path is empty since Delaunay sometimes returns empty paths
     // In this case just ignore it, the last path should be enough.
-    if(new_path.empty()) {
-        return;
-    }
 
     path = new_path;
     path_updated = true;
@@ -34,11 +31,6 @@ void PurePursuit::update_path(const vector<pcl::PointXY> &new_path) {
 
 PointXY PurePursuit::search_pursuit_point(const float look_ahead_distance, const pcl::PointXY car_position) {
     // TODO: Should check for empty path in class
-
-    if(path.empty()){
-        PointXY p;
-        return p;
-    }
 
     size_t closest_point_index = 0;
     float min_distance = numeric_limits<float>::infinity();
@@ -92,6 +84,9 @@ PointXY PurePursuit::search_pursuit_point(const float look_ahead_distance, const
 }
 
 float PurePursuit::get_steering_angle() {
+    if(path.size()<=1) {
+        return prev_steer;
+    }
     pcl::PointXY car_position;
     double roll, pitch, yaw;
 
@@ -127,6 +122,8 @@ float PurePursuit::get_steering_angle() {
     float delta = atan2((2.0 * 1.535 * sin(alpha))/LAD,1.0);
 
     delta = max(-19.9,min(180*delta/M_PI,19.9));
+
+    prev_steer = delta;
 
     return delta;
 

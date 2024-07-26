@@ -1,19 +1,22 @@
 import rospy
-from std_msgs.msg import Float32, Float32MultiArray
+from std_msgs.msg import Float32, Float32MultiArray, String
 from common_msgs.msg import CarState
 import tf2_ros
 import tf.transformations
-from geometry_msgs.msg import TransformStamped
 from fssim_common.msg import State
 from sensor_msgs.msg import Imu
 import numpy as np
-import time
 import math
+import subprocess
+import rospkg
+import os
 
 global_frame = rospy.get_param('/car_state/global_frame')
 car_frame = rospy.get_param('/car_state/car_frame')
 get_base_pose_position = rospy.get_param('/car_state/get_base_pose_position')
 SLAM = rospy.get_param('/car_state/SLAM')
+V_ESTIMATION = rospy.get_param('/car_state/V_ESTIMATION')
+N_KMEANS = rospy.get_param('/car_state/N_KMEANS')
 
 class StateClass:
 
@@ -30,12 +33,18 @@ class StateClass:
         self.yaw = 0
         self.pub_state = None
 
+        PATH = rospkg.RosPack().get_path('can_c')
+
         self.yaw_ini = None
 
         self.limovelo_rotation = np.array([[1,0,0],[0,1,0],[0,0,1]])
         
+        os.chdir(self.extract_workspace_path(PATH))
+        self.commit_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD']).strip().decode('utf-8')
+        
         # Initialize subscribers and publishers
         self.pub_state = rospy.Publisher('/car_state/state', CarState, queue_size=10)
+        self.pub_commit_hash = rospy.Publisher('/car_state/commit_hash', String, queue_size=10)
         rospy.Subscriber('/motor_speed', Float32, self.motorspeed_callback)
         rospy.Subscriber('fssim/base_pose_ground_truth', State, self.base_pose_callback)
         rospy.Subscriber('/can/IMU', Imu, self.imu_Callback)
@@ -48,26 +57,37 @@ class StateClass:
             if SLAM == "limovelo":
                 rospy.Subscriber('/limovelo/rotation', Float32MultiArray, self.update_limovelo_rotation)
                 
-        # Timer to periodically publish state
+        # Time to periodically publish state
         rospy.Timer(rospy.Duration(0.01), self.publish_state)
+        rospy.Timer(rospy.Duration(0.1), self.commit_hash_callback)
+
+    def extract_workspace_path(self, full_path):
+        # Definir el patrón que identifica el final de la parte del workspace
+        pattern = "/DRIVERLESS/"
+
+        # Encontrar la posición del patrón en la cadena completa
+        pos = full_path.find(pattern)
+        if pos != -1:
+            # Extraer la subcadena hasta el final del patrón
+            return full_path[:pos + len(pattern) - 1]
+        else:
+            # Si el patrón no se encuentra, devolver la ruta completa
+            return full_path
 
     def imu_Callback(self, msg: Imu):
-        # Extrae el cuaternión del mensaje IMU
+         # Extrae el cuaternión del mensaje IMU
         q = (
             msg.orientation.x,
             msg.orientation.y,
             msg.orientation.z,
             msg.orientation.w
         )
-
         # Convierte el cuaternión a roll, pitch, yaw
-        #roll, pitch, yaw = tf_transformations.euler_from_quaternion(q)
-        #roll, pitch, yaw = tf.euler_from_quaternion(q)
-
         roll, pitch, yaw = self.quaternion_to_euler(q)
         if self.yaw_ini == None:
             self.yaw_ini = - yaw
-        self.yaw = - yaw - self.yaw_ini
+        if SLAM == 'none':
+            self.yaw = ((-yaw - self.yaw_ini)+np.pi)%(2*np.pi) - np.pi 
         self.r = - msg.angular_velocity.z
 
     def quaternion_to_euler(self, q):
@@ -81,7 +101,12 @@ class StateClass:
         return roll, pitch, yaw
 
     def motorspeed_callback(self, msg):
-        self.vx = msg.data
+        if V_ESTIMATION == 'N_MEANS':
+            self.vx = msg.data*(1/N_KMEANS) + self.vx*(1-1/N_KMEANS)
+        elif V_ESTIMATION == 'KALMANN_FILTER':
+            self.vx = self.getKalmanEstimation(msg.data)
+        else:
+            self.vx = msg.data
     
     def base_pose_callback(self,msg: State):
         self.vx = msg.vx
@@ -134,4 +159,10 @@ class StateClass:
         state.pitch = self.pitch
         state.yaw = self.yaw
         self.pub_state.publish(state)
+
+    def getKalmanEstimation(self, speed):
+        pass
+
+    def commit_hash_callback(self, event):
+        self.pub_commit_hash.publish(self.commit_hash)
 

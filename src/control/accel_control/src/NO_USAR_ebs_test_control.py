@@ -17,7 +17,7 @@ import tf.transformations as tf
 from common_msgs.msg import Controls, CarState
 from visualization_msgs.msg import Marker
 from sensor_msgs.msg import PointCloud2
-from std_msgs.msg import Float32,Bool,Int16, Float32MultiArray
+from std_msgs.msg import Float32,Bool,Int16
 from geometry_msgs.msg import Point
 
 from accel_localization import AccelLocalization
@@ -26,8 +26,8 @@ KP = rospy.get_param('/accel_control/KP')
 KI = rospy.get_param('/accel_control/KI')
 KD = rospy.get_param('/accel_control/KD')
 TARGET = rospy.get_param('/accel_control/target')
-PENDIENTE = rospy.get_param('/accel_control/pendiente')
 TRACK_LENGTH = rospy.get_param('/accel_control/track_length')
+PENDIENTE = rospy.get_param('/accel_control/pendiente')
 LQR_PARAMS = np.array([rospy.get_param('/accel_control/lqr_dist'),
                        rospy.get_param('/accel_control/lqr_yaw'),
                        rospy.get_param('/accel_control/lqr_beta'),
@@ -35,7 +35,7 @@ LQR_PARAMS = np.array([rospy.get_param('/accel_control/lqr_dist'),
 perception_topic = rospy.get_param('/accel_control/perception_topic')
 
 
-class AccelControl():
+class EBSTestControl():
 
     def __init__(self):
         
@@ -46,29 +46,43 @@ class AccelControl():
         self.steer = 0
         self.acc = 0
         self.speed = 0
-        self.yaw_car = 0
         self.avg_speed = 0.0001
         self.i = 0
         self.braking = False
         self.a_media = 0
         self.b_media = 0
+        self.integral = 0
         self.prev_t = time.time()
         self.prev_err = 0
-        self.integral = 0
         self.r = 0
+        self.ebs_opened = False
 
         ### Publicadores y suscriptores ###
         self.cmd_publisher = rospy.Publisher('/controls_pp', Controls, queue_size=1) 
         self.braking_publisher = rospy.Publisher('/braking', Bool, queue_size=10)
+        self.pub_AS_status = rospy.Publisher('can/AS_status', Int16, queue_size=10)
         self.recta_publisher = rospy.Publisher("/accel_control/recta", Point, queue_size=10)
         rospy.Subscriber(perception_topic, PointCloud2, self.update_route, queue_size=10)
         rospy.Subscriber('/car_state/state', CarState, self.update_state, queue_size=1)
-        self.phi_dist_pub = rospy.Publisher('/phi_dist', Float32MultiArray, queue_size=1)
+
 
     def update_state(self, msg: CarState):
+        if self.ebs_opened:
+            emergency_msg = Int16()
+            emergency_msg.data = 4
+            self.pub_AS_status.publish(emergency_msg)
+            
+            return
+
         self.speed = math.hypot(msg.vx,msg.vy)
-        self.yaw_car = msg.yaw
-        self.r = msg.r
+        
+        # if self.speed > TARGET:
+        #     emergency_msg = Int16()
+        #     emergency_msg.data = 4
+        #     self.pub_AS_status.publish(emergency_msg)
+        #     self.ebs_opened=True
+        #     self.acc = 0
+        #     self.publish_cmd()
 
         if self.start_time == 0 and self.speed > 0.1:
             self.start_time = time.time()
@@ -90,6 +104,38 @@ class AccelControl():
             self.publish_cmd()
 
 
+    #def update_route(self, msg: PointCloud2):
+    #    self.steer = 0
+
+
+    def get_acc(self):
+        error = self.get_target() - self.speed
+
+        dt=time.time()-self.prev_t
+        if self.speed > 0.1:
+            self.integral += error*dt
+        derivative = (error-self.prev_err)/dt
+
+        self.prev_t = time.time()
+        self.prev_err = error
+
+        cmd = KP*error + KI*self.integral + KD*derivative
+
+        # escalate to max torque
+        return max(min(cmd/230, 1),-1)
+
+
+    def publish_cmd(self):
+        controls = Controls()
+        controls.steering = self.steer
+        controls.accelerator = self.acc
+        self.cmd_publisher.publish(controls)
+
+    def get_target(self):
+        t = time.time() - self.start_time
+        return min(t*PENDIENTE+TARGET/10, TARGET)
+    
+
     def update_route(self, msg: PointCloud2):
         try:
             a,b = self.accel_localizator.get_route(msg)
@@ -108,46 +154,12 @@ class AccelControl():
         msg.y = b
         self.recta_publisher.publish(msg)
 
-
     def get_steer(self, a, b):
         dist = -b/np.sqrt(a**2 + 1)   # Distancia del coche a la trayectoria
         yaw = - math.atan(a)               # Ángulo entre la trayectoria y el coche
         beta = 0
 
-        phi_dist_msg = Float32MultiArray()
-        phi_dist_msg.data.append(yaw)
-        phi_dist_msg.data.append(dist)
-        self.phi_dist_pub.publish(phi_dist_msg)
-
         w = np.array([dist, yaw, beta, self.r], np.float64) 
         steer = -np.dot(LQR_PARAMS, w)         # u = -K*w
 
         return max(min(steer, 20),-20)
-
-
-    def get_acc(self):
-        error = self.get_target() - self.speed
-
-        dt=time.time()-self.prev_t
-        if self.speed>0.1:
-            self.integral += error*dt
-        derivative = (error-self.prev_err)/dt
-
-        self.prev_t = time.time()
-        self.prev_err = error
-
-        cmd = KP*error + KI*self.integral + KD*derivative
-
-        return max(min(cmd/230, 1),-1)
-
-
-    def publish_cmd(self):
-        controls = Controls()
-        controls.steering = self.steer
-        controls.accelerator = self.acc
-        self.cmd_publisher.publish(controls)
-
-   
-    def get_target(self):
-        t = time.time() - self.start_time
-        return min(t*PENDIENTE+TARGET/10, TARGET)

@@ -13,6 +13,8 @@
 #include <algorithm>
 #include <common_msgs/CarState.h>
 #include <std_msgs/Int16.h>
+#include <std_msgs/Bool.h>
+#include <std_msgs/Float32.h>
 
 
 #include <pcl/common/impl/centroid.hpp>
@@ -25,6 +27,10 @@ ICP_handle::ICP_handle(){
 
 	nh.getParam("/slam_marrano/global_frame", global_frame);
 	nh.getParam("/slam_marrano/car_frame", car_frame);
+	nh.getParam("/slam_marrano/restart_map", restart_map);
+	nh.getParam("/slam_marrano/restart_iterations", restart_iterations);
+	nh.getParam("/slam_marrano/mission", mission);
+	nh.getParam("/slam_marrano/braking_offset", braking_offset);
 
 	prev_t = ros::Time::now();	
 	lap_time = ros::Time::now();
@@ -38,15 +44,17 @@ ICP_handle::ICP_handle(){
 	perception_sub = nh.subscribe<sensor_msgs::PointCloud2>("/perception_map", 1000, &ICP_handle::map_callback, this);
 	state_sub = nh.subscribe<common_msgs::CarState>("/car_state/state", 1000, &ICP_handle::state_callback, this);
 
-
+	finished_pub = nh.advertise<std_msgs::Bool>("/braking", 10);
 	map_publisher = nh.advertise<sensor_msgs::PointCloud2>("/mapa_icp", 10);
 	lap_count_publisher = nh.advertise<std_msgs::Int16>("/lap_counter", 10);
-
+	// slam_speed_publisher = nh.advertise<std_msgs::Float32>("/slam_speed", 10);
 }
 
 void ICP_handle::state_callback(common_msgs::CarState state_msg) {
 	vx = state_msg.vx;
     yaw_rate = state_msg.r;
+
+	send_position();
 }
 
 void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
@@ -56,12 +64,9 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 
 	if(!has_map){
 		prev_t = ros::Time::now();
-		lap_time = ros::Time::now();
 		*allp_clustered = *new_map;
 		*previous_map = *new_map;
 		has_map = true;
-
-		send_position();
 		return;
 	}
 
@@ -118,10 +123,15 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 	
 	//update position
 	prev_transformation = (estimation*w + transformation*(1-w));
+	float prev_x = position.coeff(0,3);
+	float prev_y = position.coeff(1,3);
 	position = prev_transformation*position;
 	prev_t = ros::Time::now();
-	send_position();
 
+	// std_msgs::Float32 slam_speed_msg;
+	// slam_speed_msg.data = sqrt((position.coeff(0,3)-prev_x)*(position.coeff(0,3)-prev_x) + (position.coeff(1,3)-prev_y)*(position.coeff(1,3)-prev_y))/dt;
+	// slam_speed_publisher.publish(slam_speed_msg);
+	
 
 	//update map
 	pcl::PointCloud<PointXYZColorScore>::Ptr registered_map2 = pcl::PointCloud<PointXYZColorScore>::Ptr(new pcl::PointCloud<PointXYZColorScore>);
@@ -214,7 +224,11 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 
 		*previous_map = *clustered_points;
 	}
-	
+
+	if(restart_map && callback_iteration>restart_iterations){
+		has_map = false;
+		callback_iteration = 0;
+	}
 
 	sensor_msgs::PointCloud2 new_map_msg;
 
@@ -227,31 +241,42 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 }
 
 void ICP_handle::send_position() {
+	float dt = ros::Time::now().toSec()-prev_t.toSec();
 	geometry_msgs::TransformStamped transformSt;
 	transformSt.header.stamp = ros::Time::now();
 	transformSt.header.frame_id = global_frame;
 	transformSt.child_frame_id = car_frame;
-	transformSt.transform.translation.x = position.coeff(0,3);
-	transformSt.transform.translation.y = position.coeff(1,3);
 	tf2::Quaternion q;
-	float ang = (float)-atan2(position.coeff(0, 1), position.coeff(0,0));
+	float ang = (float)-atan2(position.coeff(0, 1), position.coeff(0,0)) + yaw_rate*dt;
+	transformSt.transform.translation.x = position.coeff(0,3)+vx*dt*cos(ang);
+	transformSt.transform.translation.y = position.coeff(1,3)+vx*dt*sin(ang);
 	q.setRPY(0, 0, ang);
 	transformSt.transform.rotation.x = q.x();
 	transformSt.transform.rotation.y = q.y();
 	transformSt.transform.rotation.z = q.z();
 	transformSt.transform.rotation.w = q.w();
 
+
 	br.sendTransform(transformSt);
 
-	if (position.coeff(0,3)*position.coeff(0,3)+position.coeff(1,3)*position.coeff(1,3) < 4){
-		if(ros::Time::now().toSec()-lap_time.toSec() > 20){
+	if (position.coeff(0,3)*position.coeff(0,3)+position.coeff(1,3)*position.coeff(1,3) < 10){
+		if(ros::Time::now().toSec()-lap_time.toSec() > 20 && vx>1 ){
 			lap_count += 1;
 			lap_time = ros::Time::now();
 			std::cout << "Lap count: " << lap_count << std::endl;
+			if ((lap_count==1 && mission=="AUTOX")||(lap_count==10 && mission=="TRACKDRIVE")){
+				start_braking = true;	
+			} 
 		}else{
 			lap_time = ros::Time::now();
 		}
 	} 
+
+	if(start_braking && position.coeff(0,3)>braking_offset){
+		std_msgs::Bool finished_msg;
+		finished_msg.data = true;
+		finished_pub.publish(finished_msg);
+	}
 
 	std_msgs::Int16 lap_count_msg;
 	lap_count_msg.data = lap_count;

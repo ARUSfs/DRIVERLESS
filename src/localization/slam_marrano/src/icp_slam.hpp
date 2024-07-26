@@ -28,15 +28,23 @@ class ICP_handle {
 		float vx=0;
 		float lap_count = 0;
 		ros::Time lap_time;
+		bool start_braking = false;
 	public:
 		ros::NodeHandle nh;
 		ros::Subscriber perception_sub;
 		ros::Subscriber state_sub;
 		ros::Publisher map_publisher;
 		ros::Publisher lap_count_publisher;
+		ros::Publisher finished_pub;
+		// ros::Publisher slam_speed_publisher;
 
 		std::string global_frame;
 		std::string car_frame;
+
+		bool restart_map;
+		int restart_iterations;
+		std::string mission;
+		float braking_offset;
 
 		tf2_ros::TransformBroadcaster br;
 

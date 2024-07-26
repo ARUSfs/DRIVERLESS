@@ -36,13 +36,16 @@
   <node name="skidpad_control" pkg="skidpad_control" type="main.py"  output="screen">
   <rosparam command="load" file="$(find skidpad_control)/config/skidpad_control.yaml"/>
     <rosparam>
-      target: 8
-      kp: 0.5
+      targetillo: 5
+      targetaso: 5
+      KP: 43.87
+      KD : 0.0
+      KI : 1.29
 
-      k_mu: 8
-      k_phi: 10
-      k_r: 0
-      delta_correction: 1
+      stanley_coef: 1
+      k_delta: -0.02
+      k_yaw_rate: 0.2
+      k_slip_ratio: 0
     </rosparam>
   </node>
 

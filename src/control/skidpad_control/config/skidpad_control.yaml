@@ -1,9 +1,12 @@
 sim_mode: false
-kp: 0.5
-target: 8
+kp: 43.87
+ki: 1.29
+kd: 0.0
+targetillo: 8
+targetaso: 8
 
-k_mu: 5.5
-k_phi: 10
-k_r: 0
-delta_correction: 1.07
+stanley_coef: 1
+k_delta: -0.02
+k_yaw_rate: 0.2
+k_slip_ratio: 0
 

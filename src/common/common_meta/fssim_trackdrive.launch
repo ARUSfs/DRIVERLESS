@@ -1,7 +1,12 @@
 <launch>
+  <!-- Usa marrano aplicando planning en global y deja de actualizar la ruta al completar la 
+  primera vuelta pero sí sigue actulizando el slam para que no pete la localización -->
 
   <node pkg="slam_marrano" name="slam_marrano" type="main" output="screen">
   <rosparam command="load" file="$(find slam_marrano)/config/slam_marrano.yaml"/>
+    <rosparam>
+      mission: 'TRACKDRIVE'
+    </rosparam>
   </node>
 
   <node pkg="delaunay_detector" name="delaunay_detector" type="main.py" output="screen">
@@ -11,6 +16,7 @@
       color_enabled: false
       MAX_ROUTE_LENGTH: 9999
       slam: 'none'
+      trackdrive: true
     </rosparam>
   </node>
 

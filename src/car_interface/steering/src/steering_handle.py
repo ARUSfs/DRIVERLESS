@@ -24,7 +24,7 @@ class SteeringHandle:
 
 
     def command_callback(self, msg: Controls):
-        assert msg.steering < 20 and msg.steering > -20
+        assert msg.steering <= 20 and msg.steering >= -20
         if not self._is_shutdown:
             self.epos.move_to(msg.steering)
 

@@ -10,6 +10,7 @@
 bool HV_ON = false;
 canStatus stat;
 canHandle hnd;
+canHandle hnd2;
 uint8_t mission;
 std::string baseCommand = "roslaunch common_meta ";
 
@@ -25,11 +26,23 @@ void initCan()
         printf("canOpenChannel failed, status=%d\n", hnd);
     }
 
+    hnd2 = canOpenChannel(1, canOPEN_ACCEPT_VIRTUAL);
+    if (hnd < 0)
+    {
+        printf("canOpenChannel2 failed, status=%d\n", hnd);
+    }
+
     //Oneamos el bus
     stat = canBusOn(hnd);
     if (stat != canOK)
     {
         printf("canBusOn failed, status=%d\n", stat);
+    }
+
+    stat = canBusOn(hnd2);
+    if (stat != canOK)
+    {
+        printf("canBusOn failed 2, status=%d\n", stat);
     }
 }
 
@@ -42,6 +55,18 @@ void closeCan()
         }
 
         stat = canClose(hnd);
+        if (stat != canOK)
+        {
+            printf("canClose failed, status=%d\n", stat);
+        }
+
+        stat = canBusOff(hnd2);
+        if (stat != canOK)
+        {
+            printf("canBusOff failed, status=%d\n", stat);
+        }
+
+        stat = canClose(hnd2);
         if (stat != canOK)
         {
             printf("canClose failed, status=%d\n", stat);
@@ -67,7 +92,7 @@ void launchMission()
             baseCommand += "trackdrive.launch";
             break;
         case 5:
-            baseCommand += "EBS_test.launch";
+            baseCommand += "ebs_test.launch";
             break;
         case 6:
             baseCommand += "inspection.launch";
@@ -89,10 +114,19 @@ void launchMission()
     }
 }
 
+void pubHeartBeat(const ros::TimerEvent&)
+{
+    uint8_t data[1] = {0x01};
+    canWrite(hnd2, 0x183, data, 1, canMSG_STD);
+}
+
 int main(int argc, char **argv)
 {   
     ros::init(argc,argv,"carlos_mpc");
-    ros::NodeHandle n;
+    ros::NodeHandle nh;
+
+    ros::Timer heartBeatTimer = nh.createTimer(ros::Duration(0.1), pubHeartBeat);
+
 
     initCan();
 

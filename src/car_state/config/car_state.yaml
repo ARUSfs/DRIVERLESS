@@ -1,4 +1,7 @@
 global_frame: "map"
 car_frame: "body"
 get_base_pose_position: false
-SLAM: "none"
+SLAM: "marrano"
+
+V_ESTIMATION: "none"
+N_KMEANS: 3

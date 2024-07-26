@@ -16,6 +16,7 @@ class PurePursuit {
         std::string car_frame;
         bool global_mode; // false for local pp
         float LAD; //Look ahead distance
+        float prev_steer;
 
         tf2_ros::Buffer tfBuffer;
         tf2_ros::TransformListener tfListener{tfBuffer};

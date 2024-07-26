@@ -14,6 +14,7 @@ from scipy.interpolate import BSpline
 
 from common_msgs.msg import Simplex, Triangulation
 from geometry_msgs.msg import Point
+from scipy.interpolate import splprep, splev
 import math
 import time
 
@@ -22,7 +23,10 @@ MAX_DISTANCE = rospy.get_param('/delaunay_detector/MAX_DISTANCE')
 W_DISTANCE = rospy.get_param('/delaunay_detector/W_DISTANCE')
 W_ANGLE = rospy.get_param('/delaunay_detector/W_ANGLE')
 W_THRESH = rospy.get_param('/delaunay_detector/W_THRESH')
+MAX_ROUTE_LENGTH = rospy.get_param('/delaunay_detector/MAX_ROUTE_LENGTH')
 NUM_POINTS = rospy.get_param('/delaunay_detector/NUM_POINTS')
+MODE = rospy.get_param('/delaunay_detector/MODE')
+SMOOTH = rospy.get_param('/delaunay_detector/SMOOTH')
 PREV_ANGLE = 0
 
 
@@ -115,50 +119,44 @@ class PlanningSystem():
                 if dict[(i,j)]>=2:
                     m = (self.cones[i] + self.cones[j])/2
                     if m[0] not in midpoints_x:
-                        midpoints.append(m)
+                        midpoints.append([m[0],m[1]])
                         midpoints_x.append(m[0])
                         midpoints_index.append((i,j))
 
-
-
-        last_element = np.array([0, 0])
-        last_angle=PREV_ANGLE
-        midpoints = np.array(midpoints)
-        non_used_midpoints = np.full(midpoints.shape[0], True, dtype=np.bool_)
-        path = [last_element]
-
-        while len(path) < len(midpoints)+1:
-            vectors = np.full(midpoints.shape, np.Inf)
-            distances = np.full(midpoints.shape[0], np.Inf)
-            angles = np.full(midpoints.shape[0], np.Inf)
-            weights = np.full(midpoints.shape[0], np.Inf)
-
-            vectors[non_used_midpoints] = midpoints[non_used_midpoints] - last_element
-            distances[non_used_midpoints] = np.linalg.norm(vectors[non_used_midpoints], axis=1)
-            angles[non_used_midpoints] = np.abs(np.arctan2(vectors[non_used_midpoints, 1], vectors[non_used_midpoints, 0])-last_angle)
-            angles = np.minimum(angles,np.abs(angles-2*math.pi))
-
-            weights = W_DISTANCE*distances + W_ANGLE*angles
-
-            next_midpoint = np.nanargmin(weights)
-            if weights[next_midpoint] < W_THRESH:
-                non_used_midpoints[next_midpoint] = False
-                path.append(midpoints[next_midpoint])
-                last_element = midpoints[next_midpoint]
-                last_angle = np.arctan2(vectors[next_midpoint][1], vectors[next_midpoint][0])
-                # rospy.logwarn([distances[next_midpoint],angles[next_midpoint],weights[next_midpoint]])
-            else:
-                break
+        if MODE == 'STANLEY':
+            opposite_angle = PREV_ANGLE - math.pi if PREV_ANGLE > 0 else PREV_ANGLE + math.pi
+            back_path = self.compute_path(np.array(midpoints), np.array([0, 0]), opposite_angle)[1:]
+            if len(back_path)>0:
+                orig = [back_path[0][0],back_path[0][1]]
+                midpoints.remove(orig)
+            else: 
+                orig = [0,0]
+            path = self.compute_path(np.array(midpoints), np.array(orig), PREV_ANGLE)
+        else:
+            path = self.compute_path(np.array(midpoints), np.array([0, 0]), PREV_ANGLE)
         
         if len(path)>2:
             PREV_ANGLE = np.arctan2(path[1][1], path[1][0])/2
-            
-        # route = np.array(path)
 
-        route=[]
-        for i in range(len(path)-1):
-            route.extend([[(1-a)*path[i][0] + a*path[i+1][0],(1-a)*path[i][1] + a*path[i+1][1]] for a in np.linspace(0,1, num=NUM_POINTS)])
-        route = np.array(route)
+        
+        if(SMOOTH):
+            # SMOOTHED PATH
+            route = np.array(path)
+            if(len(route)>2):
+                degrees = 3 if len(route)>3 else 2
+                tck, u = splprep(route.T, s=3, k=degrees)  
+                u_new = np.linspace(u.min(), u.max(), 30)
+                route = np.array(splev(u_new, tck)).T
+        else:
+            # UPSAMPLED PATH
+            route=[]
+            for i in range(len(path)-1):
+                route.extend([[(1-a)*path[i][0] + a*path[i+1][0],(1-a)*path[i][1] + a*path[i+1][1]] for a in np.linspace(0,1, num=NUM_POINTS)])
+            route = np.array(route)
+        
+        
+       
+
 
         triang = Triangulation()
         for simplex in preproc_simplices:
@@ -172,6 +170,45 @@ class PlanningSystem():
             triang.simplices.append(s)  
 
         return route, triang
+    
+    def compute_path(self,midpoints, orig, first_angle):
+        last_element = orig
+        last_angle=first_angle
+        acum_distances=0
+        non_used_midpoints = np.full(midpoints.shape[0], True, dtype=np.bool_)
+        path = [last_element]
+
+        while len(path) < len(midpoints)+1 and acum_distances<MAX_ROUTE_LENGTH:
+            vectors = np.full(midpoints.shape, np.Inf)
+            distances = np.full(midpoints.shape[0], np.Inf)
+            angles = np.full(midpoints.shape[0], np.Inf)
+            weights = np.full(midpoints.shape[0], np.Inf)
+
+            vectors[non_used_midpoints] = midpoints[non_used_midpoints] - last_element
+            distances[non_used_midpoints] = np.linalg.norm(vectors[non_used_midpoints], axis=1)
+            angles[non_used_midpoints] = np.abs(np.arctan2(vectors[non_used_midpoints, 1], vectors[non_used_midpoints, 0])-last_angle)
+            angles = np.minimum(angles,np.abs(angles-2*math.pi))
+
+            #esto tiene sentido pero da problemitas, hay que depurar
+            # for i in range(len(midpoints)):
+            #     max_angle = math.pi/2 if len(path)==1 else math.pi/4
+            #     if angles[i]> max_angle:
+            #         angles[i]=np.Inf
+                        
+            weights = W_DISTANCE*distances + W_ANGLE*angles
+
+            next_midpoint = np.nanargmin(weights)
+            if weights[next_midpoint] < W_THRESH:
+                non_used_midpoints[next_midpoint] = False
+                path.append(midpoints[next_midpoint])
+                last_element = midpoints[next_midpoint]
+                last_angle = np.arctan2(vectors[next_midpoint][1], vectors[next_midpoint][0])
+                acum_distances+=distances[next_midpoint]
+                # rospy.logwarn([distances[next_midpoint],angles[next_midpoint],weights[next_midpoint]])
+            else:
+                break
+        
+        return path
 
     def get_distance(self, p1, p2):
         p1b = p1.tobytes()
