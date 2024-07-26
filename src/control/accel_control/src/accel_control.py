@@ -17,7 +17,7 @@ import tf.transformations as tf
 from common_msgs.msg import Controls, CarState
 from visualization_msgs.msg import Marker
 from sensor_msgs.msg import PointCloud2
-from std_msgs.msg import Float32,Bool,Int16
+from std_msgs.msg import Float32,Bool,Int16, Float32MultiArray
 from geometry_msgs.msg import Point
 
 from accel_localization import AccelLocalization
@@ -63,7 +63,7 @@ class AccelControl():
         self.recta_publisher = rospy.Publisher("/accel_control/recta", Point, queue_size=10)
         rospy.Subscriber(perception_topic, PointCloud2, self.update_route, queue_size=10)
         rospy.Subscriber('/car_state/state', CarState, self.update_state, queue_size=1)
-        self.phi_dist_pub = (rospy.Publisher('/phi_dist', Float32MultiArray, queue_size=1)
+        self.phi_dist_pub = rospy.Publisher('/phi_dist', Float32MultiArray, queue_size=1)
 
     def update_state(self, msg: CarState):
         self.speed = math.hypot(msg.vx,msg.vy)
