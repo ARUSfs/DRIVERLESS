@@ -596,7 +596,7 @@ void CanInterface::DL501Callback(const ros::TimerEvent&)
     std::copy(lat_acc_bytes_le, lat_acc_bytes_le + 2, data + 2);
     std::copy(yaw_rate_bytes_le, yaw_rate_bytes_le + 2, data);
 
-    canWrite(hndW1, 0x501, data, 6, canMSG_STD);
+    canWrite(hndW0, 0x501, data, 6, canMSG_STD);
 }
 
 void CanInterface::DL502Callback(const ros::TimerEvent&)
@@ -608,7 +608,7 @@ void CanInterface::DL502Callback(const ros::TimerEvent&)
     data[1] = (this->cones_count_all & 0x01FE)>>1;
     data[0] = (this->cones_count_all & 0xFE00)>>9;
 
-    canWrite(hndW1, 0x502, data, 5, canMSG_STD);
+    canWrite(hndW0, 0x502, data, 5, canMSG_STD);
 }
 
 void CanInterface::targetSpeedCallback(std_msgs::Int16 msg)
