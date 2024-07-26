@@ -60,6 +60,18 @@ void closeCan()
             printf("canClose failed, status=%d\n", stat);
         }
 
+        stat = canBusOff(hnd2);
+        if (stat != canOK)
+        {
+            printf("canBusOff failed, status=%d\n", stat);
+        }
+
+        stat = canClose(hnd2);
+        if (stat != canOK)
+        {
+            printf("canClose failed, status=%d\n", stat);
+        }
+
         canUnloadLibrary();    
 }
 
