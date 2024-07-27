@@ -22,6 +22,7 @@ private :
 
     void pubHeartBeat(const ros::TimerEvent&);
     void controlsCallback(common_msgs::Controls);
+    void brakeLightCallback(std_msgs::Int16);
     void steeringInfoCallback(std_msgs::Float32MultiArray);
     void ASStatusCallback(std_msgs::Int16);
     void lapCounterCallback(std_msgs::Int16);
@@ -94,6 +95,7 @@ private :
     ros::Subscriber conesCountSub;
     ros::Subscriber conesCountAllSub;
     ros::Subscriber targetSpeedSub;
+    ros::Subscriber brakeLightSub;
 
     ros::Timer pcTempTimer;
     ros::Timer heartBeatTimer;

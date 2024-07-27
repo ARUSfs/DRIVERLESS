@@ -43,6 +43,7 @@ CanInterface::CanInterface()
     conesCountSub = nh.subscribe<sensor_msgs::PointCloud2>("/perception_map", 100, &CanInterface::conesCountCallback, this);
     conesCountAllSub = nh.subscribe<sensor_msgs::PointCloud2>("/mapa_icp", 100, &CanInterface::conesCountAllCallback, this);
     targetSpeedSub = nh.subscribe<std_msgs::Int16>("/target_speed", 100, &CanInterface::targetSpeedCallback, this);
+    brakeLightSub = nh.subscribe<std_msgs::Int16>("/brake_light", 100, &CanInterface::brakeLightCallback, this);
 
     // Publishers
     motorSpeedPub = nh.advertise<std_msgs::Float32>("/motor_speed", 100);
@@ -621,6 +622,12 @@ void CanInterface::pcTempCallback(const ros::TimerEvent&)
 
     int16_t msg[3] = {0x01, bytes[0], bytes[1]};
     canWrite(hndW1, 0x183, msg, 3, canMSG_STD);
+}
+
+void CanInterface::brakeLightCallback(std_msgs::Int16 msg)
+{
+    uint8_t data[2] = {0x01, msg.data};
+    canWrite(hndW1, 0x208, data, 2, canMSG_STD);
 }
 
 void CanInterface::getPcTemp()
