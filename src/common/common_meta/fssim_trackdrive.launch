@@ -47,6 +47,11 @@
   <rosparam command="load" file="$(find controller)/config/controller.yaml"/>
     <rosparam>
       controller_mode: 'PP'
+      braking_kp: 0.5
+      deceleration:  5
+      min_braking_cmd: -0.2 
+      max_cmd: 0.2
+      min_cmd: -0.2
     </rosparam>
   </node>
 
@@ -60,6 +65,19 @@
       global_mode: true
     </rosparam>
   </node>
+
+  <!-- <node name="stanley_control" pkg="stanley_control" type="main.py"  output="screen">
+    <rosparam command="load" file="$(find stanley_control)/config/stanley_control.yaml"/>
+    <rosparam>
+      KP: 43.87
+      KI: 0.0
+      KD: 0.0
+
+      stanley_coef: 1
+      k_delta: -0.02
+      k_yaw_rate: 0.2
+    </rosparam>
+  </node> -->
 
 
  

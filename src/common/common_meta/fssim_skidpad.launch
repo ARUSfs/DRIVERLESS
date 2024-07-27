@@ -30,6 +30,7 @@
     <rosparam>
       targetillo: 5
       targetaso: 10
+      
       KP: 43.87
       KD : 0.0
       KI : 1.29
@@ -37,7 +38,6 @@
       stanley_coef: 1
       k_delta: -0.02
       k_yaw_rate: 0.2
-      k_slip_ratio: 0
     </rosparam>
   </node>
 

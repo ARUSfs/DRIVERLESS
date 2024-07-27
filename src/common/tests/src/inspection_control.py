@@ -8,13 +8,13 @@ import time
 
 PUSHING = False
 DURATION = 1000 #s
-TARGET_DURATION = 10 #s
+TARGET_DURATION = 27 #s
 
 AMPLITUDE = 20 #degrees
 FREQUENCY = 0.2 #s
 KP=0.5
 
-TARGET_SPEED = 3 #m/s
+TARGET_SPEED = 2 #m/s
 
 
 def speed_callback(msg: CarState):

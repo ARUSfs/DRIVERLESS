@@ -2,88 +2,75 @@ import rospy
 from geometry_msgs.msg import Point
 from common_msgs.msg import Trajectory, CarState
 from visualization_msgs.msg import Marker,MarkerArray
-from common_msgs.srv import MPCCurrentState, MPCCurrentStateResponse
+from std_msgs.msg import Float32MultiArray
 import numpy as np
 from scipy.interpolate import splprep, splev
 import time
 import math
 
 
-class MPCHandle():
+class GlobalRouteHandler():
 
     def __init__(self):
 
-        self.si=0
-        self.dist=0
-        self.phi=0
-        self.vx=0
-        self.delta=0
-        self.par=0
+        self.i = 0
+        self.N = 1000
 
         self.FIRST_LAP = True
         self.t_first_lap = 0
 
-        self.x = []
-        self.y = []
-        self.s = []
-
         self.sk_pub = rospy.Publisher('/controller/sk',Trajectory,queue_size=1)
+        self.i_phi_dist_msg = rospy.Publisher('/i_phi_dist', Float32MultiArray, queue_size=1)
         self.pub_curva = rospy.Publisher('/mpc/curva', MarkerArray, queue_size=1)
 
         rospy.Subscriber('/delaunay/global_route',Trajectory,self.set_mpc_route,queue_size=1)
-        rospy.Subscriber('/car_state/state', CarState, self.update_mpc_state, queue_size=1)
+        rospy.Subscriber('/car_state/state', CarState, self.update_state, queue_size=1)
 
-        rospy.Service('get_x_msg', MPCCurrentState, self.get_x_msg)
-
-        
-
-
-    def get_x_msg(self,req):
-        m = MPCCurrentStateResponse(self.si,self.dist,self.phi,self.vx,self.par,self.delta)
-        return m
     
 
-    def update_mpc_state(self, msg:CarState):
+    def update_state(self, msg:CarState):
         if (not self.FIRST_LAP):
-            x = self.x
-            y = self.y
-            s = self.s
 
-            dx=np.array(x)-msg.x
-            dy=np.array(y)-msg.y
-            dist = [np.linalg.norm([dx[i],dy[i]]) for i in range(len(x))]
-            i=np.argmin(dist)
+            rot = np.array([[math.cos(-msg.yaw),-math.sin(-msg.yaw)],[math.sin(-msg.yaw),math.cos(-msg.yaw)]])
+            local_route = (self.route-np.array([msg.x,msg.y])) @ rot.T
 
-            if x[i]!=x[i+1]:
-                recta=(y[i+1]-y[i])/(x[i+1]-x[i])*(msg.x-x[i])+y[i]-msg.y
-                signo_d=np.sign(recta)*np.sign(x[i]-x[i+1])
+            if self.i+self.N/10 < len(local_route):
+                # se halla el punto más cercano al eje delantero
+                dist = np.linalg.norm(local_route[self.i:self.i+int(self.N/10),:]-np.array([0.94,0]),axis=1)
+                self.i+=np.argmin(dist)
+                self.i = self.i%self.N
             else:
-                signo_d=np.sign(y[i+1]-y[i])*np.sign(msg.x-x[i])
-
+                dist1 = np.linalg.norm(local_route[self.i:,:]-np.array([0.94,0]),axis=1)
+                dist2 = np.linalg.norm(local_route[:int(self.N/10)-self.i,:]-np.array([0.94,0]),axis=1)
+                dist = np.hstack([dist1,dist2])
+                self.i+=np.argmin(dist)
+                self.i = self.i%self.N
+            signo_d = -np.sign(local_route[self.i,1])
+            
             d_min=np.min(dist)*signo_d
+            dist = d_min+0.0001
 
-            corrected_yaw = (msg.yaw+np.pi)%(2*np.pi) - np.pi
-            theta = np.arctan2(y[(i+5)%len(x)]-y[i],x[(i+5)%len(x)]-x[i])
-            phi = corrected_yaw - theta
-            phi_corrected = corrected_yaw - theta if np.abs(phi)<2 else (phi-2*np.pi if phi>0 else phi+2*np.pi)
+            phi = -np.arctan2(local_route[self.i+1,1]-local_route[self.i,1],local_route[self.i+1,0]-local_route[self.i,0])
 
-            self.si = s[i]
-            self.dist = d_min+0.0001
-            self.phi = phi_corrected
-            self.vx = msg.vx
+            i_phi_dist_msg = Float32MultiArray()
+            i_phi_dist_msg.data.append(self.i)
+            i_phi_dist_msg.data.append(phi)
+            i_phi_dist_msg.data.append(dist)
+            self.i_phi_dist_msg.publish(i_phi_dist_msg)
+
+
      
 
     def set_mpc_route(self, msg:Trajectory):
         if self.FIRST_LAP:
 
-            route = np.array([[msg.trajectory[i].x,msg.trajectory[i].y] for i in range(0,len(msg.trajectory),2)])
+            r = np.array([[msg.trajectory[i].x,msg.trajectory[i].y] for i in range(0,len(msg.trajectory),2)])
             
-            tck, u = splprep(route.T, s=3, per=True)  
-            u_new = np.linspace(u.min(), u.max(), 1000)
+            tck, u = splprep(r.T, s=3, per=True)  
+            u_new = np.linspace(u.min(), u.max(), self.N)
             puntos_curva = np.array(splev(u_new, tck))
-            self.x = puntos_curva[0]
-            self.y = puntos_curva[1]
 
+            self.route = puntos_curva.T
 
             acum=0
             s=[]
@@ -97,7 +84,6 @@ class MPCHandle():
                 yp.append(p2[1]-p1[1])
                 acum+=np.sqrt((p1[0]-p2[0])**2+(p1[1]-p2[1])**2)
                 s.append(acum)
-            self.s = s
             xp.append(xp[-1])
             yp.append(yp[-1])
 

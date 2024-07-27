@@ -6,12 +6,14 @@
 """
 import rospy
 from controller import Controller
+from global_route_handle import GlobalRouteHandler
 
 
 def main():
 
     rospy.init_node('controller', anonymous=True)
     Controller()
+    GlobalRouteHandler()
     rospy.spin()
 
 

@@ -2,8 +2,9 @@
 topic_controller_control: '/controls'
 topic_pp_control: 'controls_pp'
 topic_mpc_control: 'controls_mpc'
+topic_stanley_control: 'controls_stanley'
 
-# Type of control: 'PP' or 'PP-MPC' 
+# Type of control: 'PP' or 'PP-STANLEY' 
 controller_mode: 'PP'
 
 # for braking

@@ -46,6 +46,7 @@ ICP_handle::ICP_handle(){
 
 	finished_pub = nh.advertise<std_msgs::Bool>("/braking", 10);
 	map_publisher = nh.advertise<sensor_msgs::PointCloud2>("/mapa_icp", 10);
+	global_map_publisher = nh.advertise<sensor_msgs::PointCloud2>("/global_map", 10);
 	lap_count_publisher = nh.advertise<std_msgs::Int16>("/lap_counter", 10);
 	// slam_speed_publisher = nh.advertise<std_msgs::Float32>("/slam_speed", 10);
 }
@@ -264,9 +265,16 @@ void ICP_handle::send_position() {
 			lap_count += 1;
 			lap_time = ros::Time::now();
 			std::cout << "Lap count: " << lap_count << std::endl;
+			
 			if ((lap_count==1 && mission=="AUTOX")||(lap_count==10 && mission=="TRACKDRIVE")){
 				start_braking = true;	
 			} 
+
+			sensor_msgs::PointCloud2 global_map_msg;
+			pcl::toROSMsg(*allp_clustered, global_map_msg);
+			global_map_msg.header.frame_id = global_frame;
+			global_map_publisher.publish(global_map_msg);
+
 		}else{
 			lap_time = ros::Time::now();
 		}

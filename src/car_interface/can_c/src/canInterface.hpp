@@ -22,6 +22,7 @@ private :
 
     void pubHeartBeat(const ros::TimerEvent&);
     void controlsCallback(common_msgs::Controls);
+    void brakeLightCallback(std_msgs::Int16);
     void steeringInfoCallback(std_msgs::Float32MultiArray);
     void ASStatusCallback(std_msgs::Int16);
     void lapCounterCallback(std_msgs::Int16);
@@ -31,6 +32,7 @@ private :
     void DL500Callback(const ros::TimerEvent&);
     void DL501Callback(const ros::TimerEvent&);
     void DL502Callback(const ros::TimerEvent&);
+    void pcTempCallback(const ros::TimerEvent&);
 
     void readCan1();
     void readCan0();
@@ -48,6 +50,10 @@ private :
     ros::Publisher motorSpeedPub;
     ros::Publisher steeringAnglePub;
     ros::Publisher RESRangePub;
+    ros::Publisher PCTempPub;
+
+    float pc_temp;
+    void getPcTemp();
 
     uint8_t actual_speed;
     uint8_t target_speed;
@@ -89,7 +95,9 @@ private :
     ros::Subscriber conesCountSub;
     ros::Subscriber conesCountAllSub;
     ros::Subscriber targetSpeedSub;
+    ros::Subscriber brakeLightSub;
 
+    ros::Timer pcTempTimer;
     ros::Timer heartBeatTimer;
     ros::Timer DL500Timer;
     ros::Timer DL501Timer;

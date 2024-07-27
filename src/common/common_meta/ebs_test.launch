@@ -15,7 +15,7 @@
   <node pkg="slam_marrano" name="slam_marrano" type="main">
   <rosparam command="load" file="$(find slam_marrano)/config/slam_marrano.yaml"/>
   <rosparam>
-    global_frame: "map"
+    global_frame: "ini"
     car_frame: "body"
   </rosparam>
   </node>
@@ -43,11 +43,11 @@
     <rosparam>
       perception_topic: "/mapa_icp"
       global_frame: "map"
-      car_frame: "body"
+      car_frame: "ini"
       slam: "marrano"
 
-      lqr_dist: 20.0
-      lqr_yaw: 20.0
+      lqr_dist: 2.0
+      lqr_yaw: 25.0
       lqr_beta: 0.0
       lqr_r: 0.0
 
@@ -57,7 +57,7 @@
 
       target: 12
       pendiente: 4
-      track_length: 75
+      track_length: 50
     </rosparam>
   </node>
 

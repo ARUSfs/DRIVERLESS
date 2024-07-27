@@ -1,6 +1,6 @@
 # Topics names of planning node
 topic_perception_map: 'perception_map'
-topic_global_map: '/data_association/map'
+topic_global_map: '/global_map'
 topic_route: 'route'
 topic_simplices: '/delaunay_detector/simplices'
 send_simplices_marker: true
