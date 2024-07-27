@@ -20,6 +20,7 @@
   <rosparam command="load" file="$(find slam_marrano)/config/slam_marrano.yaml"/>
   <rosparam>
     mission: 'TRACKDRIVE'
+    restart_map_at_origin: true
   </rosparam>
   </node>
 
@@ -28,9 +29,9 @@
     <rosparam>
       topic_perception_map: '/mapa_icp'
       color_enabled: false
-      MAX_ROUTE_LENGTH: 9999
-      slam: 'none'
-      trackdrive: true
+      MAX_ROUTE_LENGTH: 10
+      slam: 'marrano'
+      trackdrive: false
     </rosparam>
   </node>
 
@@ -69,7 +70,7 @@
     <rosparam>
       LAD: 6
       TARGET_SPEED: 5
-      global_mode: true
+      global_mode: false
     </rosparam>
   </node>
 

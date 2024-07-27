@@ -64,7 +64,7 @@ class PlanningHandle():
             trans=self.tf_buffer.lookup_transform(car_frame, global_frame, rospy.Time(0))
             trans_msg = tf2_sensor_msgs.do_transform_cloud(msg,transform=trans)
             cones_all = point_cloud2.read_points(trans_msg, field_names=("x", "y", "z","color", "score"), skip_nans=True)
-            cones = [c for c in cones_all if c[0]>-5]
+            cones = [c for c in cones_all if c[0]>-5 and c[0]<15 and np.abs(c[1])<7]
         else:
             cones = point_cloud2.read_points(msg, field_names=("x", "y", "z","color","score"),skip_nans=True)
         

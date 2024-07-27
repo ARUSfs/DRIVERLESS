@@ -43,6 +43,7 @@ class ICP_handle {
 		std::string car_frame;
 
 		bool restart_map;
+		bool restart_map_at_origin;
 		int restart_iterations;
 		std::string mission;
 		float braking_offset;
