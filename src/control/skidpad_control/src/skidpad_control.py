@@ -55,6 +55,8 @@ class SkidpadControl():
         self.prev_err = 0
         self.prev_t = time.time()
         self.steer_diff = 0
+        self.prev_steer = 0
+        self.delta = 0
 
         self.centers = []
         self.start_time = None
@@ -226,10 +228,12 @@ class SkidpadControl():
         ### STANLEY CONTROL ###
         delta = -phi -phi_ss - np.arctan(STANLEY_COEF*dist/self.get_target())
         delta += K_DELTA*self.steer_diff + K_YAW_RATE*(r_target - self.r)  
-        delta = math.degrees(delta)
+
         
+        delta = math.degrees(delta)
+        self.delta = 0.8*self.delta + 0.2*delta
      
-        return max(-20,min(20,delta))
+        return max(-20,min(20,self.delta))
     
     def update_k(self):
         s11=5

@@ -72,7 +72,7 @@ class StanleyControl():
             speed_profile = [0 for _ in range(len(self.s))]
             ax_max = 3
             ay_max = 4
-            v_max = 10
+            v_max = 8
             v_grip = [min(np.sqrt(ay_max/np.abs(k+0.0001)),v_max) for k in self.k]
             speed_profile[0] = v_max
             for j in range(1,len(speed_profile)):

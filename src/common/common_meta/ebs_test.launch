@@ -46,8 +46,8 @@
       car_frame: "body"
       slam: "marrano"
 
-      lqr_dist: 20.0
-      lqr_yaw: 20.0
+      lqr_dist: 2.0
+      lqr_yaw: 25.0
       lqr_beta: 0.0
       lqr_r: 0.0
 

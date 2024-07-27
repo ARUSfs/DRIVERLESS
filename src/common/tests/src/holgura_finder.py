@@ -15,15 +15,17 @@ if __name__ == '__main__':
     rospy.init_node('holgura_finder')
 
     control_publisher = rospy.Publisher('/controls', Controls, queue_size=1)
-    rate = rospy.Rate(1)
+    rate = rospy.Rate(10)
 
+    ini = 0.4
+    paso = 0.01
     i=0
     while not rospy.is_shutdown():
-        rospy.loginfo("GIRANDO "+str(i/10)+" grados")
-        for _ in range(4):
-            send_command(i/10)
+        rospy.loginfo("GIRANDO "+str(ini+i*paso)+" grados")
+        for _ in range(50):
+            send_command(ini+i*paso)
             rate.sleep()
-            send_command(-i/10)
+            send_command(-ini-i*paso)
             rate.sleep()
         i+=1
 
