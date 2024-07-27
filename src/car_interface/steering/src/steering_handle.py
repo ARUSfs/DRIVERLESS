@@ -10,6 +10,7 @@ MAX_DECELERATION = rospy.get_param('/steering/MAX_DECELERATION',default=6000)
 PROFILE_VELOCITY = rospy.get_param('/steering/PROFILE_VELOCITY',default=6000)
 holgura = 0.6
 L = 1.535
+CORRIGE_HOLGURA = False
 
 class SteeringHandle:
     def __init__(self):
@@ -32,7 +33,7 @@ class SteeringHandle:
     def command_callback(self, msg: Controls):
         assert msg.steering <= 20 and msg.steering >= -20
         if not self._is_shutdown:
-            if self.speed > 2:
+            if CORRIGE_HOLGURA and self.speed > 2:
                 k_cmd = msg.steering/L
                 k_actual = self.r/self.speed
                 if k_cmd>k_actual:

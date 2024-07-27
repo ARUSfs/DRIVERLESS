@@ -37,9 +37,11 @@ class Controller():
         self.AS_status = 0
         self.v = 0
         self.lap_count = 0
+        self.brake_light = False
 
         self.pub_cmd = rospy.Publisher(topic_controller_control, Controls, queue_size=1)
         self.pub_AS_status = rospy.Publisher('can/AS_status', Int16, queue_size=10)
+        self.brake_light_pub = rospy.Publisher('/brake_light', Int16, queue_size=10)
 
         rospy.Subscriber('/can/AS_status', Int16, self.update_AS_status, queue_size=1)
         rospy.Subscriber('/car_state/state', CarState, self.state_callback,queue_size=1)
@@ -54,7 +56,7 @@ class Controller():
     def update_lap(self, msg: Int16):
         self.lap_count = msg.data
 
-    def send_controllers_pp(self, msg):
+    def send_controllers_pp(self, msg: Controls):
         self.steer = msg.steering
         if self.AS_status == 0x02 and (self.controller_mode=='PP' or (self.lap_count==0 and self.controller_mode=='PP-STANLEY')):
             #limit command
@@ -67,6 +69,17 @@ class Controller():
 
             # rospy.logerr("PURE PURSUIT")
             self.pub_cmd.publish(msg)
+
+            if msg.accelerator < -0.05 and self.brake_light == False:
+                brake_light_msg = Int16()
+                brake_light_msg.data = 1
+                self.brake_light = True
+                self.brake_light_pub.publish(brake_light_msg)
+            elif msg.accelerator > -0.05 and self.brake_light == True:
+                brake_light_msg = Int16()
+                brake_light_msg.data = 0
+                self.brake_light = False    
+                self.brake_light_pub.publish(brake_light_msg)
 
 
     def send_controllers_stanley(self, msg):
