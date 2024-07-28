@@ -54,6 +54,9 @@ CanInterface::CanInterface()
     steeringAnglePub = nh.advertise<std_msgs::Float32>("can/steering_angle", 100);
     RESRangePub = nh.advertise<std_msgs::Float32>("/can/RESRange", 100);
     PCTempPub = nh.advertise<std_msgs::Float32>("/pc_temp", 100);
+    DL500Pub = nh.advertise<std_msgs::Float32MultiArray>("/can/DL500", 100);
+    DL501Pub = nh.advertise<std_msgs::Float32MultiArray>("/can/DL501", 100);
+    DL502Pub = nh.advertise<std_msgs::Float32MultiArray>("/can/DL502", 100);
 
     //Timers
     pcTempTimer = nh.createTimer(ros::Duration(0.1), &CanInterface::pcTempCallback, this);
@@ -561,28 +564,46 @@ void CanInterface::conesCountAllCallback(sensor_msgs::PointCloud2 msg)
 
 void CanInterface::DL500Callback(const ros::TimerEvent&)
 {
+    std_msgs::Float32MultiArray x;
+
     int8_t data[8] = {motor_moment_target ,this->motor_moment_actual ,this->brake_hydr_target,this->brake_hydr_actual,
         this->target_steering_angle,this->actual_steering_angle,this->target_speed,this->actual_speed};
+
+    x.data.push_back(motor_moment_target);
+    x.data.push_back(this->motor_moment_actual);
+    x.data.push_back(this->brake_hydr_target);
+    x.data.push_back(this->brake_hydr_actual);
+    x.data.push_back(this->target_steering_angle);
+    x.data.push_back(this->actual_steering_angle);
+    x.data.push_back(this->target_speed);
+    x.data.push_back(this->actual_speed);
+
+    this->DL500Pub.publish(x);
 
     canWrite(hndW0, 0x500, data, 8, canMSG_STD);
 }
 
 void CanInterface::DL501Callback(const ros::TimerEvent&)
 {
+    std_msgs::Float32MultiArray x;
+
     int16_t long_acc = IMUData.linear_acceleration.x*512;
     int8_t long_acc_bytes[2];
     intToBytes(long_acc, long_acc_bytes);
     int8_t long_acc_bytes_le[2] = {long_acc_bytes[1], long_acc_bytes[0]};
+    x.data.push_back(IMUData.linear_acceleration.x);
 
     int16_t lat_acc = IMUData.linear_acceleration.y*512;
     int8_t lat_acc_bytes[2];
     intToBytes(lat_acc, lat_acc_bytes);
     int8_t lat_acc_bytes_le[2] = {lat_acc_bytes[1], lat_acc_bytes[0]};
+    x.data.push_back(IMUData.linear_acceleration.y);
 
     int16_t yaw_rate = IMUData.angular_velocity.z*(180/M_PI)*128;
     int8_t yaw_rate_bytes[2];
     intToBytes(yaw_rate, yaw_rate_bytes);
     int8_t yaw_rate_bytes_le[2] = {yaw_rate_bytes[1], yaw_rate_bytes[0]};
+    x.data.push_back(IMUData.angular_velocity.z);
 
     int8_t data[6];
     std::copy(long_acc_bytes_le, long_acc_bytes_le + 2, data + 4);
@@ -590,18 +611,29 @@ void CanInterface::DL501Callback(const ros::TimerEvent&)
     std::copy(yaw_rate_bytes_le, yaw_rate_bytes_le + 2, data);
 
     canWrite(hndW0, 0x501, data, 6, canMSG_STD);
+    this->DL501Pub.publish(x);
 }
 
 void CanInterface::DL502Callback(const ros::TimerEvent&)
-{
+{   
+    std_msgs::Float32MultiArray x;
     uint8_t data[5];
     data[4] = (((this->AMI_state <<2) | this->EBS_state)<<3) | this->AS_state;
+    x.data.push_back(this->AMI_state);
+    x.data.push_back(this->EBS_state);
+    x.data.push_back(this->AS_state);
     data[3] = ((((((this->cones_count_actual & 0x01)<<4)|this->lap_counter)<<2)|this->service_brake_state)<<1)|steering_state;
+    x.data.push_back(this->cones_count_actual);
+    x.data.push_back(this->lap_counter);
+    x.data.push_back(this->service_brake_state);
+    x.data.push_back(this->steering_state);
     data[2] = (this->cones_count_all & 0x0001)|((this->cones_count_actual & 0xFE)>>1);
+    x.data.push_back(this->cones_count_all);
     data[1] = (this->cones_count_all & 0x01FE)>>1;
     data[0] = (this->cones_count_all & 0xFE00)>>9;
 
     canWrite(hndW0, 0x502, data, 5, canMSG_STD);
+    this->DL502Pub.publish(x);
 }
 
 void CanInterface::targetSpeedCallback(std_msgs::Int16 msg)

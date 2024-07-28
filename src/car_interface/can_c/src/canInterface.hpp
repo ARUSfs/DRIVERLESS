@@ -51,6 +51,9 @@ private :
     ros::Publisher steeringAnglePub;
     ros::Publisher RESRangePub;
     ros::Publisher PCTempPub;
+    ros::Publisher DL500Pub;
+    ros::Publisher DL501Pub;
+    ros::Publisher DL502Pub;
 
     float pc_temp;
     void getPcTemp();
