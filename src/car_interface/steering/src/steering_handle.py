@@ -8,7 +8,7 @@ import math
 MAX_ACCELERATION = rospy.get_param('/steering/MAX_ACCELERATION',default=6000)
 MAX_DECELERATION = rospy.get_param('/steering/MAX_DECELERATION',default=6000)
 PROFILE_VELOCITY = rospy.get_param('/steering/PROFILE_VELOCITY',default=6000)
-holgura = 0.6
+holgura = 3
 L = 1.535
 CORRIGE_HOLGURA = False
 
@@ -25,7 +25,7 @@ class SteeringHandle:
 
         self._is_shutdown = False
 
-        rospy.Subscriber('/controls', Controls, callback=self.command_callback, queue_size=1)
+        rospy.Subscriber('/controls_pp', Controls, callback=self.command_callback, queue_size=1)
         rospy.Subscriber('/car_state/state', CarState, callback=self.update_state)
         self.info_pub = rospy.Publisher('/steering/epos_info', Float32MultiArray, queue_size=10)
 

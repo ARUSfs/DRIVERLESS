@@ -51,8 +51,8 @@
       pendiente: 3
       track_length: 75
 
-      lqr_dist: 1.0
-      lqr_yaw: 25.0
+      lqr_dist: 4.0
+      lqr_yaw: 40.0
       lqr_beta: 0.0
       lqr_r: 0.0
     </rosparam>

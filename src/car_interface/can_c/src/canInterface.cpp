@@ -540,7 +540,7 @@ void CanInterface::steeringInfoCallback(std_msgs::Float32MultiArray msg)
 
 void CanInterface::pubHeartBeat(const ros::TimerEvent&)
 {
-    uint8_t data[1] = {0x01};
+    uint8_t data[1] = {0x00};
     canWrite(hndW1, 0x183, data, 1, canMSG_STD);
 }
 

@@ -27,9 +27,9 @@ void initCan()
     }
 
     hnd2 = canOpenChannel(1, canOPEN_ACCEPT_VIRTUAL);
-    if (hnd < 0)
+    if (hnd2 < 0)
     {
-        printf("canOpenChannel2 failed, status=%d\n", hnd);
+        printf("canOpenChannel2 failed, status=%d\n", hnd2);
     }
 
     //Oneamos el bus
@@ -116,7 +116,7 @@ void launchMission()
 
 void pubHeartBeat(const ros::TimerEvent&)
 {
-    uint8_t data[1] = {0x01};
+    uint8_t data[1] = {0x00};
     canWrite(hnd2, 0x183, data, 1, canMSG_STD);
 }
 
@@ -132,6 +132,7 @@ int main(int argc, char **argv)
 
     while(ros::ok())
     {
+        ros::spinOnce();
         long id;
         uint8_t msg[8];
         unsigned int dlc;
