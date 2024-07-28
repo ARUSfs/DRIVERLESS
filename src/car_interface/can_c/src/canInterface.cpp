@@ -554,12 +554,14 @@ void CanInterface::lapCounterCallback(std_msgs::Int16 msg)
 
 void CanInterface::conesCountCallback(sensor_msgs::PointCloud2 msg)
 {
-    this->cones_count_all = msg.width;
+    this->cones_count_actual = msg.width;
 }
 
 void CanInterface::conesCountAllCallback(sensor_msgs::PointCloud2 msg)
-{
-    this->cones_count_all = msg.width;
+{   
+    if(this->cones_count_all<msg.width){
+        this->cones_count_all = msg.width;
+    }
 }
 
 void CanInterface::DL500Callback(const ros::TimerEvent&)

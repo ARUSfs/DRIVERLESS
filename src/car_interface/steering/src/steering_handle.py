@@ -25,7 +25,7 @@ class SteeringHandle:
 
         self._is_shutdown = False
 
-        rospy.Subscriber('/controls_pp', Controls, callback=self.command_callback, queue_size=1)
+        rospy.Subscriber('/controls', Controls, callback=self.command_callback, queue_size=1)
         rospy.Subscriber('/car_state/state', CarState, callback=self.update_state)
         self.info_pub = rospy.Publisher('/steering/epos_info', Float32MultiArray, queue_size=10)
 
