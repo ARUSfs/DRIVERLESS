@@ -28,7 +28,6 @@ class Controller():
         self.controller_mode = rospy.get_param('/controller/controller_mode')
         topic_controller_control = rospy.get_param('/controller/topic_controller_control')
         topic_pp_control = rospy.get_param('/controller/topic_pp_control')
-        topic_mpc_control = rospy.get_param('/controller/topic_mpc_control')
         topic_stanley_control = rospy.get_param('/controller/topic_stanley_control')
 
 
@@ -121,6 +120,17 @@ class Controller():
                 control_msg.steering = self.steer
 
                 self.pub_cmd.publish(control_msg)
+
+                if control_msg.accelerator < -0.05 and self.brake_light == False:
+                    brake_light_msg = Int16()
+                    brake_light_msg.data = 1
+                    self.brake_light = True
+                    self.brake_light_pub.publish(brake_light_msg)
+                elif control_msg.accelerator > -0.05 and self.brake_light == True:
+                    brake_light_msg = Int16()
+                    brake_light_msg.data = 0
+                    self.brake_light = False    
+                    self.brake_light_pub.publish(brake_light_msg)
             
             else:
                 control_msg = Controls()
