@@ -563,7 +563,10 @@ void CanInterface::conesCountCallback(sensor_msgs::PointCloud2 msg)
 void CanInterface::conesCountAllCallback(sensor_msgs::PointCloud2 msg)
 {   
     if(this->cones_count_all<msg.width){
-        this->cones_count_all = msg.width;
+        if(msg.width < 500)
+        {
+            this->cones_count_all = msg.width;
+        }
     }
 }
 
