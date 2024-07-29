@@ -137,6 +137,9 @@ void CanInterface::parseASStatus(uint8_t msg[8])
     {
         this->brake_hydr_actual = 0;
         this->brake_hydr_target = 0;
+    }else{
+        this->brake_hydr_actual = 100;
+        this->brake_hydr_target = 100;
     }
 
     this->AS_state = val+1;
@@ -482,7 +485,7 @@ void CanInterface::controlsCallback(common_msgs::Controls msg)
     // std::cout << "llega" << std::endl;
     float acc = msg.accelerator;
     int16_t intValue = static_cast<int16_t>(acc * (1<<15))-1;
-    this->motor_moment_target = intValue*0.5;
+    this->motor_moment_target = intValue;
 
     int8_t bytesCMD[2];
     intToBytes(intValue, bytesCMD);
@@ -509,14 +512,14 @@ void CanInterface::steeringInfoCallback(std_msgs::Float32MultiArray msg)
     int8_t pMovementState = msg.data[0];
     this->steering_state = pMovementState;
 
-    int16_t pPosition = msg.data[1]*100;
+    int16_t pPosition = msg.data[1]*2;
     int8_t pPositionBytes[3];
-    this->actual_steering_angle;
+    this->actual_steering_angle = pPosition;
     intToBytes(pPosition, pPositionBytes);
 
-    int16_t pTargetPosition = msg.data[2]*100;
+    int16_t pTargetPosition = msg.data[2]*2;
     int8_t pTargetPositionBytes[3];
-    this->target_steering_angle;
+    this->target_steering_angle = pTargetPosition;
     intToBytes(pTargetPosition, pTargetPositionBytes);
 
     int8_t msgEposState[8]= {0x02, pMovementState, pPositionBytes[0], pPositionBytes[1], pPositionBytes[2], pTargetPositionBytes[0], pTargetPositionBytes[1], pTargetPositionBytes[2]};
