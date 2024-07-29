@@ -12,9 +12,9 @@ DURATION = 27 #s
 
 AMPLITUDE = 20 #degrees
 FREQUENCY = 0.2 #s
-KP=0.5
+KP=0.1
 
-TARGET_SPEED = 2 #m/s
+TARGET_SPEED = 1 #m/s
 
 def as_status_callback(msg:Int16):
     global AS_status, start_time
@@ -45,13 +45,10 @@ def generate_sinusoidal_steering(time):
     return steering_angle
 
 def accelerator_control(current: float, target: float):
-        global start_time,target_reached_time,braking
+        global start_time,braking
 
         error = target - current
         cmd = KP*error
-
-        if abs(error)<0.5 and target_reached_time==0:
-            target_reached_time = time.time()
 
         if (time.time()-start_time > DURATION and start_time != 0):
            braking = True

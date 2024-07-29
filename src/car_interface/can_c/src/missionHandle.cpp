@@ -83,13 +83,13 @@ void launchMission()
             baseCommand += "acceleration.launch";
             break;
         case 2:
-            baseCommand += "skidpad.launch";
+            baseCommand += "trackdrive.launch";
             break;
         case 3:
-            baseCommand += "autocross.launch";
+            baseCommand += "skidpad.launch";
             break;
         case 4:
-            baseCommand += "trackdrive.launch";
+            baseCommand += "autocross.launch";
             break;
         case 5:
             baseCommand += "ebs_test.launch";
