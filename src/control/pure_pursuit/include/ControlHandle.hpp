@@ -19,6 +19,7 @@ class ControlHandle {
         ros::NodeHandle nh;
         ros::Publisher control_publisher;
         ros::Publisher pursuit_point_publisher;
+        ros::Publisher target_speed_pub;
         ros::Subscriber velocity_sub;
         ros::Subscriber path_sub;
         ros::Timer publisher_timer;

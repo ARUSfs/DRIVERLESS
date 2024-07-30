@@ -28,6 +28,7 @@ ControlHandle::ControlHandle(){
 
     control_publisher = nh.advertise<common_msgs::Controls>("/controls_pp", 1);
     pursuit_point_publisher = nh.advertise<geometry_msgs::Point>("pursuit_point",1);
+    target_speed_pub = nh.advertise<std_msgs::Float32>("/target_speed", 1);
      
     
     previous_time = std::chrono::high_resolution_clock::now();
@@ -59,6 +60,10 @@ void ControlHandle::control_timer_callback(const ros::TimerEvent& event) {
     msg.accelerator = accelerator_control/230;
     msg.steering = angle;
     control_publisher.publish(msg);
+
+    std_msgs::Float32 target_speed_msg;
+    target_speed_msg.data = TARGET_SPEED;
+    target_speed_pub.publish(target_speed_msg);
 
     if(!pPursuit.path.empty()){
         geometry_msgs::Point p;

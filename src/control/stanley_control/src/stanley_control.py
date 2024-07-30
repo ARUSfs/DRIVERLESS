@@ -53,6 +53,7 @@ class StanleyControl():
         self.has_route = False
 
         self.cmd_publisher = rospy.Publisher('/controls_stanley', Controls, queue_size=1) 
+        self.target_speed_pub = rospy.Publisher('/target_speed', Float32, queue_size=1)
         rospy.Subscriber('/car_state/state', CarState, self.update_state, queue_size=10)
         rospy.Subscriber('/i_phi_dist', Float32MultiArray, self.callback, queue_size=1)
         rospy.Subscriber('/controller/sk', Trajectory, self.update_route, queue_size=10)
@@ -106,6 +107,10 @@ class StanleyControl():
         controls.steering = self.steer
         controls.accelerator = self.acc
         self.cmd_publisher.publish(controls)
+
+        target_speed = Float32()
+        target_speed.data = self.speed_profile[self.i]
+        self.target_speed_pub.publish(target_speed)
 
 
     def get_acc(self):
