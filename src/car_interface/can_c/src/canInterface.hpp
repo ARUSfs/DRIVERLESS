@@ -88,6 +88,7 @@ private :
     void parseGPSVel(unsigned char []);
     void parseSteeringAngle(unsigned char []);
     void parseRES(unsigned char []);
+    void parseBrakeHydr(unsigned char []);
     void initialize_timer();
 
 

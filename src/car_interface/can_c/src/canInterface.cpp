@@ -129,6 +129,8 @@ void CanInterface::parseInvSpeed(uint8_t msg[8])
 }
 
 //-------------------------------------------- AS -------------------------------------------------------------------------
+//1111
+//133
 void CanInterface::parseASStatus(uint8_t msg[8])
 {
     int16_t val = (msg[2]);
@@ -147,6 +149,12 @@ void CanInterface::parseASStatus(uint8_t msg[8])
     std_msgs::Int16 x;
     x.data = val;
     this->ASStatusPub.publish(x);
+}
+
+void CanInterface::parseBrakeHydr(uint8_t msg[8])
+{
+    uint16_t b = (msg[2]<<8) | msg[1];
+    this -> brake_hydr_actual = ((b-1111)/(133-1111))*100;
 }
 
 //-------------------------------------------- IMU -----------------------------------------------------------------------
@@ -350,6 +358,7 @@ void CanInterface::readCan0()
                             parseASStatus(msg);
                             break;
                         case 0x04: //Brake pressure
+                            parseBrakeHydr(msg);
                             break; 
                         case 0x05: //Pneumtic pressure
                             break;
