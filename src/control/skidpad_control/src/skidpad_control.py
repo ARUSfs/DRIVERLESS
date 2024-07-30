@@ -268,8 +268,9 @@ class SkidpadControl():
         else:
             target_speed = TARGETILLO
         
-        target_msg = Float32()
-        target_msg.data = target_speed
-        self.target_speed_pub.publish(target_msg)
+        if(not self.braking):
+            target_msg = Float32()
+            target_msg.data = target_speed
+            self.target_speed_pub.publish(target_msg)
 
         return target_speed

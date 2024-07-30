@@ -29,7 +29,7 @@
   <rosparam command="load" file="$(find skidpad_control)/config/skidpad_control.yaml"/>
     <rosparam>
       targetillo: 5
-      targetaso: 10
+      targetaso: 5
       
       KP: 43.87
       KD : 0.0

@@ -153,8 +153,9 @@ class AccelControl():
         t = time.time() - self.start_time
         target_speed = min(t*PENDIENTE+TARGET/10, TARGET)
 
-        target_msg = Float32()
-        target_msg.data = target_speed
-        self.target_speed_pub.publish(target_msg)
+        if(self.start_time>0 and not self.braking):
+            target_msg = Float32()
+            target_msg.data = target_speed
+            self.target_speed_pub.publish(target_msg)
 
         return target_speed

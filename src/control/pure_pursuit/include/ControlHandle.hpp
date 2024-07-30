@@ -1,5 +1,6 @@
 #include "ros/ros.h"
 #include <std_msgs/Float32.h>
+#include <std_msgs/Bool.h>
 #include "common_msgs/Trajectory.h"
 #include "common_msgs/CarState.h"
 
@@ -14,6 +15,7 @@ class ControlHandle {
         float KI;
         float previous_error;
         float integral;
+        bool braking = false;
         std::chrono::time_point<std::chrono::high_resolution_clock> previous_time;
 
         ros::NodeHandle nh;
@@ -21,6 +23,7 @@ class ControlHandle {
         ros::Publisher pursuit_point_publisher;
         ros::Publisher target_speed_pub;
         ros::Subscriber velocity_sub;
+        ros::Subscriber braking_sub;
         ros::Subscriber path_sub;
         ros::Timer publisher_timer;
 
@@ -30,6 +33,7 @@ class ControlHandle {
         void speed_callback(const common_msgs::CarState);
         void path_callback(const common_msgs::Trajectory);
         void control_timer_callback(const ros::TimerEvent&);
+        void braking_callback(const std_msgs::Bool);
 
     public:
         ControlHandle();
