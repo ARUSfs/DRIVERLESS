@@ -80,6 +80,7 @@ class SkidpadControl():
         self.braking_publisher = rospy.Publisher('/braking', Bool, queue_size=10)
         self.route_pub = rospy.Publisher('/skidpad_route',Marker,queue_size=1)
         self.phi_dist_pub = rospy.Publisher('/phi_dist', Float32MultiArray,queue_size=1)
+        self.target_speed_pub = rospy.Publisher('/target_speed', Float32, queue_size=10)
         rospy.Subscriber('/perception_map', PointCloud2, self.update_route, queue_size=10)
         rospy.Subscriber('/car_state/state', CarState, self.update_state, queue_size=1)
         rospy.Subscriber('/steering/epos_info', Float32MultiArray, self.update_steer, queue_size=1)
@@ -255,13 +256,20 @@ class SkidpadControl():
             self.k = 0
     
     def get_target(self):
+        target_speed = 0
         if self.si < 50:
-            return TARGETILLO
+            target_speed = TARGETILLO
         elif self.si < 130:
-            return TARGETASO
+            target_speed = TARGETASO
         elif self.si < 170:
-            return TARGETILLO
+            target_speed = TARGETILLO
         elif self.si < 245:
-            return TARGETASO
+            target_speed = TARGETASO
         else:
-            return TARGETILLO
+            target_speed = TARGETILLO
+        
+        target_msg = Float32()
+        target_msg.data = target_speed
+        self.target_speed_pub.publish(target_msg)
+
+        return target_speed

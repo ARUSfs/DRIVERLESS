@@ -61,6 +61,7 @@ class AccelControl():
         self.cmd_publisher = rospy.Publisher('/controls_pp', Controls, queue_size=1) 
         self.braking_publisher = rospy.Publisher('/braking', Bool, queue_size=10)
         self.recta_publisher = rospy.Publisher("/accel_control/recta", Point, queue_size=10)
+        self.target_speed_pub = rospy.Publisher('/target_speed', Float32, queue_size=10)
         rospy.Subscriber(perception_topic, PointCloud2, self.update_route, queue_size=10)
         rospy.Subscriber('/car_state/state', CarState, self.update_state, queue_size=1)
         self.phi_dist_pub = rospy.Publisher('/phi_dist', Float32MultiArray, queue_size=1)
@@ -150,4 +151,10 @@ class AccelControl():
    
     def get_target(self):
         t = time.time() - self.start_time
-        return min(t*PENDIENTE+TARGET/10, TARGET)
+        target_speed = min(t*PENDIENTE+TARGET/10, TARGET)
+
+        target_msg = Float32()
+        target_msg.data = target_speed
+        self.target_speed_pub.publish(target_msg)
+
+        return target_speed

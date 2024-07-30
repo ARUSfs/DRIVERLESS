@@ -125,7 +125,7 @@ void CanInterface::parseInvSpeed(uint8_t msg[8])
     std_msgs::Float32 x;
     x.data = invSpeed;
     this->motorSpeedPub.publish(x);
-    this->actual_speed = (invSpeed*1000)/3600;
+    this->actual_speed = invSpeed*3.6;
 }
 
 //-------------------------------------------- AS -------------------------------------------------------------------------
@@ -562,11 +562,8 @@ void CanInterface::conesCountCallback(sensor_msgs::PointCloud2 msg)
 
 void CanInterface::conesCountAllCallback(sensor_msgs::PointCloud2 msg)
 {   
-    if(this->cones_count_all<msg.width){
-        if(msg.width < 500)
-        {
-            this->cones_count_all = msg.width;
-        }
+    if(this->cones_count_all<msg.width && msg.width < 500){
+        this->cones_count_all = msg.width;
     }
 }
 

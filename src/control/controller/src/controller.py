@@ -41,6 +41,7 @@ class Controller():
         self.pub_cmd = rospy.Publisher(topic_controller_control, Controls, queue_size=1)
         self.pub_AS_status = rospy.Publisher('can/AS_status', Int16, queue_size=10)
         self.brake_light_pub = rospy.Publisher('/brake_light', Int16, queue_size=10)
+        self.target_speed_pub = rospy.Publisher('/target_speed', Float32, queue_size=10)
 
         rospy.Subscriber('/can/AS_status', Int16, self.update_AS_status, queue_size=1)
         rospy.Subscriber('/car_state/state', CarState, self.state_callback,queue_size=1)
@@ -131,6 +132,10 @@ class Controller():
                     brake_light_msg.data = 0
                     self.brake_light = False    
                     self.brake_light_pub.publish(brake_light_msg)
+
+                target_msg = Float32()
+                target_msg.data = self.braking_target
+                self.target_speed_pub.publish(target_msg)
             
             else:
                 control_msg = Controls()
