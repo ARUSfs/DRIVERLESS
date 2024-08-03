@@ -4,6 +4,7 @@
 #include <ros/ros.h>
 #include <thread>
 #include <std_msgs/Int16.h>
+#include <std_msgs/Float32.h>
 #include <std_msgs/Float32MultiArray.h>
 #include <sensor_msgs/Imu.h>
 #include "sensor_msgs/PointCloud2.h"
@@ -28,7 +29,7 @@ private :
     void lapCounterCallback(std_msgs::Int16);
     void conesCountCallback(sensor_msgs::PointCloud2);
     void conesCountAllCallback(sensor_msgs::PointCloud2);
-    void targetSpeedCallback(std_msgs::Int16);
+    void targetSpeedCallback(std_msgs::Float32);
     void DL500Callback(const ros::TimerEvent&);
     void DL501Callback(const ros::TimerEvent&);
     void DL502Callback(const ros::TimerEvent&);
@@ -64,6 +65,7 @@ private :
     int8_t target_steering_angle;
     uint8_t brake_hydr_actual;
     uint8_t brake_hydr_target;
+    uint8_t pneumatic_press;
     int8_t motor_moment_actual;
     int8_t motor_moment_target;
 
@@ -89,6 +91,7 @@ private :
     void parseSteeringAngle(unsigned char []);
     void parseRES(unsigned char []);
     void parseBrakeHydr(unsigned char []);
+    void parsePneumatic(unsigned char []);
     void initialize_timer();
 
 

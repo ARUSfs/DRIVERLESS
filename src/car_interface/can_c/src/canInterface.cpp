@@ -42,7 +42,7 @@ CanInterface::CanInterface()
     lapCounterSub = nh.subscribe<std_msgs::Int16>("/lap_counter", 100, &CanInterface::lapCounterCallback, this);
     conesCountSub = nh.subscribe<sensor_msgs::PointCloud2>("/perception_map", 100, &CanInterface::conesCountCallback, this);
     conesCountAllSub = nh.subscribe<sensor_msgs::PointCloud2>("/mapa_icp", 100, &CanInterface::conesCountAllCallback, this);
-    targetSpeedSub = nh.subscribe<std_msgs::Int16>("/target_speed", 100, &CanInterface::targetSpeedCallback, this);
+    targetSpeedSub = nh.subscribe<std_msgs::Float32>("/target_speed", 100, &CanInterface::targetSpeedCallback, this);
     brakeLightSub = nh.subscribe<std_msgs::Int16>("/brake_light", 100, &CanInterface::brakeLightCallback, this);
 
     // Publishers
@@ -155,6 +155,13 @@ void CanInterface::parseBrakeHydr(uint8_t msg[8])
 {
     uint16_t b = (msg[2]<<8) | msg[1];
     this -> brake_hydr_actual = ((b-1111)/(133-1111))*100;
+}
+
+void CanInterface::parsePneumatic(uint8_t msg[8])
+{
+    uint16_t p1 = (msg[2]<<8) | msg[1];
+    uint16_t p2 = (msg[4]<<8) | msg[3];
+    std::cout << "pneumatic pressure: " << p1 << " " << p2 << std::endl;
 }
 
 //-------------------------------------------- IMU -----------------------------------------------------------------------
@@ -361,6 +368,7 @@ void CanInterface::readCan0()
                             parseBrakeHydr(msg);
                             break; 
                         case 0x05: //Pneumtic pressure
+                            parsePneumatic(msg);
                             break;
                         case 0x06: //Valves state
                             break;
@@ -650,7 +658,7 @@ void CanInterface::DL502Callback(const ros::TimerEvent&)
     this->DL502Pub.publish(x);
 }
 
-void CanInterface::targetSpeedCallback(std_msgs::Int16 msg)
+void CanInterface::targetSpeedCallback(std_msgs::Float32 msg)
 {
     this->target_speed = msg.data;
 }
