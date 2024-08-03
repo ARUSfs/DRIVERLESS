@@ -86,7 +86,7 @@ void launchMission()
             baseCommand += "trackdrive.launch";
             break;
         case 3:
-            baseCommand += "skidpad.launch";
+            baseCommand += "skidpad_antiguo.launch";
             break;
         case 4:
             baseCommand += "autocross.launch";
