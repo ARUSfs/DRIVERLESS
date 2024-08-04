@@ -8,7 +8,7 @@ import math
 MAX_ACCELERATION = rospy.get_param('/steering/MAX_ACCELERATION',default=6000)
 MAX_DECELERATION = rospy.get_param('/steering/MAX_DECELERATION',default=6000)
 PROFILE_VELOCITY = rospy.get_param('/steering/PROFILE_VELOCITY',default=6000)
-holgura = 3
+holgura = 5
 L = 1.535
 CORRIGE_HOLGURA = False
 
@@ -37,9 +37,9 @@ class SteeringHandle:
                 k_cmd = msg.steering/L
                 k_actual = self.r/self.speed
                 if k_cmd>k_actual:
-                    self.epos.move_to(-(msg.steering+holgura))
-                else:
                     self.epos.move_to(-(msg.steering-holgura))
+                else:
+                    self.epos.move_to(-(msg.steering+holgura))
             else:
                 self.epos.move_to(-msg.steering)
 
