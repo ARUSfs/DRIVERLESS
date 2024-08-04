@@ -8,7 +8,7 @@ car_state_topic: '/car_state/state'
 
 #FOV restrictions
 MAX_X_FOV: 25   # m
-MAX_Y_FOV: 20   # m
+MAX_Y_FOV: 5   # m
 MAX_Z_FOV: 0   # m
 H_FOV: 180   # degrees
 
