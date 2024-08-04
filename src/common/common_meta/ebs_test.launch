@@ -42,8 +42,8 @@
    <rosparam command="load" file="$(find accel_control)/config/accel_control.yaml"/>
     <rosparam>
       perception_topic: "/mapa_icp"
-      global_frame: "map"
-      car_frame: "ini"
+      global_frame: "ini"
+      car_frame: "body"
       slam: "marrano"
 
       lqr_dist: 4.0
