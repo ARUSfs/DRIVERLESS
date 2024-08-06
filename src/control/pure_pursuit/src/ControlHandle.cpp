@@ -2,6 +2,7 @@
 
 #include "ros/ros.h"
 #include <std_msgs/Float32.h>
+#include <std_msgs/Bool.h>
 #include "common_msgs/Trajectory.h"
 #include "common_msgs/Controls.h"
 #include "common_msgs/CarState.h"
@@ -25,9 +26,11 @@ ControlHandle::ControlHandle(){
     velocity_sub = nh.subscribe("/car_state/state", 10, &ControlHandle::speed_callback, this);
 
     path_sub = nh.subscribe("/route", 1, &ControlHandle::path_callback, this);
+    braking_sub = nh.subscribe("/braking", 1, &ControlHandle::braking_callback, this);
 
     control_publisher = nh.advertise<common_msgs::Controls>("/controls_pp", 1);
     pursuit_point_publisher = nh.advertise<geometry_msgs::Point>("pursuit_point",1);
+    target_speed_pub = nh.advertise<std_msgs::Float32>("/target_speed", 1);
      
     
     previous_time = std::chrono::high_resolution_clock::now();
@@ -60,6 +63,12 @@ void ControlHandle::control_timer_callback(const ros::TimerEvent& event) {
     msg.steering = angle;
     control_publisher.publish(msg);
 
+    if(!braking){
+        std_msgs::Float32 target_speed_msg;
+        target_speed_msg.data = TARGET_SPEED;
+        target_speed_pub.publish(target_speed_msg);
+    }
+    
     if(!pPursuit.path.empty()){
         geometry_msgs::Point p;
         p.x = pPursuit.path[pPursuit.pursuit_index].x;
@@ -86,3 +95,6 @@ void ControlHandle::path_callback(const common_msgs::Trajectory path) {
     pPursuit.update_path(new_path);
 }
 
+void ControlHandle::braking_callback(const std_msgs::Bool braking_msg) {
+    braking = braking_msg.data;
+}

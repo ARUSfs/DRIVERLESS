@@ -28,6 +28,7 @@ ICP_handle::ICP_handle(){
 	nh.getParam("/slam_marrano/global_frame", global_frame);
 	nh.getParam("/slam_marrano/car_frame", car_frame);
 	nh.getParam("/slam_marrano/restart_map", restart_map);
+	nh.getParam("/slam_marrano/restart_map_at_origin", restart_map_at_origin);
 	nh.getParam("/slam_marrano/restart_iterations", restart_iterations);
 	nh.getParam("/slam_marrano/mission", mission);
 	nh.getParam("/slam_marrano/braking_offset", braking_offset);
@@ -274,6 +275,10 @@ void ICP_handle::send_position() {
 			pcl::toROSMsg(*allp_clustered, global_map_msg);
 			global_map_msg.header.frame_id = global_frame;
 			global_map_publisher.publish(global_map_msg);
+
+			if(restart_map_at_origin){
+				has_map = false;
+			}
 
 		}else{
 			lap_time = ros::Time::now();

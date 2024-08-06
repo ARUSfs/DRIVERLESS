@@ -1,0 +1,11 @@
+sim_mode: false
+kp: 43.87
+ki: 1.29
+kd: 0.0
+target: 8
+
+k_mu: 5.5
+k_phi: 10
+k_r: 0
+delta_correction: 1.07
+

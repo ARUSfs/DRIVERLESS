@@ -2,6 +2,7 @@ global_frame: "map"
 car_frame: "body"
 
 restart_map: false
+restart_map_at_origin: false
 restart_iterations: 100
 mission: "none"
 braking_offset: 5

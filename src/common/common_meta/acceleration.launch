@@ -17,6 +17,7 @@
   <node pkg="car_state" name="car_state" type="main.py">
   <rosparam command="load" file="$(find car_state)/config/car_state.yaml"/>
     <rosparam>
+      global_frame: "ini"
       car_frame: "body"
       SLAM: "marrano"
     </rosparam>
@@ -47,12 +48,12 @@
       KI: 1.29
       KD: 0.0
         
-      target: 8
+      target: 15
       pendiente: 3
-      track_length: 75
+      track_length: 80
 
-      lqr_dist: 1.0
-      lqr_yaw: 25.0
+      lqr_dist: 4.0
+      lqr_yaw: 40.0
       lqr_beta: 0.0
       lqr_r: 0.0
     </rosparam>

@@ -24,15 +24,15 @@ from geometry_msgs.msg import PointStamped
 
 from skidpad_localization import SkidpadLocalization
 
-STANLEY_COEF = rospy.get_param('/skidpad_control/stanley_coef')
-K_DELTA = rospy.get_param('/skidpad_control/k_delta')
-K_YAW_RATE = rospy.get_param('/skidpad_control/k_yaw_rate')
+KP = rospy.get_param('/skidpad_control/kp')
+KI = rospy.get_param('/skidpad_control/ki')
+KD = rospy.get_param('/skidpad_control/kd')
+TARGET = rospy.get_param('/skidpad_control/target')
 
-TARGETILLO = rospy.get_param('/skidpad_control/targetillo')
-TARGETASO = rospy.get_param('/skidpad_control/targetaso')
-KP = rospy.get_param('/skidpad_control/KP')
-KI = rospy.get_param('/skidpad_control/KI')
-KD = rospy.get_param('/skidpad_control/KD')
+k_mu = rospy.get_param('/skidpad_control/k_mu')
+k_phi = rospy.get_param('/skidpad_control/k_phi')
+k_r = rospy.get_param('/skidpad_control/k_r')
+delta_correction = rospy.get_param('/skidpad_control/delta_correction')
 
 
 class SkidpadControl():
@@ -54,9 +54,9 @@ class SkidpadControl():
         self.integral = 0
         self.prev_err = 0
         self.prev_t = time.time()
-        self.steer_diff = 0
-        self.prev_steer = 0
-        self.delta = 0
+
+        self.tfBuffer = tf2_ros.Buffer()
+        self.listener = tf2_ros.TransformListener(self.tfBuffer)
 
         self.centers = []
         self.start_time = None
@@ -64,7 +64,6 @@ class SkidpadControl():
         self.calibrated = False
 
         self.i = 0
-        self.si = 0
 
  
         self.N = 100
@@ -73,13 +72,14 @@ class SkidpadControl():
 
         self.plantilla = np.array([[-20 + d*i,0] for i in range(int(20/d)+1)]+2*[[r * np.sin(2 * np.pi * i / self.N), -9.125+r * np.cos(2 * np.pi * i / self.N)] for i in range(self.N)]+2*[[r * np.sin(2 * np.pi * i / self.N), 9.125-r * np.cos(2 * np.pi * i / self.N)] for i in range(self.N)]+[[d*i,0] for i in range(int(20/d)+1)])
         self.route = None
+        self.delta_real=0
         
     
 
         self.cmd_publisher = rospy.Publisher('/controls_pp', Controls, queue_size=1) 
         self.braking_publisher = rospy.Publisher('/braking', Bool, queue_size=10)
         self.route_pub = rospy.Publisher('/skidpad_route',Marker,queue_size=1)
-        self.phi_dist_pub = rospy.Publisher('/phi_dist', Float32MultiArray,queue_size=1)
+        self.pubb = rospy.Publisher('/phi_dist', Float32MultiArray,queue_size=1)
         self.target_speed_pub = rospy.Publisher('/target_speed', Float32, queue_size=10)
         rospy.Subscriber('/perception_map', PointCloud2, self.update_route, queue_size=10)
         rospy.Subscriber('/car_state/state', CarState, self.update_state, queue_size=1)
@@ -99,8 +99,7 @@ class SkidpadControl():
             self.publish_cmd()
     
     def update_steer(self, msg: Float32MultiArray):
-        self.steer_diff = self.prev_steer - msg.data[1]
-        self.prev_steer = msg.data[1]
+        self.delta_real = msg.data[1]
 
 
     def update_route(self, msg: PointCloud2):
@@ -156,11 +155,12 @@ class SkidpadControl():
                 self.centers = []
                 self.start_time = time.time()
 
+        # rospy.loginfo(time.time()-t)
 
 
 
     def get_acc(self):
-        error = self.get_target() - self.speed
+        error = TARGET - self.speed
 
         dt=time.time()-self.prev_t
         if self.speed > 0.1:
@@ -183,30 +183,54 @@ class SkidpadControl():
         controls.accelerator = self.acc
         self.cmd_publisher.publish(controls)
 
+        if(not self.braking):
+            target_msg = Float32()
+            target_msg.data = TARGET
+            self.target_speed_pub.publish(target_msg)
+
 
     def get_steer(self):
+        # if self.i+self.N/2 < len(self.route):
+        #     dist = np.linalg.norm(self.route[self.i:self.i+int(self.N/2),:]-self.pos,axis=1)
+        #     self.i+=np.argmin(dist)
+        # elif self.i< len(self.route)-1:
+        #     dist = np.linalg.norm(self.route[self.i:,:]-self.pos,axis=1)
+        #     self.i+=np.argmin(dist)
+
+        i = self.i
+
+        x = self.route[:,0]
+        y = self.route[:,1]
+
+        # if x[i]!=x[i+1]:
+        #     recta=(y[self.i+1]-y[i])/(x[i+1]-x[i])*(self.pos[0]-x[i])+y[i]-self.pos[1]
+        #     signo_d=np.sign(recta)*np.sign(x[i]-x[i+1])
+        # else:
+        #     signo_d=np.sign(y[i+1]-y[i])*np.sign(self.pos[0]-x[i])
         
         rot = np.array([[math.cos(-self.yaw),-math.sin(-self.yaw)],[math.sin(-self.yaw),math.cos(-self.yaw)]])
         local_route = (self.route-self.pos) @ rot.T
 
         if self.i+self.N/2 < len(local_route):
-            # se halla el punto más cercano al eje delantero
-            dist = np.linalg.norm(local_route[self.i:self.i+int(self.N/2),:]-np.array([0.94,0]),axis=1)
+            dist = np.linalg.norm(local_route[self.i:self.i+int(self.N/2),:],axis=1)
             self.i+=np.argmin(dist)
         elif self.i< len(local_route)-1:
-            dist = np.linalg.norm(local_route[self.i:,:]-np.array([0.94,0]),axis=1)
+            dist = np.linalg.norm(local_route[self.i:,:],axis=1)
             self.i+=np.argmin(dist)
         signo_d = -np.sign(local_route[self.i,1])
         
         d_min=np.min(dist)*signo_d
-        dist = d_min+0.0001
+        # rospy.logwarn(d_min)
 
-        phi = -np.arctan2(local_route[self.i+1,1]-local_route[self.i,1],local_route[self.i+1,0]-local_route[self.i,0])
+        theta = np.arctan2(y[(i+5)%len(x)]-y[i],x[(i+5)%len(x)]-x[i])
+        phi_corrected = ((self.yaw-theta)+np.pi)%(2*np.pi) - np.pi 
+       
+        dist = d_min+0.0001
+        phi = phi_corrected
 
         d = 2*math.pi*9.125/self.N
 
-        
-        # brake 7m after last lap
+
         if self.i > 4*self.N+int(27/d):
             self.braking=True
             braking_msg = Bool()
@@ -220,21 +244,23 @@ class SkidpadControl():
         params = Float32MultiArray()
         params.data.append(phi)
         params.data.append(dist)
-        self.phi_dist_pub.publish(params)
+        self.pubb.publish(params)
 
         r_target = self.speed*self.k
 
-        phi_ss = 250*self.speed*r_target/(-20000*(1+0.55/0.45))
-
-        ### STANLEY CONTROL ###
-        delta = -phi -phi_ss - np.arctan(STANLEY_COEF*dist/self.get_target())
-        delta += K_DELTA*self.steer_diff + K_YAW_RATE*(r_target - self.r)  
-
+        ### BASE CONTROL + CORRECTION ###
+        # delta = delta_correction*math.degrees(np.arctan(self.k*1.535)) - k_mu*((dist**3+0.1*dist)) - k_phi*(phi+2*np.arctan(self.k*1.535/2)) + k_r*(r_target - self.r)
         
+        ### STANLEY CONTROL ###
+        coef = 1
+        delta = -phi - np.arctan(coef*dist/TARGET)
+        # delta += 0.003*self.r*self.speed
+        # OPTIONAL CORRECTION
+        delta += -0.02*(delta-math.radians(self.delta_real)) + 0.2*(r_target - self.r)    
         delta = math.degrees(delta)
-        self.delta = 0.8*self.delta + 0.2*delta
+        
      
-        return max(-20,min(20,self.delta))
+        return max(-20,min(20,delta))
     
     def update_k(self):
         s11=5
@@ -254,23 +280,3 @@ class SkidpadControl():
             self.k = (1/9.125)
         else:
             self.k = 0
-    
-    def get_target(self):
-        target_speed = 0
-        if self.si < 50:
-            target_speed = TARGETILLO
-        elif self.si < 130:
-            target_speed = TARGETASO
-        elif self.si < 170:
-            target_speed = TARGETILLO
-        elif self.si < 245:
-            target_speed = TARGETASO
-        else:
-            target_speed = TARGETILLO
-        
-        if(not self.braking):
-            target_msg = Float32()
-            target_msg.data = target_speed
-            self.target_speed_pub.publish(target_msg)
-
-        return target_speed

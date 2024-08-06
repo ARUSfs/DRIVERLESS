@@ -7,16 +7,20 @@ import time
 
 
 PUSHING = False
-DURATION = 1000 #s
-TARGET_DURATION = 27 #s
+DURATION = 27 #s
+
 
 AMPLITUDE = 20 #degrees
 FREQUENCY = 0.2 #s
-KP=0.5
+KP=0.1
 
-TARGET_SPEED = 2 #m/s
+TARGET_SPEED = 1 #m/s
 
-
+def as_status_callback(msg:Int16):
+    global AS_status, start_time
+    AS_status = msg.data
+    if (AS_status == 2 and start_time == 0):
+        start_time=time.time()
 def speed_callback(msg: CarState):
         global start_time,braking,actual_speed,last_speed_update
 
@@ -41,15 +45,12 @@ def generate_sinusoidal_steering(time):
     return steering_angle
 
 def accelerator_control(current: float, target: float):
-        global start_time,target_reached_time,braking
+        global start_time,braking
 
         error = target - current
         cmd = KP*error
 
-        if abs(error)<target*0.01 and target_reached_time==0:
-            target_reached_time = time.time()
-
-        if (target_reached_time!=0 and time.time()-target_reached_time>TARGET_DURATION) or (time.time()-start_time > DURATION):
+        if (time.time()-start_time > DURATION and start_time != 0):
            braking = True
            braking_msg = Bool()
            braking_msg.data = True
@@ -61,14 +62,13 @@ def accelerator_control(current: float, target: float):
 if __name__ == '__main__':
     rospy.init_node('sinusoidal_control_node')
 
-    start_time = time.time()
-    target_reached_time = 0
-
+    start_time = 0
+    AS_status = 0
 
     braking = False
 
     control_publisher = rospy.Publisher('/controls_pp', Controls, queue_size=1)
     braking_publisher = rospy.Publisher('/braking', Bool, queue_size=10)
     rospy.Subscriber('/car_state/state', CarState, speed_callback,queue_size=1)
-
+    rospy.Subscriber('/can/AS_status',Int16, as_status_callback, queue_size=1)
     rospy.spin()

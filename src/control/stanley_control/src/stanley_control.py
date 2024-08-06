@@ -46,6 +46,7 @@ class StanleyControl():
         self.steer_diff = 0
         self.prev_steer = 0
         self.prev_t = time.time()
+        self.braking = False
         
         self.s = None
         self.k = None
@@ -53,16 +54,21 @@ class StanleyControl():
         self.has_route = False
 
         self.cmd_publisher = rospy.Publisher('/controls_stanley', Controls, queue_size=1) 
+        self.target_speed_pub = rospy.Publisher('/target_speed', Float32, queue_size=1)
         rospy.Subscriber('/car_state/state', CarState, self.update_state, queue_size=10)
         rospy.Subscriber('/i_phi_dist', Float32MultiArray, self.callback, queue_size=1)
         rospy.Subscriber('/controller/sk', Trajectory, self.update_route, queue_size=10)
         rospy.Subscriber('/steering/epos_info', Float32MultiArray, self.update_steer, queue_size=1)
+        rospy.Subscriber('/braking',Bool, self.braking_callback, queue_size=10)
 
         
     def update_state(self, msg: CarState):
         self.speed = math.hypot(msg.vx,msg.vy)
         self.yaw = msg.yaw
         self.r = msg.r
+
+    def braking_callback(self, msg: Bool):
+        self.braking = msg.data
 
     def update_route(self, msg: Trajectory):
         if not self.has_route:
@@ -106,6 +112,11 @@ class StanleyControl():
         controls.steering = self.steer
         controls.accelerator = self.acc
         self.cmd_publisher.publish(controls)
+
+        if(not self.braking):
+            target_speed = Float32()
+            target_speed.data = self.speed_profile[self.i]
+            self.target_speed_pub.publish(target_speed)
 
 
     def get_acc(self):

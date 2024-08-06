@@ -42,7 +42,7 @@ CanInterface::CanInterface()
     lapCounterSub = nh.subscribe<std_msgs::Int16>("/lap_counter", 100, &CanInterface::lapCounterCallback, this);
     conesCountSub = nh.subscribe<sensor_msgs::PointCloud2>("/perception_map", 100, &CanInterface::conesCountCallback, this);
     conesCountAllSub = nh.subscribe<sensor_msgs::PointCloud2>("/mapa_icp", 100, &CanInterface::conesCountAllCallback, this);
-    targetSpeedSub = nh.subscribe<std_msgs::Int16>("/target_speed", 100, &CanInterface::targetSpeedCallback, this);
+    targetSpeedSub = nh.subscribe<std_msgs::Float32>("/target_speed", 100, &CanInterface::targetSpeedCallback, this);
     brakeLightSub = nh.subscribe<std_msgs::Int16>("/brake_light", 100, &CanInterface::brakeLightCallback, this);
 
     // Publishers
@@ -54,6 +54,9 @@ CanInterface::CanInterface()
     steeringAnglePub = nh.advertise<std_msgs::Float32>("can/steering_angle", 100);
     RESRangePub = nh.advertise<std_msgs::Float32>("/can/RESRange", 100);
     PCTempPub = nh.advertise<std_msgs::Float32>("/pc_temp", 100);
+    DL500Pub = nh.advertise<std_msgs::Float32MultiArray>("/can/DL500", 100);
+    DL501Pub = nh.advertise<std_msgs::Float32MultiArray>("/can/DL501", 100);
+    DL502Pub = nh.advertise<std_msgs::Float32MultiArray>("/can/DL502", 100);
 
     //Timers
     pcTempTimer = nh.createTimer(ros::Duration(0.1), &CanInterface::pcTempCallback, this);
@@ -122,10 +125,12 @@ void CanInterface::parseInvSpeed(uint8_t msg[8])
     std_msgs::Float32 x;
     x.data = invSpeed;
     this->motorSpeedPub.publish(x);
-    this->actual_speed = (invSpeed*1000)/3600;
+    this->actual_speed = invSpeed*3.6;
 }
 
 //-------------------------------------------- AS -------------------------------------------------------------------------
+//1111
+//133
 void CanInterface::parseASStatus(uint8_t msg[8])
 {
     int16_t val = (msg[2]);
@@ -134,6 +139,9 @@ void CanInterface::parseASStatus(uint8_t msg[8])
     {
         this->brake_hydr_actual = 0;
         this->brake_hydr_target = 0;
+    }else{
+        this->brake_hydr_actual = 100;
+        this->brake_hydr_target = 100;
     }
 
     this->AS_state = val+1;
@@ -141,6 +149,19 @@ void CanInterface::parseASStatus(uint8_t msg[8])
     std_msgs::Int16 x;
     x.data = val;
     this->ASStatusPub.publish(x);
+}
+
+void CanInterface::parseBrakeHydr(uint8_t msg[8])
+{
+    uint16_t b = (msg[2]<<8) | msg[1];
+    this -> brake_hydr_actual = ((b-1111)/(133-1111))*100;
+}
+
+void CanInterface::parsePneumatic(uint8_t msg[8])
+{
+    uint16_t p1 = (msg[2]<<8) | msg[1];
+    uint16_t p2 = (msg[4]<<8) | msg[3];
+    std::cout << "pneumatic pressure: " << p1 << " " << p2 << std::endl;
 }
 
 //-------------------------------------------- IMU -----------------------------------------------------------------------
@@ -344,8 +365,10 @@ void CanInterface::readCan0()
                             parseASStatus(msg);
                             break;
                         case 0x04: //Brake pressure
+                            parseBrakeHydr(msg);
                             break; 
                         case 0x05: //Pneumtic pressure
+                            parsePneumatic(msg);
                             break;
                         case 0x06: //Valves state
                             break;
@@ -479,7 +502,7 @@ void CanInterface::controlsCallback(common_msgs::Controls msg)
     // std::cout << "llega" << std::endl;
     float acc = msg.accelerator;
     int16_t intValue = static_cast<int16_t>(acc * (1<<15))-1;
-    this->motor_moment_target = intValue*0.5;
+    this->motor_moment_target = intValue;
 
     int8_t bytesCMD[2];
     intToBytes(intValue, bytesCMD);
@@ -506,14 +529,14 @@ void CanInterface::steeringInfoCallback(std_msgs::Float32MultiArray msg)
     int8_t pMovementState = msg.data[0];
     this->steering_state = pMovementState;
 
-    int16_t pPosition = msg.data[1]*100;
+    int16_t pPosition = msg.data[1]*2;
     int8_t pPositionBytes[3];
-    this->actual_steering_angle;
+    this->actual_steering_angle = pPosition;
     intToBytes(pPosition, pPositionBytes);
 
-    int16_t pTargetPosition = msg.data[2]*100;
+    int16_t pTargetPosition = msg.data[2]*2;
     int8_t pTargetPositionBytes[3];
-    this->target_steering_angle;
+    this->target_steering_angle = pTargetPosition;
     intToBytes(pTargetPosition, pTargetPositionBytes);
 
     int8_t msgEposState[8]= {0x02, pMovementState, pPositionBytes[0], pPositionBytes[1], pPositionBytes[2], pTargetPositionBytes[0], pTargetPositionBytes[1], pTargetPositionBytes[2]};
@@ -540,7 +563,7 @@ void CanInterface::steeringInfoCallback(std_msgs::Float32MultiArray msg)
 
 void CanInterface::pubHeartBeat(const ros::TimerEvent&)
 {
-    uint8_t data[1] = {0x01};
+    uint8_t data[1] = {0x00};
     canWrite(hndW1, 0x183, data, 1, canMSG_STD);
 }
 
@@ -551,38 +574,58 @@ void CanInterface::lapCounterCallback(std_msgs::Int16 msg)
 
 void CanInterface::conesCountCallback(sensor_msgs::PointCloud2 msg)
 {
-    this->cones_count_all = msg.width;
+    this->cones_count_actual = msg.width;
 }
 
 void CanInterface::conesCountAllCallback(sensor_msgs::PointCloud2 msg)
-{
-    this->cones_count_all = msg.width;
+{   
+    if(this->cones_count_all<msg.width && msg.width < 500){
+        this->cones_count_all = msg.width;
+    }
 }
 
 void CanInterface::DL500Callback(const ros::TimerEvent&)
 {
+    std_msgs::Float32MultiArray x;
+
     int8_t data[8] = {motor_moment_target ,this->motor_moment_actual ,this->brake_hydr_target,this->brake_hydr_actual,
         this->target_steering_angle,this->actual_steering_angle,this->target_speed,this->actual_speed};
+
+    x.data.push_back(motor_moment_target);
+    x.data.push_back(this->motor_moment_actual);
+    x.data.push_back(this->brake_hydr_target);
+    x.data.push_back(this->brake_hydr_actual);
+    x.data.push_back(this->target_steering_angle);
+    x.data.push_back(this->actual_steering_angle);
+    x.data.push_back(this->target_speed);
+    x.data.push_back(this->actual_speed);
+
+    this->DL500Pub.publish(x);
 
     canWrite(hndW0, 0x500, data, 8, canMSG_STD);
 }
 
 void CanInterface::DL501Callback(const ros::TimerEvent&)
 {
+    std_msgs::Float32MultiArray x;
+
     int16_t long_acc = IMUData.linear_acceleration.x*512;
     int8_t long_acc_bytes[2];
     intToBytes(long_acc, long_acc_bytes);
     int8_t long_acc_bytes_le[2] = {long_acc_bytes[1], long_acc_bytes[0]};
+    x.data.push_back(IMUData.linear_acceleration.x);
 
     int16_t lat_acc = IMUData.linear_acceleration.y*512;
     int8_t lat_acc_bytes[2];
     intToBytes(lat_acc, lat_acc_bytes);
     int8_t lat_acc_bytes_le[2] = {lat_acc_bytes[1], lat_acc_bytes[0]};
+    x.data.push_back(IMUData.linear_acceleration.y);
 
     int16_t yaw_rate = IMUData.angular_velocity.z*(180/M_PI)*128;
     int8_t yaw_rate_bytes[2];
     intToBytes(yaw_rate, yaw_rate_bytes);
     int8_t yaw_rate_bytes_le[2] = {yaw_rate_bytes[1], yaw_rate_bytes[0]};
+    x.data.push_back(IMUData.angular_velocity.z);
 
     int8_t data[6];
     std::copy(long_acc_bytes_le, long_acc_bytes_le + 2, data + 4);
@@ -590,21 +633,32 @@ void CanInterface::DL501Callback(const ros::TimerEvent&)
     std::copy(yaw_rate_bytes_le, yaw_rate_bytes_le + 2, data);
 
     canWrite(hndW0, 0x501, data, 6, canMSG_STD);
+    this->DL501Pub.publish(x);
 }
 
 void CanInterface::DL502Callback(const ros::TimerEvent&)
-{
+{   
+    std_msgs::Float32MultiArray x;
     uint8_t data[5];
     data[4] = (((this->AMI_state <<2) | this->EBS_state)<<3) | this->AS_state;
+    x.data.push_back(this->AMI_state);
+    x.data.push_back(this->EBS_state);
+    x.data.push_back(this->AS_state);
     data[3] = ((((((this->cones_count_actual & 0x01)<<4)|this->lap_counter)<<2)|this->service_brake_state)<<1)|steering_state;
+    x.data.push_back(this->cones_count_actual);
+    x.data.push_back(this->lap_counter);
+    x.data.push_back(this->service_brake_state);
+    x.data.push_back(this->steering_state);
     data[2] = (this->cones_count_all & 0x0001)|((this->cones_count_actual & 0xFE)>>1);
+    x.data.push_back(this->cones_count_all);
     data[1] = (this->cones_count_all & 0x01FE)>>1;
     data[0] = (this->cones_count_all & 0xFE00)>>9;
 
     canWrite(hndW0, 0x502, data, 5, canMSG_STD);
+    this->DL502Pub.publish(x);
 }
 
-void CanInterface::targetSpeedCallback(std_msgs::Int16 msg)
+void CanInterface::targetSpeedCallback(std_msgs::Float32 msg)
 {
     this->target_speed = msg.data;
 }
