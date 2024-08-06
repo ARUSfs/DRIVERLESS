@@ -37,9 +37,9 @@ class SteeringHandle:
                 k_cmd = msg.steering/L
                 k_actual = self.r/self.speed
                 if k_cmd>k_actual:
-                    self.epos.move_to(-(msg.steering-holgura))
-                else:
                     self.epos.move_to(-(msg.steering+holgura))
+                else:
+                    self.epos.move_to(-(msg.steering-holgura))
             else:
                 self.epos.move_to(-msg.steering)
 
