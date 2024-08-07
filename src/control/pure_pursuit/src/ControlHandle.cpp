@@ -12,6 +12,7 @@
 
 #include <iostream>
 #include <chrono>
+#include <algorithm>
 
 ControlHandle::ControlHandle(){
 
@@ -27,6 +28,9 @@ ControlHandle::ControlHandle(){
 
     path_sub = nh.subscribe("/route", 1, &ControlHandle::path_callback, this);
     braking_sub = nh.subscribe("/braking", 1, &ControlHandle::braking_callback, this);
+    speed_profile_sub = nh.subscribe("/speed_profile",1, &ControlHandle::update_target, this);
+    sk_sub = nh.subscribe("controller/sk", 1, &ControlHandle::update_sk, this);
+
 
     control_publisher = nh.advertise<common_msgs::Controls>("/controls_pp", 1);
     pursuit_point_publisher = nh.advertise<geometry_msgs::Point>("pursuit_point",1);
@@ -98,3 +102,26 @@ void ControlHandle::path_callback(const common_msgs::Trajectory path) {
 void ControlHandle::braking_callback(const std_msgs::Bool braking_msg) {
     braking = braking_msg.data;
 }
+
+void ControlHandle::update_target(const std_msgs::Float32MultiArray msg){
+    float dx =  0.1*std::max(velocity,3.0f);
+    int index = 0;
+    while (s[index]<dx){
+        index++;
+    }
+    TARGET_SPEED = msg.data[index];
+    std::cout << "target: " << TARGET_SPEED << std::endl;
+}
+
+
+void ControlHandle::update_sk(const common_msgs::Trajectory msg){
+    s.clear();
+    k.clear();
+
+    for(const geometry_msgs::Point &point : msg.trajectory){
+        s.push_back(point.x);
+        k.push_back(point.y);
+    }
+}
+
+

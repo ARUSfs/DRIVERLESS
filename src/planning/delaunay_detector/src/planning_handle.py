@@ -5,14 +5,14 @@
 """
 
 from itertools import combinations
-from common_msgs.msg import Trajectory
+from common_msgs.msg import Trajectory, CarState
 from visualization_msgs.msg import Marker
 from geometry_msgs.msg import Point
 from common_msgs.msg import Simplex, Triangulation
 from sensor_msgs.msg import PointCloud2
 from sensor_msgs import point_cloud2
 from scipy.interpolate import splprep, splev
-from std_msgs.msg import Int16
+from std_msgs.msg import Int16, Float32MultiArray
 import numpy as np
 import tf2_ros
 import tf2_sensor_msgs.tf2_sensor_msgs as tf2_sensor_msgs
@@ -26,7 +26,7 @@ global_frame = rospy.get_param('/delaunay_detector/global_frame')
 car_frame = rospy.get_param('/delaunay_detector/car_frame')
 slam = rospy.get_param('/delaunay_detector/slam')
 TRACKDRIVE = rospy.get_param('/delaunay_detector/trackdrive')
-
+SMOOTH = rospy.get_param('/delaunay_detector/SMOOTH')
 
 class PlanningHandle():
     """Listen map of cones, calculate center track via Delaunay
@@ -57,6 +57,11 @@ class PlanningHandle():
 
         self.pub_global_route = rospy.Publisher('/delaunay/global_route', Trajectory, queue_size=1)
 
+        if(SMOOTH):
+            rospy.Subscriber("/car_state/state", CarState, self.update_state)
+            self.pub_speed_profile = rospy.Publisher("/speed_profile", Float32MultiArray, queue_size=1)
+            self.pub_sk = rospy.Publisher('/controller/sk',Trajectory,queue_size=1)
+
 
     def get_trajectory(self, msg):
         if(slam=="marrano"):
@@ -74,12 +79,12 @@ class PlanningHandle():
 
 
     def publish_msg(self):
-        route, triang = self.planning_system.calculate_path()
-        self.delaunay_publisher.publish(triang)
+        self.planning_system.calculate_path()
+        self.delaunay_publisher.publish(self.planning_system.triang)
 
         msg = Trajectory()
         msg.trajectory = list()
-        for midpoint in route:
+        for midpoint in self.planning_system.route:
             point = Point()
             point.x = midpoint[0]
             point.y = midpoint[1]
@@ -88,6 +93,24 @@ class PlanningHandle():
 
         self.pub_route.publish(msg)
 
+        if(SMOOTH):
+            speed_profile_msg = Float32MultiArray()
+            speed_profile_msg.data=self.planning_system.speed_profile
+            self.pub_speed_profile.publish(speed_profile_msg)
+
+            s = self.planning_system.s
+            k = self.planning_system.k
+
+            sk_msg = Trajectory()
+            msg.trajectory = list()
+            for i in range(len(s)):
+                p = Point()
+                p.x = s[i]
+                p.y = k[i]
+                p.z = 0
+                sk_msg.trajectory.append(p)
+            self.pub_sk.publish(sk_msg)
+
 
     def get_global_track(self,msg :PointCloud2):
         if self.first_lap:
@@ -95,19 +118,19 @@ class PlanningHandle():
 
             cones = point_cloud2.read_points(msg, field_names=("x", "y", "z","color", "score"), skip_nans=True)
             self.planning_system.update_tracklimits(cones)
-            route, triang = self.planning_system.calculate_path()
+            self.planning_system.calculate_path()
 
-            route = route[1:]
             
             # rospy.logwarn(route)
             msg2 = Trajectory()
-            msg2.trajectory = [Point(p[0],p[1],0) for p in route]
+            msg2.trajectory = [Point(p[0],p[1],0) for p in self.planning_system.route[1:]]
             # rospy.logwarn(msg2)
-            rospy.logerr([len(route),len(msg2.trajectory)])
+            rospy.logerr(len(msg2.trajectory))
 
             self.pub_global_route.publish(msg2)
 
-       
+    def update_state(self, msg: CarState):
+        self.planning_system.speed = np.hypot(msg.vx,msg.vy)
 
 
 

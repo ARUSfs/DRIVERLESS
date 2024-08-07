@@ -44,6 +44,12 @@ class PlanningSystem():
         self.distances = None
 
         self.previous_perceptions = []
+        self.speed = 0
+        self.speed_profile = None
+        self.route = None
+        self.triang = None
+        self.s = None
+        self.k = None
 
     def update_tracklimits(self, cones):
         self.colours = list()
@@ -147,6 +153,60 @@ class PlanningSystem():
                 tck, u = splprep(route.T, s=3, k=degrees)  
                 u_new = np.linspace(u.min(), u.max(), 30)
                 route = np.array(splev(u_new, tck)).T
+
+                acum=0
+                s=[]
+                s.append(0)
+                xp = []
+                yp = []
+                for i in range(route.shape[0]-1):
+                    p1=route[i]
+                    p2=route[i+1]
+                    xp.append(p2[0]-p1[0])
+                    yp.append(p2[1]-p1[1])
+                    acum+=np.sqrt((p1[0]-p2[0])**2+(p1[1]-p2[1])**2)
+                    s.append(acum)
+                xp.append(xp[-1])
+                yp.append(yp[-1])
+
+
+                xpp=[]
+                ypp=[]
+                for i in range(len(xp)-1):
+                    xpp.append(xp[i+1]-xp[i])
+                    ypp.append(yp[i+1]-yp[i])
+                xpp.append(xpp[-1])
+                ypp.append(xpp[-1])
+
+                k=[]
+                for i in range(len(xpp)):
+                    if xp[i]!=yp[i]:
+                        k.append((xp[i]*ypp[i] - xpp[i]*yp[i])/(xp[i]**2+yp[i]**2)**1.5)
+                    else:
+                        k.append(0)
+
+                
+                speed_profile = [0 for _ in range(len(s))]
+                ax_max = 3
+                ay_max = 4
+                v_max = 8
+                v_grip = [min(np.sqrt(ay_max/np.abs(c+0.0001)),v_max) for c in k]
+                speed_profile[0] = self.speed
+                for j in range(1,len(speed_profile)):
+                    ds = s[j]-s[j-1]
+                    speed_profile[j] = np.sqrt(speed_profile[j-1]**2 + 2*ax_max*ds)
+                    if speed_profile[j] > v_grip[j]:
+                        speed_profile[j] = v_grip[j]
+                for j in range(len(speed_profile)-2,-1,-1):
+                    v_max_braking = np.sqrt(speed_profile[j+1]**2 + 2*ax_max*ds)
+                    if speed_profile[j] > v_max_braking:
+                        speed_profile[j] = v_max_braking
+                
+                self.speed_profile = speed_profile 
+                self.s = s
+                self.k = k
+                
+
         else:
             # UPSAMPLED PATH
             route=[]
@@ -154,9 +214,6 @@ class PlanningSystem():
                 route.extend([[(1-a)*path[i][0] + a*path[i+1][0],(1-a)*path[i][1] + a*path[i+1][1]] for a in np.linspace(0,1, num=NUM_POINTS)])
             route = np.array(route)
         
-        
-       
-
 
         triang = Triangulation()
         for simplex in preproc_simplices:
@@ -169,7 +226,10 @@ class PlanningSystem():
                 s.simplex.append(p)
             triang.simplices.append(s)  
 
-        return route, triang
+        self.route = route
+        self.triang = triang
+
+ 
     
     def compute_path(self,midpoints, orig, first_angle):
         last_element = orig
