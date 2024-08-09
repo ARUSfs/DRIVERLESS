@@ -106,10 +106,8 @@ void ControlHandle::update_target(const std_msgs::Float32MultiArray msg){
     float dx =  0.1*std::max(velocity,3.0f);
     int index = 0;
     std::cout << dx << std::endl;
-    for(int i=0; i<s.size(); i++){
-        std::cout << s[i] << std::endl;
-    }
-    while (s[index]<dx && s.size()>index){
+    std::cout << s.size() << std::endl;
+    while (s.size()>index && s[index]<dx){
         index++;
     }
     if(msg.data.size()>index){
@@ -120,13 +118,15 @@ void ControlHandle::update_target(const std_msgs::Float32MultiArray msg){
 
 
 void ControlHandle::update_sk(const common_msgs::Trajectory msg){
-    s.clear();
-    k.clear();
+    if(msg.trajectory.size()>0){
+        s.clear();
+        k.clear();
 
-    for(const geometry_msgs::Point &point : msg.trajectory){
-        s.push_back(point.x);
-        k.push_back(point.y);
-    }
+        for(const geometry_msgs::Point &point : msg.trajectory){
+            s.push_back(point.x);
+            k.push_back(point.y);
+        }
+    } 
 }
 
 
