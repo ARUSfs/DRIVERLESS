@@ -47,7 +47,6 @@ ControlHandle::ControlHandle(){
 }
 
 void ControlHandle::control_timer_callback(const ros::TimerEvent& event) {
-    // TODO PONER CON PARAMETROS POR DIOS ESTO ES PARA PROBAR TODO
 
     auto current_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> delta_time = current_time - previous_time;
@@ -106,10 +105,16 @@ void ControlHandle::braking_callback(const std_msgs::Bool braking_msg) {
 void ControlHandle::update_target(const std_msgs::Float32MultiArray msg){
     float dx =  0.1*std::max(velocity,3.0f);
     int index = 0;
-    while (s[index]<dx){
+    std::cout << dx << std::endl;
+    for(int i=0; i<s.size(); i++){
+        std::cout << s[i] << std::endl;
+    }
+    while (s[index]<dx && s.size()>index){
         index++;
     }
-    TARGET_SPEED = msg.data[index];
+    if(msg.data.size()>index){
+        TARGET_SPEED = msg.data[index];
+    }
     std::cout << "target: " << TARGET_SPEED << std::endl;
 }
 

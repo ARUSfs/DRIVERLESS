@@ -15,7 +15,6 @@ class PurePursuit {
         std::string global_frame;
         std::string car_frame;
         bool global_mode; // false for local pp
-        float LAD; //Look ahead distance
         float prev_steer;
 
         tf2_ros::Buffer tfBuffer;
@@ -27,6 +26,7 @@ class PurePursuit {
     public:
         std::vector<pcl::PointXY> path;
         size_t pursuit_index;
+        float LAD; //Look ahead distance
         PurePursuit();
 
         void update_path(const std::vector<pcl::PointXY> &new_path);
