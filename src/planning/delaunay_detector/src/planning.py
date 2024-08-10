@@ -187,9 +187,9 @@ class PlanningSystem():
 
                 
                 speed_profile = [0 for _ in range(len(s))]
-                ax_max = 3
-                ay_max = 4
-                v_max = 8
+                ax_max = 4
+                ay_max = 5
+                v_max = 7
                 v_grip = [min(np.sqrt(ay_max/np.abs(c+0.0001)),v_max) for c in k]
                 speed_profile[0] = self.speed
                 for j in range(1,len(speed_profile)):

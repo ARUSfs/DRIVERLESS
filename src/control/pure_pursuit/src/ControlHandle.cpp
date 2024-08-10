@@ -114,6 +114,8 @@ void ControlHandle::update_target(const std_msgs::Float32MultiArray msg){
         TARGET_SPEED = msg.data[index];
     }
     std::cout << "target: " << TARGET_SPEED << std::endl;
+
+    pPursuit.LAD = 0.1*TARGET_SPEED*TARGET_SPEED + 3;
 }
 
 
