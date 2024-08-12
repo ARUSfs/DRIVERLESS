@@ -64,6 +64,7 @@ CanInterface::CanInterface()
     DL500Timer = nh.createTimer(ros::Duration(0.1), &CanInterface::DL500Callback, this);
     DL501Timer = nh.createTimer(ros::Duration(0.1), &CanInterface::DL501Callback, this);
     DL502Timer = nh.createTimer(ros::Duration(0.1), &CanInterface::DL502Callback, this);
+    DL511Timer = nh.createTimer(ros::Duration(0.1), &CanInterface::DL511Callback, this);
 
     canInitializeLibrary(); // Initialize the library
     std::cout << "Librería inicializada" << std::endl;
