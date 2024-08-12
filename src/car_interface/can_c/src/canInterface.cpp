@@ -152,16 +152,20 @@ void CanInterface::parseASStatus(uint8_t msg[8])
 }
 
 void CanInterface::parseBrakeHydr(uint8_t msg[8])
-{
+{   
+
     uint16_t b = (msg[2]<<8) | msg[1];
+    this->frontPres = (b*25*(5/3.1967)*(3.3/4096))-12.5;
     this -> brake_hydr_actual = ((b-1111)/(133-1111))*100;
+
+    uint16_t c = (msg[4]<<8) | msg[3];
+    this->rearPres = (c*25*(5/3.1967)*(3.3/4096))-12.5;
 }
 
 void CanInterface::parsePneumatic(uint8_t msg[8])
 {
-    uint16_t p1 = (msg[2]<<8) | msg[1];
-    uint16_t p2 = (msg[4]<<8) | msg[3];
-    std::cout << "pneumatic pressure: " << p1 << " " << p2 << std::endl;
+    this->pnPres1 = (msg[2]<<8) | msg[1];
+    this->pnPres2 = (msg[4]<<8) | msg[3];
 }
 
 //-------------------------------------------- IMU -----------------------------------------------------------------------
@@ -711,4 +715,16 @@ void CanInterface::getPcTemp()
     }
     pclose(fp);
     this->pc_temp = temp;
+}
+
+void CanInterface::DL511Callback(const ros::TimerEvent&)
+{
+    uint8_t data[5];
+    data[4] = 0x01;
+    data[2] = this->frontPres * 2;
+    data[3] = this->rearPres * 2;
+    data[0] = this->pnPres1 * 10;
+    data[1] = this->pnPres2 * 10;
+
+    canWrite(hndW0, 0x511, data, 5, canMSG_STD);
 }

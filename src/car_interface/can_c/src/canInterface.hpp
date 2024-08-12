@@ -33,6 +33,7 @@ private :
     void DL500Callback(const ros::TimerEvent&);
     void DL501Callback(const ros::TimerEvent&);
     void DL502Callback(const ros::TimerEvent&);
+    void DL511Callback(const ros::TimerEvent&);
     void pcTempCallback(const ros::TimerEvent&);
 
     void readCan1();
@@ -57,6 +58,10 @@ private :
     ros::Publisher DL502Pub;
 
     float pc_temp;
+    int rearPres;
+    int frontPres;
+    int pnPres1;
+    int pnPres2;
     void getPcTemp();
 
     uint8_t actual_speed;
@@ -109,6 +114,7 @@ private :
     ros::Timer DL500Timer;
     ros::Timer DL501Timer;
     ros::Timer DL502Timer;
+    ros::Timer DL511Timer;
 
     std::thread thread_0;
     std::thread thread_1;    
