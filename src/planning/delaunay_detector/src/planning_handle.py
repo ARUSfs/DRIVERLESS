@@ -93,7 +93,7 @@ class PlanningHandle():
 
         self.pub_route.publish(msg)
 
-        if(SMOOTH):
+        if(SMOOTH and len(self.planning_system.speed_profile)>0):
             speed_profile_msg = Float32MultiArray()
             speed_profile_msg.data=self.planning_system.speed_profile
             self.pub_speed_profile.publish(speed_profile_msg)

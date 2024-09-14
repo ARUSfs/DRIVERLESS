@@ -32,6 +32,7 @@
       MAX_ROUTE_LENGTH: 10
       slam: 'marrano'
       trackdrive: false
+      SMOOTH: true
     </rosparam>
   </node>
 
@@ -60,6 +61,8 @@
   <rosparam command="load" file="$(find controller)/config/controller.yaml"/>
     <rosparam>
       controller_mode: 'PP'
+      max_cmd: 0.2
+      min_cmd: -0.2
     </rosparam>
   </node>
 
@@ -69,7 +72,7 @@
   <rosparam command="load" file="$(find pure_pursuit)/config/pure_pursuit.yaml"/>
     <rosparam>
       LAD: 4
-      TARGET_SPEED: 3
+      TARGET_SPEED: 1
       global_mode: false
     </rosparam>
   </node>

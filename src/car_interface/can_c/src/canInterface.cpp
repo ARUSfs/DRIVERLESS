@@ -36,27 +36,27 @@ void CanInterface::check_can(canStatus stat)
 CanInterface::CanInterface()
 {    
      // Subscribers
-    controlsSub = nh.subscribe<common_msgs::Controls>("/controls", 100, &CanInterface::controlsCallback, this);    
-    ASStatusSub = nh.subscribe<std_msgs::Int16>("/can/AS_status", 100, &CanInterface::ASStatusCallback, this);
-    steeringInfoSub = nh.subscribe<std_msgs::Float32MultiArray>("/steering/epos_info", 100, &CanInterface::steeringInfoCallback, this);
-    lapCounterSub = nh.subscribe<std_msgs::Int16>("/lap_counter", 100, &CanInterface::lapCounterCallback, this);
-    conesCountSub = nh.subscribe<sensor_msgs::PointCloud2>("/perception_map", 100, &CanInterface::conesCountCallback, this);
-    conesCountAllSub = nh.subscribe<sensor_msgs::PointCloud2>("/mapa_icp", 100, &CanInterface::conesCountAllCallback, this);
-    targetSpeedSub = nh.subscribe<std_msgs::Float32>("/target_speed", 100, &CanInterface::targetSpeedCallback, this);
-    brakeLightSub = nh.subscribe<std_msgs::Int16>("/brake_light", 100, &CanInterface::brakeLightCallback, this);
+    controlsSub = nh.subscribe<common_msgs::Controls>("/controls", 1, &CanInterface::controlsCallback, this);    
+    ASStatusSub = nh.subscribe<std_msgs::Int16>("/can/AS_status", 10, &CanInterface::ASStatusCallback, this);
+    steeringInfoSub = nh.subscribe<std_msgs::Float32MultiArray>("/steering/epos_info", 10, &CanInterface::steeringInfoCallback, this);
+    lapCounterSub = nh.subscribe<std_msgs::Int16>("/lap_counter", 10, &CanInterface::lapCounterCallback, this);
+    conesCountSub = nh.subscribe<sensor_msgs::PointCloud2>("/perception_map", 10, &CanInterface::conesCountCallback, this);
+    conesCountAllSub = nh.subscribe<sensor_msgs::PointCloud2>("/mapa_icp", 10, &CanInterface::conesCountAllCallback, this);
+    targetSpeedSub = nh.subscribe<std_msgs::Float32>("/target_speed", 10, &CanInterface::targetSpeedCallback, this);
+    brakeLightSub = nh.subscribe<std_msgs::Int16>("/brake_light", 10, &CanInterface::brakeLightCallback, this);
 
     // Publishers
-    motorSpeedPub = nh.advertise<std_msgs::Float32>("/motor_speed", 100);
-    ASStatusPub = nh.advertise<std_msgs::Int16>("/can/AS_status", 100);
-    GPSPub = nh.advertise<sensor_msgs::NavSatFix>("can/gps", 100);
-    GPSSpeedPub = nh.advertise<geometry_msgs::Vector3>("can/gps_speed", 100);
+    motorSpeedPub = nh.advertise<std_msgs::Float32>("/motor_speed", 1);
+    ASStatusPub = nh.advertise<std_msgs::Int16>("/can/AS_status", 1);
+    GPSPub = nh.advertise<sensor_msgs::NavSatFix>("can/gps", 1);
+    GPSSpeedPub = nh.advertise<geometry_msgs::Vector3>("can/gps_speed", 1);
     IMUPub = nh.advertise<sensor_msgs::Imu>("can/IMU", 100);
-    steeringAnglePub = nh.advertise<std_msgs::Float32>("can/steering_angle", 100);
-    RESRangePub = nh.advertise<std_msgs::Float32>("/can/RESRange", 100);
-    PCTempPub = nh.advertise<std_msgs::Float32>("/pc_temp", 100);
-    DL500Pub = nh.advertise<std_msgs::Float32MultiArray>("/can/DL500", 100);
-    DL501Pub = nh.advertise<std_msgs::Float32MultiArray>("/can/DL501", 100);
-    DL502Pub = nh.advertise<std_msgs::Float32MultiArray>("/can/DL502", 100);
+    steeringAnglePub = nh.advertise<std_msgs::Float32>("can/steering_angle", 1);
+    RESRangePub = nh.advertise<std_msgs::Float32>("/can/RESRange", 1);
+    PCTempPub = nh.advertise<std_msgs::Float32>("/pc_temp", 1);
+    DL500Pub = nh.advertise<std_msgs::Float32MultiArray>("/can/DL500", 1);
+    DL501Pub = nh.advertise<std_msgs::Float32MultiArray>("/can/DL501", 1);
+    DL502Pub = nh.advertise<std_msgs::Float32MultiArray>("/can/DL502", 1);
 
     //Timers
     pcTempTimer = nh.createTimer(ros::Duration(0.1), &CanInterface::pcTempCallback, this);

@@ -45,7 +45,7 @@ class PlanningSystem():
 
         self.previous_perceptions = []
         self.speed = 0
-        self.speed_profile = None
+        self.speed_profile = []
         self.route = None
         self.triang = None
         self.s = None
@@ -143,8 +143,8 @@ class PlanningSystem():
         
         if len(path)>2:
             PREV_ANGLE = np.arctan2(path[1][1], path[1][0])/2
-
-        
+       
+        rospy.loginfo(path)
         if(SMOOTH):
             # SMOOTHED PATH
             route = np.array(path)
@@ -187,9 +187,9 @@ class PlanningSystem():
 
                 
                 speed_profile = [0 for _ in range(len(s))]
-                ax_max = 4
-                ay_max = 5
-                v_max = 7
+                ax_max = 3
+                ay_max = 1
+                v_max = 3
                 v_grip = [min(np.sqrt(ay_max/np.abs(c+0.0001)),v_max) for c in k]
                 speed_profile[0] = self.speed
                 for j in range(1,len(speed_profile)):
@@ -205,6 +205,9 @@ class PlanningSystem():
                 self.speed_profile = speed_profile 
                 self.s = s
                 self.k = k
+
+                rospy.loginfo(route)
+                rospy.loginfo(speed_profile)
                 
 
         else:

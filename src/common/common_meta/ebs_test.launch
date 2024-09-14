@@ -55,8 +55,8 @@
       KD : 0.0
       KI : 1.29
 
-      target: 12
-      pendiente: 4
+      target: 5
+      pendiente: 3
       track_length: 50
     </rosparam>
   </node>

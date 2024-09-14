@@ -48,9 +48,9 @@
       KI: 1.29
       KD: 0.0
         
-      target: 15
+      target: 5
       pendiente: 3
-      track_length: 80
+      track_length: 40
 
       lqr_dist: 4.0
       lqr_yaw: 40.0
