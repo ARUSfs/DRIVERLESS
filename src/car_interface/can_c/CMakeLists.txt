@@ -8,7 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   common_msgs
 )
-find_package(PahoMqttCpp REQUIRED)
+# find_package(PahoMqttCpp REQUIRED)
 ## Declare a catkin package
 catkin_package(
   CATKIN_DEPENDS roscpp std_msgs sensor_msgs common_msgs
@@ -27,7 +27,7 @@ add_executable(main src/main.cpp src/canInterface.cpp)
 
 add_executable(missionHandle src/missionHandle.cpp)
 
-add_executable(telemetry src/telemetry.cpp)
+# add_executable(telemetry src/telemetry.cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(main
@@ -40,13 +40,13 @@ target_link_libraries(missionHandle
   /usr/lib/libcanlib.so # Asegúrate de que la ruta a la biblioteca canlib es correcta
 )
 
-target_include_directories(telemetry
-    PRIVATE
-    ${PahoMqttCpp_INCLUDE_DIRS}
-)
+# target_include_directories(telemetry
+#     PRIVATE
+#     ${PahoMqttCpp_INCLUDE_DIRS}
+# )
 
-target_link_libraries(telemetry
-  ${catkin_LIBRARIES}
-  /usr/lib/libcanlib.so # Asegúrate de que la ruta a la biblioteca canlib es correcta
-  PahoMqttCpp::paho-mqttpp3
-)
+# target_link_libraries(telemetry
+#   ${catkin_LIBRARIES}
+#   /usr/lib/libcanlib.so # Asegúrate de que la ruta a la biblioteca canlib es correcta
+#   PahoMqttCpp::paho-mqttpp3
+# )
