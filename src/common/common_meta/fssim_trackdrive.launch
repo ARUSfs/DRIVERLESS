@@ -17,7 +17,6 @@
       color_enabled: false
       MAX_ROUTE_LENGTH: 10
       slam: 'marrano'
-      trackdrive: false
       SMOOTH: true
     </rosparam>
   </node>

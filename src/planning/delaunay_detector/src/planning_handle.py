@@ -20,12 +20,10 @@ import tf2_sensor_msgs.tf2_sensor_msgs as tf2_sensor_msgs
 import rospy
 
 from planning import PlanningSystem
-from track_planning import TrackPlanningSystem
 
 global_frame = rospy.get_param('/delaunay_detector/global_frame')
 car_frame = rospy.get_param('/delaunay_detector/car_frame')
 slam = rospy.get_param('/delaunay_detector/slam')
-TRACKDRIVE = rospy.get_param('/delaunay_detector/trackdrive')
 SMOOTH = rospy.get_param('/delaunay_detector/SMOOTH')
 
 class PlanningHandle():
@@ -41,7 +39,6 @@ class PlanningHandle():
         self.listener = tf2_ros.TransformListener(self.tf_buffer)
 
         self.planning_system = PlanningSystem()
-        self.track_planning_system = TrackPlanningSystem()
 
         topic_perception_map = rospy.get_param('~topic_perception_map')
         rospy.Subscriber(topic_perception_map, PointCloud2, self.get_trajectory, queue_size=1)
@@ -73,8 +70,7 @@ class PlanningHandle():
         else:
             cones = point_cloud2.read_points(msg, field_names=("x", "y", "z","color","score"),skip_nans=True)
         
-        if (self.first_lap or not TRACKDRIVE):
-            self.planning_system.update_tracklimits(cones)
+        self.planning_system.update_tracklimits(cones)
         self.publish_msg()
 
 

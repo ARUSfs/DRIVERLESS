@@ -8,10 +8,14 @@ send_simplices_marker: true
 global_frame: 'map'
 car_frame: 'body'
 slam: 'none'
-trackdrive: false
 
 MODE: 'PP' # PP or STANLEY
-SMOOTH: false
+
+# velocity profile parameters
+SMOOTH: false 
+ax_max: 1
+ay_max: 1
+v_max: 5
 
 # Hiperparameters of delaunay detector
 MAX_DISTANCE: 8

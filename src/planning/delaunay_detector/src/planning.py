@@ -26,9 +26,13 @@ W_THRESH = rospy.get_param('/delaunay_detector/W_THRESH')
 MAX_ROUTE_LENGTH = rospy.get_param('/delaunay_detector/MAX_ROUTE_LENGTH')
 NUM_POINTS = rospy.get_param('/delaunay_detector/NUM_POINTS')
 MODE = rospy.get_param('/delaunay_detector/MODE')
-SMOOTH = rospy.get_param('/delaunay_detector/SMOOTH')
 PREV_ANGLE = 0
 
+
+SMOOTH = rospy.get_param('/delaunay_detector/SMOOTH')
+AX_MAX = rospy.get_param('/delaunay_detector/ax_max')
+AY_MAX = rospy.get_param('/delaunay_detector/ay_max')
+V_MAX = rospy.get_param('/delaunay_detector/v_max')
 
 class PlanningSystem():
     """Update tracklimits with new cones detected, calculate
@@ -187,18 +191,15 @@ class PlanningSystem():
 
                 
                 speed_profile = [0 for _ in range(len(s))]
-                ax_max = 3
-                ay_max = 1
-                v_max = 3
-                v_grip = [min(np.sqrt(ay_max/np.abs(c+0.0001)),v_max) for c in k]
+                v_grip = [min(np.sqrt(AY_MAX/np.abs(c+0.0001)),V_MAX) for c in k]
                 speed_profile[0] = self.speed
                 for j in range(1,len(speed_profile)):
                     ds = s[j]-s[j-1]
-                    speed_profile[j] = np.sqrt(speed_profile[j-1]**2 + 2*ax_max*ds)
+                    speed_profile[j] = np.sqrt(speed_profile[j-1]**2 + 2*AX_MAX*ds)
                     if speed_profile[j] > v_grip[j]:
                         speed_profile[j] = v_grip[j]
                 for j in range(len(speed_profile)-2,-1,-1):
-                    v_max_braking = np.sqrt(speed_profile[j+1]**2 + 2*ax_max*ds)
+                    v_max_braking = np.sqrt(speed_profile[j+1]**2 + 2*AX_MAX*ds)
                     if speed_profile[j] > v_max_braking:
                         speed_profile[j] = v_max_braking
                 
