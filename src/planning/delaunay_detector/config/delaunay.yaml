@@ -13,9 +13,9 @@ MODE: 'PP' # PP or STANLEY
 
 # velocity profile parameters
 SMOOTH: false 
-ax_max: 1
-ay_max: 1
-v_max: 5
+ax_max: 3
+ay_max: 1.5
+v_max: 8
 
 # Hiperparameters of delaunay detector
 MAX_DISTANCE: 8
