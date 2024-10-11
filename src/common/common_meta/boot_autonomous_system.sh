@@ -6,5 +6,5 @@ sleep 5
 
 roslaunch can_c mission.launch &
 
-sleep 10
-rosrun can_c telemetry &
+#sleep 10
+#rosrun can_c telemetry &
