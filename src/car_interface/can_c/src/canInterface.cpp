@@ -47,6 +47,7 @@ CanInterface::CanInterface()
 
     // Publishers
     motorSpeedPub = nh.advertise<std_msgs::Float32>("/motor_speed", 1);
+    wheelSpeedPub = nh.advertise<std_msgs::Float32>("/wheel_speed", 1);
     ASStatusPub = nh.advertise<std_msgs::Int16>("/can/AS_status", 1);
     GPSPub = nh.advertise<sensor_msgs::NavSatFix>("can/gps", 1);
     GPSSpeedPub = nh.advertise<geometry_msgs::Vector3>("can/gps_speed", 1);
@@ -127,6 +128,16 @@ void CanInterface::parseInvSpeed(uint8_t msg[8])
     x.data = invSpeed;
     this->motorSpeedPub.publish(x);
     this->actual_speed = invSpeed*3.6;
+}
+
+void CanInterface::parseWheelSpeeds(uint8_t msg[8])
+{      
+    int16_t val = msg[3]
+    float speed = (1/val)*72000000*2*M_PI*52/12
+    std_msgs::Float32 x;
+    x.data = speed;
+    this->wheelSpeedPub.publish(x);
+    this->actual_speed = speed*3.6;
 }
 
 //-------------------------------------------- AS -------------------------------------------------------------------------
@@ -472,7 +483,7 @@ void CanInterface::readCan1()
                             parseSteeringAngle(msg);
                             break;
                         case 0x04:
-                            break;
+                            parseWheelSpeeds(msg);
                     }
                     break;
                 case 0x185:

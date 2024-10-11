@@ -50,6 +50,7 @@ private :
     ros::Publisher GPSPub;
     ros::Publisher GPSSpeedPub;
     ros::Publisher motorSpeedPub;
+    ros::Publisher wheelSpeedPub;
     ros::Publisher steeringAnglePub;
     ros::Publisher RESRangePub;
     ros::Publisher PCTempPub;
@@ -97,6 +98,7 @@ private :
     void parseRES(unsigned char []);
     void parseBrakeHydr(unsigned char []);
     void parsePneumatic(unsigned char []);
+    void parseWheelSpeeds(unsigned char []);
     void initialize_timer();
 
 
