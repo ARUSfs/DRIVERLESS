@@ -15,6 +15,7 @@ class ControlHandle {
         float KD;
         float KI;
         float previous_error;
+        float prev_target = 0;
         float integral;
         bool braking = false;
         std::vector<float> s;

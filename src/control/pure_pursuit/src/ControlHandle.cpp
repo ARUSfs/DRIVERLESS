@@ -56,7 +56,11 @@ void ControlHandle::control_timer_callback(const ros::TimerEvent& event) {
     integral += v_error * delta_time.count();
     const float derivative = (v_error - previous_error)/delta_time.count(); 
     previous_error = v_error;
-    const float accelerator_control = (v_error*KP)+(KI*integral)+(KD*derivative);
+
+    const float feed_forward = (TARGET_SPEED-prev_target)/delta_time.count();
+    prev_target = TARGET_SPEED;
+
+    const float accelerator_control = (v_error*KP)+(KI*integral)+(KD*derivative) + feed_forward;
 
     const float angle = pPursuit.get_steering_angle();
 

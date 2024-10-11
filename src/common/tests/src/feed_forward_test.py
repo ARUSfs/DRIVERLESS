@@ -64,7 +64,7 @@ def feed_forward(current: float):
         target_acc = profile_ax[i]
         #240 en el suelo, 8 en borricas sin ruedas
         target_acc = target_acc*8*0.2
-	
+
         rospy.loginfo([target_vx,current, target_acc])
 
         dt = time.time()-last_time
