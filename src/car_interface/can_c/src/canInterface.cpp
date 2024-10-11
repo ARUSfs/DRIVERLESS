@@ -132,7 +132,7 @@ void CanInterface::parseInvSpeed(uint8_t msg[8])
 
 void CanInterface::parseWheelSpeeds(uint8_t msg[8])
 {      
-    int16_t val = msg[3]
+    int16_t val = msg[3];
     float speed = (1/val)*72000000*2*M_PI*52/12;
     std_msgs::Float32 x;
     x.data = speed;
