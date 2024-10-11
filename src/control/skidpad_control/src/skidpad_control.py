@@ -60,7 +60,7 @@ class SkidpadControl():
 
         self.centers = []
         self.start_time = None
-        self.calib_time = 2
+        self.calib_time = 5
         self.calibrated = False
 
         self.i = 0
@@ -116,7 +116,7 @@ class SkidpadControl():
         elif not self.calibrated:
 
             epsilon = 1  # Distancia máxima entre puntos para considerarlos vecinos
-            min_samples = int(5*self.calib_time)  # Número mínimo de puntos para formar un clúster
+            min_samples = int(3*self.calib_time)  # Número mínimo de puntos para formar un clúster
 
             dbscan = DBSCAN(eps=epsilon, min_samples=min_samples)
             dbscan.fit(np.array(self.centers))
@@ -127,7 +127,7 @@ class SkidpadControl():
             centroid1 = np.mean(np.array(self.centers)[centroid1_mask],axis=0)
             centroid2 = np.mean(np.array(self.centers)[centroid2_mask],axis=0)
 
-            if np.abs(18.25 - np.linalg.norm(centroid1-centroid2)) < 1:
+            if np.abs(18.25 - np.linalg.norm(centroid1-centroid2)) < 2:
                 self.calibrated = True
 
                 center = [(centroid1[0]+centroid2[0])/2,(centroid1[1]+centroid2[1])/2]
