@@ -64,7 +64,9 @@ private :
     int pnPres1;
     int pnPres2;
     void getPcTemp();
-
+    
+    int32_t rl_wheel_speed_cycles = 0;
+    bool moving = false;
     uint8_t actual_speed;
     uint8_t target_speed;
     int8_t actual_steering_angle;

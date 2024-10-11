@@ -20,21 +20,30 @@ def as_status_callback(msg:Int16):
         start_time=time.time()
         last_time = time.time()
 
-def speed_callback(msg: Float32):
-        global start_time,braking
+def motor_speed_callback(msg: Float32):
+    global speed
+    if msg.data < 3:
+        speed = msg.data
+
+def wheel_speed_callback(msg: Float32):
+    global speed
+    if msg.data >= 3:
+        speed = msg.data
+
+def timer_callback(event):
+    global start_time,braking, speed
         
-        if not braking and AS_status == 2:
+    if not braking and AS_status == 2:
             
-            v = msg.data
-            control_msg = Controls()
+        control_msg = Controls()
 
-            control_msg.steering = 0
+        control_msg.steering = 0
 
-            
-            control_msg.accelerator = feed_forward(v)
+         
+        control_msg.accelerator = feed_forward(speed)
 
-            control_publisher.publish(control_msg)
-            #rospy.logerr(control_msg)
+        control_publisher.publish(control_msg)
+        #rospy.logerr(control_msg)
 
 
 def feed_forward(current: float):
@@ -76,17 +85,21 @@ def feed_forward(current: float):
         return max(min(cmd/230, 1),-1)
 
 if __name__ == '__main__':
-    rospy.init_node('sinusoidal_control_node')
+    rospy.init_node('feed_forward_test')
 
     start_time = 0
     AS_status = 0
     last_time = 0
     braking = False
-    integral = time.time()
+    speed = 0
+    integral = 0
 
     control_publisher = rospy.Publisher('/controls_pp', Controls, queue_size=1)
     braking_publisher = rospy.Publisher('/braking', Bool, queue_size=10)
     profile_publisher = rospy.Publisher('/profile', Float32MultiArray, queue_size=1)
-    rospy.Subscriber('/motor_speed', Float32, speed_callback,queue_size=1)
+    rospy.Subscriber('/wheel_speed', Float32, wheel_speed_callback,queue_size=1)
+    rospy.Subscriber('/motor_speed', Float32, motor_speed_callback, queue_size=1)
     rospy.Subscriber('/can/AS_status',Int16, as_status_callback, queue_size=1)
+    rospy.Timer(rospy.Duration(1.0/100), timer_callback)
+
     rospy.spin()
