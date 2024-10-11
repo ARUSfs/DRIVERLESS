@@ -27,7 +27,7 @@
   </node>
 
   <!-- Se guardan en $HOME/.ros/ -->
-  <node pkg="rosbag" type="record" name="rosbag_record" args="record -o inspection -a"/>
+  <node pkg="rosbag" type="record" name="rosbag_record" args="record -o feed_forward -a"/>
 
 
 </launch>
