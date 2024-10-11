@@ -33,6 +33,7 @@ private :
     void DL500Callback(const ros::TimerEvent&);
     void DL501Callback(const ros::TimerEvent&);
     void DL502Callback(const ros::TimerEvent&);
+    void DL511Callback(const ros::TimerEvent&);
     void pcTempCallback(const ros::TimerEvent&);
 
     void readCan1();
@@ -49,6 +50,7 @@ private :
     ros::Publisher GPSPub;
     ros::Publisher GPSSpeedPub;
     ros::Publisher motorSpeedPub;
+    ros::Publisher wheelSpeedPub;
     ros::Publisher steeringAnglePub;
     ros::Publisher RESRangePub;
     ros::Publisher PCTempPub;
@@ -57,8 +59,14 @@ private :
     ros::Publisher DL502Pub;
 
     float pc_temp;
+    int rearPres;
+    int frontPres;
+    int pnPres1;
+    int pnPres2;
     void getPcTemp();
-
+    
+    int32_t rl_wheel_speed_cycles = 0;
+    bool moving = false;
     uint8_t actual_speed;
     uint8_t target_speed;
     int8_t actual_steering_angle;
@@ -92,6 +100,7 @@ private :
     void parseRES(unsigned char []);
     void parseBrakeHydr(unsigned char []);
     void parsePneumatic(unsigned char []);
+    void parseWheelSpeeds(unsigned char []);
     void initialize_timer();
 
 
@@ -109,6 +118,7 @@ private :
     ros::Timer DL500Timer;
     ros::Timer DL501Timer;
     ros::Timer DL502Timer;
+    ros::Timer DL511Timer;
 
     std::thread thread_0;
     std::thread thread_1;    

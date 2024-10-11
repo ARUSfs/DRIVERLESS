@@ -19,8 +19,6 @@
   <node pkg="slam_marrano" name="slam_marrano" type="main">
   <rosparam command="load" file="$(find slam_marrano)/config/slam_marrano.yaml"/>
   <rosparam>
-    restart_map: false
-    restart_iterations: 100
     mission: 'AUTOX'
   </rosparam>
   </node>
@@ -29,8 +27,10 @@
     <rosparam command="load" file="$(find delaunay_detector)/config/delaunay.yaml"/>
     <rosparam>
       topic_perception_map: '/mapa_icp'
-      slam: 'marrano'
       color_enabled: false
+      MAX_ROUTE_LENGTH: 10
+      slam: 'marrano'
+      SMOOTH: true
     </rosparam>
   </node>
 
@@ -39,6 +39,11 @@
   <rosparam command="load" file="$(find car_state)/config/car_state.yaml"/>
   <rosparam>
     SLAM: "marrano"
+    braking_kp: 0.5
+    deceleration:  5
+    min_braking_cmd: -0.2 
+    max_cmd: 0.2
+    min_cmd: -0.2
   </rosparam>
   </node>
 
@@ -69,7 +74,6 @@
     <rosparam>
       LAD: 4
       TARGET_SPEED: 3
-      global_mode: true
     </rosparam>
   </node>
 

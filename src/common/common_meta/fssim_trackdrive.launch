@@ -17,7 +17,7 @@
       color_enabled: false
       MAX_ROUTE_LENGTH: 10
       slam: 'marrano'
-      trackdrive: false
+      SMOOTH: true
     </rosparam>
   </node>
 
@@ -63,7 +63,6 @@
     <rosparam>
       LAD: 6
       TARGET_SPEED: 5
-      global_mode: false
     </rosparam>
   </node>
 

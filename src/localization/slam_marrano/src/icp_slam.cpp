@@ -121,7 +121,7 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 		w = 1;
 	else
 		w = -1 + 2.0/(1.0 + std::exp(-(5*std::abs(dist-dx)+10*std::abs(tyaw-dyaw))));
-	std::cout << "ICP confidence: " << 1-w << std::endl;
+	// std::cout << "ICP confidence: " << 1-w << std::endl;
 	
 	//update position
 	prev_transformation = (estimation*w + transformation*(1-w));

@@ -132,24 +132,9 @@ void CanInterface::parseInvSpeed(uint8_t msg[8])
 
 void CanInterface::parseWheelSpeeds(uint8_t msg[8])
 {   
-    int32_t val = ((static_cast<uint32_t>(msg[4]) << 24) |
-               (static_cast<uint32_t>(msg[3]) << 16) |
-               (static_cast<uint32_t>(msg[2]) << 8)  |
-               static_cast<uint32_t>(msg[1]));
-
-    if (rl_wheel_speed_cycles == 0){
-        rl_wheel_speed_cycles = val;
-    }else if (rl_wheel_speed_cycles != val){
-        moving = true;
-    }
-
-    float speed = 0;
-    if (moving){
-        speed = (72000000.0f / static_cast<float>(val)) * 2 * M_PI * 0.2f / 12;
-    }
-
-    rl_wheel_speed_cycles = val;
-
+    std::cout << "llega wheelspeed" << std::endl;   
+    int16_t val = msg[3];
+    float speed = (1/val)*72000000*2*M_PI*52/12;
     std_msgs::Float32 x;
     x.data = speed;
     this->wheelSpeedPub.publish(x);
@@ -492,15 +477,14 @@ void CanInterface::readCan1()
                 case 0x382:
                     parseAngularVelocity(msg);
                     break;
-                case 0x187:
+                case 0x453:
                     switch(subId)
                     {
-                        case 0x01:
+                        case 0x03:
                             parseSteeringAngle(msg);
                             break;
                         case 0x04:
-                            //parseWheelSpeeds(msg);
-                            break;
+                            parseWheelSpeeds(msg);
                     }
                     break;
                 case 0x185:
@@ -509,10 +493,6 @@ void CanInterface::readCan1()
                         case 0x01:
                             parseMission(msg);
                     }
-                    break;
-                case 0x453:
-                    parseWheelSpeeds(msg);
-                    break;
                 default:
                     break;
             }

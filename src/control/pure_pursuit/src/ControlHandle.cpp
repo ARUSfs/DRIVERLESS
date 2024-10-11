@@ -12,6 +12,7 @@
 
 #include <iostream>
 #include <chrono>
+#include <algorithm>
 
 ControlHandle::ControlHandle(){
 
@@ -27,6 +28,9 @@ ControlHandle::ControlHandle(){
 
     path_sub = nh.subscribe("/route", 1, &ControlHandle::path_callback, this);
     braking_sub = nh.subscribe("/braking", 1, &ControlHandle::braking_callback, this);
+    speed_profile_sub = nh.subscribe("/speed_profile",1, &ControlHandle::update_target, this);
+    sk_sub = nh.subscribe("controller/sk", 1, &ControlHandle::update_sk, this);
+
 
     control_publisher = nh.advertise<common_msgs::Controls>("/controls_pp", 1);
     pursuit_point_publisher = nh.advertise<geometry_msgs::Point>("pursuit_point",1);
@@ -43,7 +47,6 @@ ControlHandle::ControlHandle(){
 }
 
 void ControlHandle::control_timer_callback(const ros::TimerEvent& event) {
-    // TODO PONER CON PARAMETROS POR DIOS ESTO ES PARA PROBAR TODO
 
     auto current_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> delta_time = current_time - previous_time;
@@ -53,7 +56,11 @@ void ControlHandle::control_timer_callback(const ros::TimerEvent& event) {
     integral += v_error * delta_time.count();
     const float derivative = (v_error - previous_error)/delta_time.count(); 
     previous_error = v_error;
-    const float accelerator_control = (v_error*KP)+(KI*integral)+(KD*derivative);
+
+    const float feed_forward = (TARGET_SPEED-prev_target)/delta_time.count();
+    prev_target = TARGET_SPEED;
+
+    const float accelerator_control = (v_error*KP)+(KI*integral)+(KD*derivative) + feed_forward;
 
     const float angle = pPursuit.get_steering_angle();
 
@@ -98,3 +105,34 @@ void ControlHandle::path_callback(const common_msgs::Trajectory path) {
 void ControlHandle::braking_callback(const std_msgs::Bool braking_msg) {
     braking = braking_msg.data;
 }
+
+void ControlHandle::update_target(const std_msgs::Float32MultiArray msg){
+    float dx =  0.1*std::max(velocity,3.0f);
+    int index = 0;
+    std::cout << dx << std::endl;
+    std::cout << s.size() << std::endl;
+    while (s.size()>index && s[index]<dx){
+        index++;
+    }
+    if(msg.data.size()>index){
+        TARGET_SPEED = msg.data[index];
+    }
+    std::cout << "target: " << TARGET_SPEED << std::endl;
+
+    pPursuit.LAD = 0.1*TARGET_SPEED*TARGET_SPEED + 3;
+}
+
+
+void ControlHandle::update_sk(const common_msgs::Trajectory msg){
+    if(msg.trajectory.size()>0){
+        s.clear();
+        k.clear();
+
+        for(const geometry_msgs::Point &point : msg.trajectory){
+            s.push_back(point.x);
+            k.push_back(point.y);
+        }
+    } 
+}
+
+
