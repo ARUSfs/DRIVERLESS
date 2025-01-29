@@ -1,0 +1,5 @@
+<launch>
+    <node name="steering" pkg="steering" type="main.py" output="screen">
+        <rosparam command="load" file="$(find steering)/config/steering.yaml"/>
+    </node>
+</launch>

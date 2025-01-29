@@ -1,0 +1,37 @@
+<launch>
+  <node pkg="rslidar_sdk" name="rslidar_sdk_node" type="rslidar_sdk_node" output="screen">
+    <param name="config_path" value=""/>
+  </node>
+    
+  <!-- <node pkg="rslidar_sdk" name="velodyne_transformer" type="velodyne_transformer.py"/>
+  <node pkg="rslidar_sdk" name="imu_transformer" type="imu_transformer.py"/> -->
+
+  <node name="steering" pkg="steering" type="main.py" output="screen">
+  </node>
+
+  <node name="can" pkg="can" type="main.py">
+  </node>
+
+  <node pkg="control_joystick" name="control_joystick" type="main.py">
+  <rosparam command="load" file="$(find control_joystick)/config/parameters.yaml"/>
+  </node>
+
+   <!--Copy paste del nodo de ds4_driver-->
+  <arg name="addr" default="" />
+  <arg name="use_standard_msgs" default="false" />
+  <arg name="autorepeat_rate" default="0" if="$(arg use_standard_msgs)" />
+
+  <node pkg="ds4_driver" type="ds4_driver_node.py" name="ds4_driver" output="screen" >
+    <rosparam command="load" file="$(find ds4_driver)/config/params.yaml" />
+
+    <param name="device_addr" value="$(arg addr)" />
+    <param name="use_standard_msgs" value="$(arg use_standard_msgs)" />
+    <param name="autorepeat_rate" value="$(arg autorepeat_rate)" if="$(arg use_standard_msgs)" />
+  </node>
+
+  <node pkg="tf2_ros" type="static_transform_publisher" name="ds4_to_imu"
+    args="0 0.05 -0.01 -1.5707 0 1.5707 ds4 ds4_imu" />
+  <!-- Se guardan en $HOME/.ros/ -->
+  <node pkg="rosbag" type="record" name="rosbag_record" args="record -o ps4 -a"/>  
+</launch>
+

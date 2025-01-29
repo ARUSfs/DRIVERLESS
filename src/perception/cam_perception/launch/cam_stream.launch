@@ -1,0 +1,5 @@
+<launch>
+  <node pkg="cam_detect" name="cam_stream" type="main2.py">
+    <rosparam command="load" file="$(find cam_detect)/config/params.yaml"/>
+  </node>
+</launch>

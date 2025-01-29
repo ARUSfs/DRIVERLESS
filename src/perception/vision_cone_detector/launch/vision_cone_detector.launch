@@ -1,0 +1,7 @@
+<launch>
+  <include file="$(find imycamera)/launch/camera.launch"/>
+  <node pkg="vision_cone_detector" name="vision_cone_detector" type="main.py">
+    <rosparam command="load" file="$(find vision_cone_detector)/config/vision.yaml"/>
+  </node>
+
+</launch>

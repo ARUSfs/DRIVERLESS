@@ -1,0 +1,61 @@
+<launch>
+
+  <node pkg="slam_marrano" name="slam_marrano" type="main" output="screen">
+  <rosparam command="load" file="$(find slam_marrano)/config/slam_marrano.yaml"/>
+  </node>
+
+  <node pkg="delaunay_detector" name="delaunay_detector" type="main.py" output="screen">
+    <rosparam command="load" file="$(find delaunay_detector)/config/delaunay.yaml"/>
+    <rosparam>
+      topic_perception_map: '/perception_map'
+      color_enabled: false
+    </rosparam>
+  </node>
+
+  <node pkg="fssim_interface" name="fssim_interface" type="main.py">
+  </node>
+
+  <node name="interface" pkg="visualization" type="main_interface.py">
+	  <rosparam command="load" file="$(find visualization)/config/interface.yaml"/>
+    <rosparam>
+      frame: 'fssim/vehicle/cog'
+    </rosparam>
+	</node>
+	
+  
+  <node pkg="car_state" name="car_state" type="main.py">
+  <rosparam command="load" file="$(find car_state)/config/car_state.yaml"/>
+  <rosparam>
+  SLAM: "none"
+  </rosparam>
+  </node>
+
+  
+
+  <!-- <node name="telemetries" pkg="telemetries" type="main.py">
+  <rosparam command="load" file="$(find control_pure_pursuit)/config/pure_pursuit.yaml"/>
+	</node> -->
+
+  <node pkg="controller" name="controller" type="main.py">
+  <rosparam command="load" file="$(find controller)/config/controller.yaml"/>
+    <rosparam>
+      controller_mode: 'PP'
+    </rosparam>
+  </node>
+
+ 
+
+  <node pkg="pure_pursuit" name="pure_pursuit" type="main" output="screen">
+  <rosparam command="load" file="$(find pure_pursuit)/config/pure_pursuit.yaml"/>
+    <rosparam>
+      LAD: 8
+      TARGET_SPEED: 6
+      global_mode: false
+    </rosparam>
+  </node>
+
+
+ 
+
+
+</launch>

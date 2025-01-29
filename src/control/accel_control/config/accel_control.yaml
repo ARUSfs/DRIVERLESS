@@ -1,0 +1,17 @@
+KP: 43.87
+KI: 1.29
+KD: 0.0
+target: 10
+pendiente: 4.0
+track_length: 75
+
+lqr_dist: 1.0
+lqr_yaw: 25.0
+lqr_beta: 0.0
+lqr_r: 3.0
+
+perception_topic: "/perception_map"
+global_frame: "ini"
+car_frame: "body"
+slam: "marrano"
+

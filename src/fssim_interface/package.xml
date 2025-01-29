@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>fssim_interface</name>
+  <version>0.0.0</version>
+  <description>Package to connect pipeline to FSSIM</description>
+
+  <maintainer email="mariano@todo.todo">mariano</maintainer>
+
+
+  <license>TODO</license>
+
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>rospy</build_depend>
+  <build_export_depend>rospy</build_export_depend>
+  <exec_depend>rospy</exec_depend>
+
+
+</package>

@@ -1,0 +1,5 @@
+<launch>
+  <node pkg="slam_marrano" name="slam_marrano" type="main" output="screen">
+  <rosparam command="load" file="$(find slam_marrano)/config/slam_marrano.yaml"/>
+  </node>
+</launch>

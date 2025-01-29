@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>pure_pursuit</name>
+  <version>0.1.0</version>
+  <description>Implementation of Pure Pursuit in CPP</description>
+
+  <maintainer email="pindado.jacobo@gmail.com">Jacobo Pindado Perea</maintainer>
+
+
+  <license>TODO</license>
+
+  <build_depend>common_msgs</build_depend>
+  <exec_depend>common_msgs</exec_depend>
+
+  <build_depend>std_msgs</build_depend>
+  <exec_depend>std_msgs</exec_depend>
+
+  <build_depend>tf2</build_depend>
+  <build_depend>tf2_ros</build_depend>
+  <build_depend>tf2_geometry_msgs</build_depend>
+  <exec_depend>tf2</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>tf2_geometry_msgs</exec_depend>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+</package>

@@ -1,0 +1,52 @@
+cmake_minimum_required(VERSION 3.0.2)
+project(can_c)
+
+## Find catkin and any catkin packages
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  std_msgs
+  sensor_msgs
+  common_msgs
+)
+# find_package(PahoMqttCpp REQUIRED)
+## Declare a catkin package
+catkin_package(
+  CATKIN_DEPENDS roscpp std_msgs sensor_msgs common_msgs
+)
+
+
+## Include directories
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+  /usr/local/include # Asegúrate de que la ruta a las cabeceras de canlib es correcta
+)
+
+## Declare the C++ executable
+add_executable(main src/main.cpp src/canInterface.cpp)
+
+add_executable(missionHandle src/missionHandle.cpp)
+
+# add_executable(telemetry src/telemetry.cpp)
+
+## Specify libraries to link a library or executable target against
+target_link_libraries(main
+  ${catkin_LIBRARIES}
+  /usr/lib/libcanlib.so # Asegúrate de que la ruta a la biblioteca canlib es correcta
+)
+
+target_link_libraries(missionHandle
+  ${catkin_LIBRARIES}
+  /usr/lib/libcanlib.so # Asegúrate de que la ruta a la biblioteca canlib es correcta
+)
+
+# target_include_directories(telemetry
+#     PRIVATE
+#     ${PahoMqttCpp_INCLUDE_DIRS}
+# )
+
+# target_link_libraries(telemetry
+#   ${catkin_LIBRARIES}
+#   /usr/lib/libcanlib.so # Asegúrate de que la ruta a la biblioteca canlib es correcta
+#   PahoMqttCpp::paho-mqttpp3
+# )

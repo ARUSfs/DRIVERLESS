@@ -1,0 +1,49 @@
+<launch>
+
+
+  <node pkg="controller" name="controller" type="main.py" output='screen'>
+    <rosparam command="load" file="$(find controller)/config/controller.yaml"/>
+    <rosparam>
+      braking_kp: 0.5
+      deceleration:  5
+      min_braking_cmd: -0.2 
+      max_cmd: 0.15 
+      min_cmd: 0
+    </rosparam>
+  </node>
+
+  <node pkg="fssim_interface" name="fssim_interface" type="main.py">
+  </node>
+
+  <node pkg="car_state" name="car_state" type="main.py">
+    <rosparam command="load" file="$(find car_state)/config/car_state.yaml"/>
+    <rosparam>
+      global_frame: "map"
+      car_frame: "body"
+      SLAM: "marrano"
+    </rosparam>
+  </node>
+
+
+  <node name="skidpad_control" pkg="skidpad_control" type="main.py"  output="screen">
+  <rosparam command="load" file="$(find skidpad_control)/config/skidpad_control.yaml"/>
+    <rosparam>
+      targetillo: 5
+      targetaso: 5
+      
+      KP: 43.87
+      KD : 0.0
+      KI : 1.29
+
+      stanley_coef: 1
+      k_delta: -0.02
+      k_yaw_rate: 0.2
+    </rosparam>
+  </node>
+
+  <node name="slam_marrano" pkg="slam_marrano" type="main">
+  <rosparam command="load" file="$(find slam_marrano)/config/slam_marrano.yaml"/>
+  </node>
+
+
+</launch>

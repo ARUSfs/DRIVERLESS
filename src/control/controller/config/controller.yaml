@@ -1,0 +1,19 @@
+# Topics names of controller node
+topic_controller_control: '/controls'
+topic_pp_control: 'controls_pp'
+topic_mpc_control: 'controls_mpc'
+topic_stanley_control: 'controls_stanley'
+
+# Type of control: 'PP' or 'PP-STANLEY' 
+controller_mode: 'PP'
+
+# for braking
+braking_kp: 0.5
+deceleration:  5
+min_braking_cmd: -0.2 
+
+# for accelerating
+max_cmd: 1 
+min_cmd: 0
+min_vel: 0.5
+amplitude: 20

@@ -1,0 +1,59 @@
+<launch>
+  <node pkg="rslidar_sdk" name="rslidar_sdk_node" type="rslidar_sdk_node" output="screen">
+    <param name="config_path" value=""/>
+	</node>
+
+  <node name="steering" pkg="steering" type="main.py" output="screen">
+    <rosparam command="load" file="$(find steering)/config/steering.yaml"/>
+  </node>
+
+  <node name="can_c" pkg="can_c" type="main" output="screen">
+  </node>
+
+  <node pkg="controller" name="controller" type="main.py" output='screen'>
+    <rosparam command="load" file="$(find controller)/config/controller.yaml"/>
+    <rosparam>
+      braking_kp: 0.5
+      deceleration:  5
+      min_braking_cmd: -0.2 
+      max_cmd: 0.2
+      min_cmd: 0
+    </rosparam>
+  </node>
+
+
+  <node pkg="car_state" name="car_state" type="main.py">
+    <rosparam command="load" file="$(find car_state)/config/car_state.yaml"/>
+    <rosparam>
+      SLAM: "marrano"
+    </rosparam>
+  </node>
+
+  <node pkg="lidar_perception" name="lidar_perception" type="main">
+  <rosparam command="load" file="$(find lidar_perception)/config/lidar_cpp.yaml"/>
+  </node>
+
+  <node name="skidpad_control" pkg="skidpad_control" type="main.py"  output="screen">
+  <rosparam command="load" file="$(find skidpad_control)/config/skidpad_control.yaml"/>
+    <rosparam>
+      targetillo: 5
+      targetaso: 5
+      KP: 43.87
+      KD : 0.0
+      KI : 1.29
+
+      stanley_coef: 1
+      k_delta: -0.00
+      k_yaw_rate: 0.0
+    </rosparam>
+  </node>
+
+  <node name="slam_marrano" pkg="slam_marrano" type="main">
+  <rosparam command="load" file="$(find slam_marrano)/config/slam_marrano.yaml"/>
+  </node>
+
+  <!-- Se guardan en $HOME/.ros/ -->
+  <node pkg="rosbag" type="record" name="rosbag_record" args="record -o skidpad -a"/>
+
+
+</launch>

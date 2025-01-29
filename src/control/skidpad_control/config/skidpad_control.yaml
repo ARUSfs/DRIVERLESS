@@ -1,0 +1,10 @@
+KP: 43.87
+KI: 1.29
+KD: 0.0
+targetillo: 8
+targetaso: 8
+
+stanley_coef: 1
+k_delta: -0.02
+k_yaw_rate: 0.2
+
