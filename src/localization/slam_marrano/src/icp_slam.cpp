@@ -208,7 +208,7 @@ void ICP_handle::map_callback(sensor_msgs::PointCloud2 map_msg) {
 			for (const auto& idx : cluster.indices) {
 								// This is a botch that works but should be changed. PCL ICP doesn't sopport weighted points,
 								// so the more reliable we consider a point to be, the more that are placed on the exact same
-								// coordinates (limited in this case to 50).
+								// coordinates (limited in this case to 50) :)
 				if(j < 10)
 					clustered_points->push_back((*previous_map)[idx]);
 				else
